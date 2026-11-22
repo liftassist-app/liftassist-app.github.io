@@ -14,6 +14,9 @@
   <link rel="apple-touch-icon" href="./icon-192.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
 
+  <!-- Defense-in-depth CSP: restrict script, font, and network endpoints -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com https://www.gstatic.com https://cdn.jsdelivr.net; frame-src 'self' https://lift-assist-85f6c.firebaseapp.com; object-src 'none'; base-uri 'self';" />
+
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 
@@ -1071,6 +1074,34 @@
           <span class="text-slate-300">Checking Cloud Sync status...</span>
         </div>
 
+        <!-- Email Verification Required Banner (Shown when signed in with unverified email) -->
+        <div id="cloud-sync-verify-panel" class="hidden space-y-3">
+          <div class="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/35 space-y-1.5">
+            <div class="text-[11px] uppercase tracking-wider font-bold text-amber-300">Verify Your Email to Enable Cloud Sync</div>
+            <div id="cloud-sync-verify-email" class="font-mono text-sm font-bold text-white"></div>
+            <p class="text-[11px] text-slate-300 leading-relaxed">
+              We sent a verification link to your inbox (check spam/junk too). Click that link, then press <strong>I&rsquo;ve Verified</strong> below. Cloud Firestore enforces verified emails to protect your account.
+            </p>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button type="button" onclick="refreshCloudEmailVerification()" class="px-3 py-2.5 rounded-xl text-xs font-extrabold bg-amber-500 hover:bg-amber-400 text-slate-950 transition">🔄 I&rsquo;ve Verified (Refresh)</button>
+            <button type="button" onclick="resendCloudVerificationEmail()" class="px-3 py-2.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">📧 Resend Verification Email</button>
+          </div>
+          <div class="flex justify-end">
+            <button type="button" onclick="signOutCloudSync(false)" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 border border-slate-700 transition">Sign Out</button>
+          </div>
+        </div>
+
+        <!-- Conflict Resolution Banner (Shown when unowned local edits conflict with an existing cloud backup) -->
+        <div id="cloud-sync-conflict-panel" class="hidden p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/40 space-y-2.5">
+          <div class="text-[11px] uppercase tracking-wider font-bold text-amber-300">⚠️ Choose Which Backup to Keep</div>
+          <p id="cloud-sync-conflict-summary" class="text-[11px] text-slate-200 leading-relaxed"></p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button type="button" onclick="resolveCloudSyncConflict('pull')" class="px-3 py-2 rounded-xl text-xs font-extrabold bg-sky-500 hover:bg-sky-400 text-slate-950 transition">⬇️ Pull Cloud Backup</button>
+            <button type="button" onclick="resolveCloudSyncConflict('push')" class="px-3 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition">⬆️ Push This Device</button>
+          </div>
+        </div>
+
         <!-- Signed-In Controls -->
         <div id="cloud-sync-signedin-panel" class="hidden space-y-3">
           <div class="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 space-y-1">
@@ -1085,8 +1116,9 @@
             <button type="button" onclick="syncCloudState('pull')" class="px-3 py-2.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 transition" title="Load latest cloud backup onto this device">⬇️ Pull Cloud</button>
           </div>
 
-          <div class="flex justify-end">
-            <button type="button" onclick="signOutCloudSync()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 border border-slate-700 transition">Sign Out</button>
+          <div class="flex flex-wrap justify-end gap-2">
+            <button type="button" onclick="signOutCloudSync(true)" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/35 transition" title="Recommended on shared computers: signs out and wipes cached workouts from this browser">Sign Out &amp; Clear Local</button>
+            <button type="button" onclick="signOutCloudSync(false)" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 border border-slate-700 transition">Sign Out</button>
           </div>
         </div>
 
@@ -1116,13 +1148,16 @@
           </div>
         </div>
 
-        <!-- Firebase Config Setup Accordion (Shown open if unconfigured, collapsible if configured) -->
+        <!-- Firebase Config Setup Accordion (Locked when embedded in production) -->
         <details id="cloud-config-details" class="rounded-xl bg-slate-950 border border-slate-800 overflow-hidden">
           <summary class="px-3.5 py-2.5 text-xs font-bold text-slate-300 cursor-pointer hover:text-white flex items-center justify-between">
             <span>⚙️ Firebase Project Config (Free Spark Plan)</span>
             <span id="cloud-config-badge" class="font-mono text-[10px] text-amber-300">Not Configured</span>
           </summary>
-          <div class="p-3.5 pt-1 space-y-2.5 border-t border-slate-800/80 text-xs">
+          <div id="cloud-config-locked-notice" class="hidden p-3.5 pt-2 border-t border-slate-800/80 text-[11px] text-emerald-300 leading-relaxed">
+            🔒 <strong>Locked to production Firebase project (<code class="text-white">lift-assist-85f6c</code>).</strong> Browser-local config overrides are disabled so credentials and backups can never be redirected to an unauthorized project.
+          </div>
+          <div id="cloud-config-editable-body" class="p-3.5 pt-1 space-y-2.5 border-t border-slate-800/80 text-xs">
             <p class="text-[11px] text-slate-400 leading-relaxed">
               Paste your Firebase Web App config JSON (or embed it in <code class="text-amber-300">DEFAULT_FIREBASE_CONFIG</code> inside <code class="text-amber-300">index.html</code> before publishing to GitHub Pages so all devices connect automatically).
             </p>
@@ -1684,7 +1719,14 @@
         rmSuccessStreak: (raw.rmSuccessStreak && typeof raw.rmSuccessStreak === 'object') ? { ...raw.rmSuccessStreak } : {},
         pendingLevelUps: Array.isArray(raw.pendingLevelUps) ? raw.pendingLevelUps.slice(0, 5) : [],
         pools,
-        currentRoll: raw.currentRoll && typeof raw.currentRoll === 'object' ? raw.currentRoll : null,
+        currentRoll: (raw.currentRoll && typeof raw.currentRoll === 'object')
+          ? {
+              ...raw.currentRoll,
+              slots: Array.isArray(raw.currentRoll.slots)
+                ? raw.currentRoll.slots.map((sl, i) => ({ ...sl, id: sanitizeSafeId(sl && sl.id, 'dslot_' + i) }))
+                : []
+            }
+          : null,
         activeSession: raw.activeSession && typeof raw.activeSession === 'object' ? raw.activeSession : null,
         lastCompleted: raw.lastCompleted && typeof raw.lastCompleted === 'object' ? raw.lastCompleted : null,
         challengeMode: validChallenges.includes(raw.challengeMode) ? raw.challengeMode : 'none',
@@ -1749,6 +1791,26 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+    }
+
+    function sanitizeSafeId(val, prefix = 'id') {
+      const clean = String(val == null ? '' : val).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64);
+      return clean || `${prefix}_${Math.random().toString(36).slice(2, 9)}`;
+    }
+
+    function stripDangerousKeys(obj) {
+      if (!obj || typeof obj !== 'object') return obj;
+      if (Array.isArray(obj)) return obj.map(stripDangerousKeys);
+      const out = {};
+      Object.keys(obj).forEach(k => {
+        if (k === '__proto__' || k === 'constructor' || k === 'prototype') return;
+        out[k] = stripDangerousKeys(obj[k]);
+      });
+      return out;
+    }
+
+    function safeJsonParse(raw) {
+      return stripDangerousKeys(JSON.parse(raw));
     }
 
     function normalizeMuscleList(list) {
@@ -2078,7 +2140,7 @@
       const restOffsetSecs = Math.max(-120, Math.min(120, toIntOr(opts.restOffsetSecs, 0)));
       const stopwatchSecs = Math.max(0, toIntOr(opts.stopwatchSecs, 0));
       return {
-        id: opts.id || ('lift_' + Math.random().toString(36).slice(2, 9)),
+        id: sanitizeSafeId(opts.id, 'lift'),
         tier,
         exercise: meta.name || name,
         category: meta.category || 'Custom Exercises',
@@ -2245,7 +2307,7 @@
             ? Array.from({ length: count }, (_, i) => Math.max(1, t3Max - i))
             : buildDefaultT3SetReps(count, goal - 3));
       return {
-        id: opts.id || ('lift_' + Math.random().toString(36).slice(2, 9)),
+        id: sanitizeSafeId(opts.id, 'lift'),
         tier: 'T3',
         exercise: meta.name || name,
         category: meta.category || 'Upper Accessories & Core',
@@ -3176,7 +3238,7 @@
     function normalizeDayPlanSlot(s, wk) {
       if (s.tier === 'T3') {
         return {
-          id: s.id || ('rslot_' + Math.random().toString(36).slice(2, 9)),
+          id: sanitizeSafeId(s.id, 'rslot'),
           tier: 'T3',
           exercise: canonicalizeExerciseName(s.exercise || 'Leg Extension'),
           t3Mode: s.t3Mode === 'perset' ? 'perset' : 'total',
@@ -3189,7 +3251,7 @@
       const isT1 = s.tier === 'T1';
       const fuSets = Math.max(0, toIntOr(s.fuSets, isT1 ? wk.t1Fu : wk.t2Fu));
       return {
-        id: s.id || ('rslot_' + Math.random().toString(36).slice(2, 9)),
+        id: sanitizeSafeId(s.id, 'rslot'),
         tier: isT1 ? 'T1' : 'T2',
         exercise: canonicalizeExerciseName(s.exercise || (isT1 ? 'Low-Bar Back Squat' : 'Pause Back Squat')),
         action: ['Find', 'Hold', 'Push', 'Extend'].includes(s.action) ? s.action : (isT1 ? wk.t1Action : wk.t2Action),
@@ -3244,7 +3306,7 @@
       const legacyStatus = ['Find', 'Hold', 'Push', 'Extend'].includes(wk.status) ? wk.status : 'Extend';
       const normalized = {
         week: idx + 1,
-        mesoId: (wk.mesoId && String(wk.mesoId).trim()) || 'meso_1',
+        mesoId: sanitizeSafeId(wk.mesoId, 'meso_1'),
         mesoName: typeof wk.mesoName === 'string' && wk.mesoName.trim() ? wk.mesoName.trim() : '',
         mesoPhase: wk.mesoPhase === 'intensification' ? 'intensification' : (wk.mesoPhase === 'accumulation' ? 'accumulation' : null),
         status: legacyStatus,
@@ -3447,6 +3509,9 @@
        ========================================================================= */
     function saveState(opts = {}) {
       try {
+        if (!opts || !opts.keepSampleFlag) {
+          appState._isDefaultSample = false;
+        }
         if (!opts || !opts.preserveTimestamp) {
           appState._updatedAt = Date.now();
         }
@@ -3535,7 +3600,7 @@
       let parsed = null;
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) parsed = JSON.parse(raw);
+        if (raw) parsed = safeJsonParse(raw);
       } catch (err) {
         console.warn('Could not parse saved state, loading defaults:', err);
       }
@@ -3574,21 +3639,21 @@
 
         appState.customExercises = Array.isArray(parsed.customExercises)
           ? parsed.customExercises.map(ex => ({
-              id: ex.id || ('cust_' + Math.random().toString(36).slice(2, 9)),
-              name: ex.name || 'Custom Exercise',
-              category: ex.category || 'Custom Exercises',
-              tiers: Array.isArray(ex.tiers) && ex.tiers.length ? ex.tiers : ['T2', 'T3'],
-              primaryMuscles: normalizeMuscleList(ex.primaryMuscles),
-              secondaryMuscles: normalizeMuscleList(ex.secondaryMuscles)
+              id: sanitizeSafeId(ex && ex.id, 'cust'),
+              name: (ex && ex.name) || 'Custom Exercise',
+              category: (ex && ex.category) || 'Custom Exercises',
+              tiers: Array.isArray(ex && ex.tiers) && ex.tiers.length ? ex.tiers : ['T2', 'T3'],
+              primaryMuscles: normalizeMuscleList(ex && ex.primaryMuscles),
+              secondaryMuscles: normalizeMuscleList(ex && ex.secondaryMuscles)
             }))
           : [];
 
         if (Array.isArray(parsed.split) && parsed.split.length > 0) {
           appState.split = parsed.split.map((day, idx) => ({
-            id: day.id || ('day' + (idx + 1)),
-            shortName: day.shortName || ('D' + (idx + 1)),
-            name: day.name || ('Day ' + (idx + 1)),
-            exercises: Array.isArray(day.exercises) ? day.exercises.map(normalizeSplitExercise) : []
+            id: sanitizeSafeId(day && day.id, 'day' + (idx + 1)),
+            shortName: (day && day.shortName) || ('D' + (idx + 1)),
+            name: (day && day.name) || ('Day ' + (idx + 1)),
+            exercises: Array.isArray(day && day.exercises) ? day.exercises.map(normalizeSplitExercise) : []
           }));
         } else {
           appState.split = createDefaultSplit();
@@ -3615,7 +3680,7 @@
               const firstNorm = normalizeRoadmapWeek(rawWeeks[0], 0);
               const normWeeks = rawWeeks.map((wk, wIdx) => (wIdx === 0 ? firstNorm : normalizeRoadmapWeek(wk, wIdx, firstNorm.dayPlans)));
               return {
-                id: b.id || ('block_' + Date.now() + '_' + bIdx),
+                id: sanitizeSafeId(b && b.id, 'block_' + bIdx),
                 name: (b.name || `Macrocycle ${bIdx + 1}`).trim(),
                 phase: b.phase === 'intensification' ? 'intensification' : 'accumulation',
                 baseLoadPct: parseFloat(b.baseLoadPct) > 0 ? parseFloat(b.baseLoadPct) : (b.phase === 'intensification' ? 87.5 : 82.5),
@@ -3626,8 +3691,9 @@
             })
           : [];
 
-        const matchedBlock = parsed.activeRoadmapBlockId
-          ? appState.savedRoadmapBlocks.find(b => b.id === parsed.activeRoadmapBlockId)
+        const cleanActiveBlockId = parsed.activeRoadmapBlockId ? sanitizeSafeId(parsed.activeRoadmapBlockId, 'block') : null;
+        const matchedBlock = cleanActiveBlockId
+          ? appState.savedRoadmapBlocks.find(b => b.id === cleanActiveBlockId)
           : null;
         appState.activeRoadmapBlockId = matchedBlock ? matchedBlock.id : null;
         appState.activeRoadmapBlockName = typeof parsed.activeRoadmapBlockName === 'string' && parsed.activeRoadmapBlockName.trim()
@@ -3637,10 +3703,16 @@
           ? parsed.activeRoadmapBlockNotes
           : (matchedBlock ? matchedBlock.notes : '');
 
-        appState.history = Array.isArray(parsed.history) && parsed.history.length > 0
-          ? parsed.history
+        const hasParsedHistory = Array.isArray(parsed.history) && parsed.history.length > 0;
+        appState.history = hasParsedHistory
+          ? parsed.history.map((s, sIdx) => ({
+              ...s,
+              id: sanitizeSafeId(s && s.id, 'hist_' + sIdx)
+            }))
           : createSampleHistory();
         appState._updatedAt = Number.isFinite(parsed._updatedAt) ? parsed._updatedAt : 0;
+        appState._ownerUid = (typeof parsed._ownerUid === 'string' && parsed._ownerUid.trim()) ? sanitizeSafeId(parsed._ownerUid, 'uid') : null;
+        appState._isDefaultSample = parsed._isDefaultSample !== undefined ? Boolean(parsed._isDefaultSample) : !hasParsedHistory;
         appState.diceGainz = normalizeDiceGainzState(parsed.diceGainz);
       } else {
         appState.split = createDefaultSplit();
@@ -3651,6 +3723,8 @@
         appState.activeRoadmapBlockNotes = '';
         appState.history = createSampleHistory();
         appState._updatedAt = 0;
+        appState._ownerUid = null;
+        appState._isDefaultSample = true;
         appState.diceGainz = createDefaultDiceGainzState();
       }
 
@@ -3660,7 +3734,7 @@
       if (tfEl) tfEl.value = appState.analyticsTimeframe || 'all';
       migrateCanonicalLiftNames();
       syncRoadmapBaseLoadsFromTrainingData(false);
-      saveState({ skipCloudPush: true, preserveTimestamp: true });
+      saveState({ skipCloudPush: true, preserveTimestamp: true, keepSampleFlag: true });
     }
 
     function migrateCanonicalLiftNames() {
@@ -4107,7 +4181,7 @@
 
     function switchTab(tabName) {
       appState.activeTab = tabName;
-      saveState();
+      saveState({ preserveTimestamp: true, skipCloudPush: true, keepSampleFlag: true });
       ['logger', 'roadmap', 'analytics', 'guide'].forEach(t => {
         const view = document.getElementById(`view-${t}`);
         const btn = document.getElementById(`tab-btn-${t}`);
@@ -4617,7 +4691,7 @@
               ${warmupSets.map((ws, wIdx) => {
                 const wDone = Boolean(warmupDoneArr[wIdx]);
                 return `
-                  <button type="button" onclick="toggleWarmupSetDone('${escapeHtml(ex.id)}', ${wIdx})" class="px-2 py-1 rounded-lg font-mono text-[11px] font-bold border transition ${
+                  <button type="button" data-id="${escapeHtml(ex.id)}" onclick="toggleWarmupSetDone(this.dataset.id, ${wIdx})" class="px-2 py-1 rounded-lg font-mono text-[11px] font-bold border transition ${
                     wDone ? 'bg-orange-500 text-slate-950 border-orange-400' : 'bg-slate-950 text-orange-200 border-orange-500/35 hover:border-orange-400'
                   }" title="${ws.pct}% of working weight">${wDone ? '✓ ' : ''}${ws.weight} kg ×${ws.reps}</button>
                 `;
@@ -4698,7 +4772,7 @@
             </div>
             <div class="flex flex-wrap items-center gap-2 self-end sm:self-center">
               ${renderCardDensityControlsHtml(ex, exIdx, lastEntry)}
-              <button type="button" onclick="toggleWarmupDrawer('${escapeHtml(ex.id)}')" class="px-2 py-1 rounded-lg text-[11px] font-mono font-bold border transition ${
+              <button type="button" data-id="${escapeHtml(ex.id)}" onclick="toggleWarmupDrawer(this.dataset.id)" class="px-2 py-1 rounded-lg text-[11px] font-mono font-bold border transition ${
                 warmupOpen ? 'bg-orange-500/25 text-orange-200 border-orange-500/50' : 'bg-slate-800 text-orange-300/90 border-slate-700 hover:border-orange-500/40'
               }" title="Toggle KG Barbell Warm-Up Ramp (Book p. 37)">🔥 Warm-Up</button>
               <button type="button" onclick="toggleAllExerciseSets(${exIdx})" class="px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold border transition ${
@@ -8330,7 +8404,7 @@
               const bMesos = getMesocycleGroups(b.weeks || []).length;
               const bInt = b.phase === 'intensification';
               return `
-                <button type="button" onclick="requestSwitchRoadmapBlock('${escapeHtml(b.id)}')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${
+                <button type="button" data-id="${escapeHtml(b.id)}" onclick="requestSwitchRoadmapBlock(this.dataset.id)" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${
                   isActive
                     ? 'bg-amber-500/20 text-amber-200 border-amber-400 shadow-sm'
                     : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-600 hover:text-white'
@@ -8463,16 +8537,16 @@
               <span class="px-2 py-0.5 rounded-md font-mono text-[10px] font-extrabold uppercase tracking-wider shrink-0 ${
                 gInt ? 'bg-amber-500 text-slate-950' : 'bg-sky-500 text-slate-950'
               }">MESOCYCLE ${mIdx + 1}</span>
-              <input type="text" aria-label="Mesocycle ${mIdx + 1} name" value="${escapeHtml(group.mesoName)}" onchange="updateMesocycleMeta('${escapeHtml(group.mesoId)}', 'mesoName', this.value)" class="flex-1 min-w-[160px] max-w-sm bg-slate-950/80 border border-slate-700 rounded-lg px-2.5 py-1 text-xs sm:text-sm font-bold text-white focus:outline-none ${gInt ? 'focus:border-amber-400' : 'focus:border-sky-400'}" />
+              <input type="text" aria-label="Mesocycle ${mIdx + 1} name" value="${escapeHtml(group.mesoName)}" data-id="${escapeHtml(group.mesoId)}" onchange="updateMesocycleMeta(this.dataset.id, 'mesoName', this.value)" class="flex-1 min-w-[160px] max-w-sm bg-slate-950/80 border border-slate-700 rounded-lg px-2.5 py-1 text-xs sm:text-sm font-bold text-white focus:outline-none ${gInt ? 'focus:border-amber-400' : 'focus:border-sky-400'}" />
               <span class="px-2 py-0.5 rounded-md font-mono text-[10px] font-bold bg-slate-950/80 text-slate-300 border border-slate-700 shrink-0">${wkSpanLabel}</span>
             </div>
             <div class="flex flex-wrap items-center gap-1.5 shrink-0">
               <div class="inline-flex rounded-lg overflow-hidden border border-slate-700 bg-slate-950" title="Mesocycle Training Phase (controls per-meso coaching cues)">
-                <button type="button" onclick="updateMesocycleMeta('${escapeHtml(group.mesoId)}', 'mesoPhase', 'accumulation')" class="px-2 py-1 font-mono text-[10px] font-bold transition ${!gInt ? 'bg-sky-500 text-slate-950' : 'text-slate-400 hover:text-white'}">📈 ACC</button>
-                <button type="button" onclick="updateMesocycleMeta('${escapeHtml(group.mesoId)}', 'mesoPhase', 'intensification')" class="px-2 py-1 font-mono text-[10px] font-bold transition ${gInt ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}">🔥 INT</button>
+                <button type="button" data-id="${escapeHtml(group.mesoId)}" onclick="updateMesocycleMeta(this.dataset.id, 'mesoPhase', 'accumulation')" class="px-2 py-1 font-mono text-[10px] font-bold transition ${!gInt ? 'bg-sky-500 text-slate-950' : 'text-slate-400 hover:text-white'}">📈 ACC</button>
+                <button type="button" data-id="${escapeHtml(group.mesoId)}" onclick="updateMesocycleMeta(this.dataset.id, 'mesoPhase', 'intensification')" class="px-2 py-1 font-mono text-[10px] font-bold transition ${gInt ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}">🔥 INT</button>
               </div>
-              <button type="button" onclick="addRoadmapWeek('${escapeHtml(group.mesoId)}')" class="px-2.5 py-1 rounded-lg font-mono text-[10px] font-bold bg-slate-900 hover:bg-slate-800 text-amber-300 border border-slate-700 transition" title="Add +1 week inside Mesocycle ${mIdx + 1}">+ Wk</button>
-              ${multiMeso ? `<button type="button" onclick="confirmRemoveMesocycle('${escapeHtml(group.mesoId)}')" class="px-2 py-1 rounded-lg font-mono text-[10px] font-bold bg-slate-900 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-slate-700 hover:border-rose-500/40 transition" title="Remove Mesocycle ${mIdx + 1}">✕ Meso</button>` : ''}
+              <button type="button" data-id="${escapeHtml(group.mesoId)}" onclick="addRoadmapWeek(this.dataset.id)" class="px-2.5 py-1 rounded-lg font-mono text-[10px] font-bold bg-slate-900 hover:bg-slate-800 text-amber-300 border border-slate-700 transition" title="Add +1 week inside Mesocycle ${mIdx + 1}">+ Wk</button>
+              ${multiMeso ? `<button type="button" data-id="${escapeHtml(group.mesoId)}" onclick="confirmRemoveMesocycle(this.dataset.id)" class="px-2 py-1 rounded-lg font-mono text-[10px] font-bold bg-slate-900 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-slate-700 hover:border-rose-500/40 transition" title="Remove Mesocycle ${mIdx + 1}">✕ Meso</button>` : ''}
             </div>
           </div>
         `;
@@ -10152,7 +10226,7 @@
               <td class="py-3 px-3 whitespace-nowrap font-mono font-bold text-sky-300">${(s.totalTonnage || 0).toLocaleString()} kg</td>
               <td class="py-3 px-3 whitespace-nowrap font-mono text-cyan-300">${(s.density || 0).toFixed(1)} kg/min<div class="text-[10px] text-slate-500">${s.durationMin || 0} min</div></td>
               <td class="py-3 pl-3 text-right whitespace-nowrap">
-                <button type="button" onclick="deleteHistoryEntry('${escapeHtml(s.id)}')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 text-[11px]">Delete</button>
+                <button type="button" data-id="${escapeHtml(s.id)}" onclick="deleteHistoryEntry(this.dataset.id)" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 text-[11px]">Delete</button>
               </td>
             </tr>
           `).join('')
@@ -10297,8 +10371,8 @@
                 <div class="text-[11px] text-slate-400">Primary: ${escapeHtml(ex.primaryMuscles.join(', ') || 'None')} · Secondary: ${escapeHtml(ex.secondaryMuscles.join(', ') || 'None')}</div>
               </div>
               <div class="flex items-center gap-1.5">
-                <button type="button" onclick="openCreateCustomForm('${escapeHtml(ex.id)}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px]">Edit</button>
-                <button type="button" onclick="deleteCustomExercise('${escapeHtml(ex.id)}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 text-[11px]">✕</button>
+                <button type="button" data-id="${escapeHtml(ex.id)}" onclick="openCreateCustomForm(this.dataset.id)" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px]">Edit</button>
+                <button type="button" data-id="${escapeHtml(ex.id)}" onclick="deleteCustomExercise(this.dataset.id)" class="px-2 py-1 rounded bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 text-[11px]">✕</button>
               </div>
             </div>
           `).join('')
@@ -10581,12 +10655,17 @@
       }
       try {
         if (raw.startsWith('{')) {
-          const parsed = JSON.parse(raw);
+          const parsed = safeJsonParse(raw);
           if (parsed && typeof parsed === 'object' && '_exportMeta' in parsed) {
             delete parsed._exportMeta;
           }
+          parsed._isDefaultSample = false;
+          if (cloudSyncUser && cloudSyncUser.uid) parsed._ownerUid = cloudSyncUser.uid;
+          else delete parsed._ownerUid;
+          parsed._updatedAt = Date.now();
           localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
           loadState();
+          saveState();
           closeImportModal();
           switchTab(appState.activeTab);
           const sCnt = (appState.history || []).length;
@@ -12506,7 +12585,7 @@
                 <div class="flex flex-wrap items-center gap-2">
                   <span class="px-2 py-0.5 rounded font-mono text-[10px] font-extrabold border ${tStyle.badge}">${slot.tier}</span>
                   ${slot.chooseExerciseUnlocked ? `
-                    <select onchange="changeDiceRolledSlotExercise('${slot.id}', this.value)" class="bg-slate-900 border border-emerald-500/50 rounded-lg px-2 py-0.5 text-xs font-bold text-white">
+                    <select data-id="${escapeHtml(slot.id)}" onchange="changeDiceRolledSlotExercise(this.dataset.id, this.value)" class="bg-slate-900 border border-emerald-500/50 rounded-lg px-2 py-0.5 text-xs font-bold text-white">
                       ${buildExerciseSelectOptionsHtml(slot.exercise)}
                     </select>
                   ` : `<span class="text-sm font-extrabold text-white">${escapeHtml(slot.exercise)}</span>`}
@@ -12526,7 +12605,7 @@
                 ${(slot.legacyHit && !slot.legacySteppedDown && slot.rm > 1) ? `
                   <div class="pt-1 flex flex-wrap items-center gap-2 text-[11px] text-purple-200">
                     <span>🏛️ <strong>Legacy Roll (p. 105):</strong> Previously completed ${slot.legacyHit.prevRm}RM (${slot.legacyHit.prevWeight} kg).</span>
-                    <button type="button" onclick="applyLegacyStepDown('${slot.id}')" class="px-2 py-0.5 rounded-md font-bold bg-purple-500 hover:bg-purple-400 text-slate-950 transition">Step Down → ${slot.rm - 1}RM (+2.5 kg)</button>
+                    <button type="button" data-id="${escapeHtml(slot.id)}" onclick="applyLegacyStepDown(this.dataset.id)" class="px-2 py-0.5 rounded-md font-bold bg-purple-500 hover:bg-purple-400 text-slate-950 transition">Step Down → ${slot.rm - 1}RM (+2.5 kg)</button>
                   </div>
                 ` : ''}
               </div>
@@ -12535,15 +12614,15 @@
                 ${slot.overrideUnlocked ? `
                   <div class="inline-flex items-center gap-1 bg-emerald-500/15 border border-emerald-500/40 rounded-lg px-2 py-1">
                     <span class="text-[10px] font-mono font-bold text-emerald-300">Override:</span>
-                    <button type="button" onclick="adjustDiceSlotOverride('${slot.id}', -1)" class="px-1.5 py-0.5 rounded bg-slate-900 hover:bg-slate-800 text-white font-mono text-xs font-bold">−1</button>
+                    <button type="button" data-id="${escapeHtml(slot.id)}" onclick="adjustDiceSlotOverride(this.dataset.id, -1)" class="px-1.5 py-0.5 rounded bg-slate-900 hover:bg-slate-800 text-white font-mono text-xs font-bold">−1</button>
                     <span class="font-mono text-xs font-extrabold text-white px-1">${slot.overrideDelta > 0 ? '+' : ''}${slot.overrideDelta || 0}</span>
-                    <button type="button" onclick="adjustDiceSlotOverride('${slot.id}', 1)" class="px-1.5 py-0.5 rounded bg-slate-900 hover:bg-slate-800 text-white font-mono text-xs font-bold">+1</button>
+                    <button type="button" data-id="${escapeHtml(slot.id)}" onclick="adjustDiceSlotOverride(this.dataset.id, 1)" class="px-1.5 py-0.5 rounded bg-slate-900 hover:bg-slate-800 text-white font-mono text-xs font-bold">+1</button>
                   </div>
                 ` : (!roll.readinessOverrideUsed ? `
-                  <button type="button" onclick="triggerDiceReadinessOverride('${slot.id}')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-800 hover:bg-emerald-500/20 text-slate-200 hover:text-emerald-200 border border-slate-700 hover:border-emerald-500/40 transition">🎯 Readiness (1d6)</button>
+                  <button type="button" data-id="${escapeHtml(slot.id)}" onclick="triggerDiceReadinessOverride(this.dataset.id)" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-800 hover:bg-emerald-500/20 text-slate-200 hover:text-emerald-200 border border-slate-700 hover:border-emerald-500/40 transition">🎯 Readiness (1d6)</button>
                 ` : '')}
                 ${canGoalReroll ? `
-                  <button type="button" onclick="triggerDiceGoalReroll('${slot.id}')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-indigo-500 hover:bg-indigo-400 text-white transition">🎲 Goal Re-Roll</button>
+                  <button type="button" data-id="${escapeHtml(slot.id)}" onclick="triggerDiceGoalReroll(this.dataset.id)" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-indigo-500 hover:bg-indigo-400 text-white transition">🎲 Goal Re-Roll</button>
                 ` : ''}
               </div>
             </div>
@@ -13184,6 +13263,7 @@
     };
     const FIREBASE_CFG_STORAGE_KEY = 'gg_firebase_cfg_v1';
     const FIREBASE_SDK_VER = '10.14.1';
+    const MAX_CLOUD_PAYLOAD_CHARS = 900000;
 
     let deferredPWAInstallPrompt = null;
     let firebaseSdkLoadPromise = null;
@@ -13195,23 +13275,30 @@
     let cloudSyncPendingPush = false;
     let cloudSyncInFlight = false;
     let cloudSyncLastSyncedAt = null;
+    let cloudSyncConflictState = null;
+    let cloudSyncLastError = '';
 
     function getActiveFirebaseConfig() {
+      // Production lock: when embedded config is present, ignore localStorage overrides to prevent redirection attacks
+      if (DEFAULT_FIREBASE_CONFIG.apiKey && DEFAULT_FIREBASE_CONFIG.projectId) {
+        return { cfg: DEFAULT_FIREBASE_CONFIG, source: 'embedded', locked: true };
+      }
       try {
         const raw = localStorage.getItem(FIREBASE_CFG_STORAGE_KEY);
         if (raw) {
-          const parsed = JSON.parse(raw);
-          if (parsed && parsed.apiKey && parsed.projectId) return { cfg: parsed, source: 'local' };
+          const parsed = safeJsonParse(raw);
+          if (parsed && parsed.apiKey && parsed.projectId) return { cfg: parsed, source: 'local', locked: false };
         }
       } catch (_) {}
-      if (DEFAULT_FIREBASE_CONFIG.apiKey && DEFAULT_FIREBASE_CONFIG.projectId) {
-        return { cfg: DEFAULT_FIREBASE_CONFIG, source: 'embedded' };
-      }
       return null;
     }
 
     function loadScriptOnce(src) {
       return new Promise((resolve, reject) => {
+        if (typeof src !== 'string' || !src.startsWith('https://www.gstatic.com/firebasejs/')) {
+          reject(new Error('Blocked untrusted script origin.'));
+          return;
+        }
         if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
         const s = document.createElement('script');
         s.src = src;
@@ -13250,7 +13337,7 @@
 
       if (cfgBadge) {
         cfgBadge.textContent = cfgInfo
-          ? (cfgInfo.source === 'embedded' ? `Connected (${cfgInfo.cfg.projectId})` : `Saved Local (${cfgInfo.cfg.projectId})`)
+          ? (cfgInfo.locked ? `Locked (${cfgInfo.cfg.projectId})` : `Saved Local (${cfgInfo.cfg.projectId})`)
           : 'Not Configured';
         cfgBadge.className = cfgInfo ? 'font-mono text-[10px] text-emerald-300' : 'font-mono text-[10px] text-amber-300';
       }
@@ -13259,6 +13346,12 @@
       let text = '☁️ Cloud Sync';
       let mobileText = '☁️ Sync';
       let boxHtml = '';
+
+      if (state === 'error') {
+        cloudSyncLastError = detail || 'Cloud sync paused. Local data is safe.';
+      } else if (state === 'syncing' || detail) {
+        cloudSyncLastError = '';
+      }
 
       if (!cfgInfo) {
         dotCls = 'bg-slate-500';
@@ -13278,6 +13371,16 @@
         text = '☁️ Sync Error';
         mobileText = '☁️ Err';
         boxHtml = `<span class="text-rose-200">⚠️ ${escapeHtml(detail || 'Cloud sync paused. Local data is safe.')}</span>`;
+      } else if (cloudSyncUser && !cloudSyncUser.emailVerified) {
+        dotCls = 'bg-amber-400';
+        text = '☁️ Verify Email';
+        mobileText = '☁️ Verify';
+        boxHtml = `<span class="text-amber-200">📧 <strong>Email verification pending:</strong> Verify your inbox link, then click <strong>I&rsquo;ve Verified</strong> to enable Cloud Sync.</span>`;
+      } else if (cloudSyncConflictState) {
+        dotCls = 'bg-amber-400';
+        text = '☁️ Sync Choice';
+        mobileText = '☁️ Choice';
+        boxHtml = `<span class="text-amber-200">⚠️ <strong>Action needed:</strong> Both this device and Cloud have workout data. Choose Pull or Push below.</span>`;
       } else if (cloudSyncUser) {
         dotCls = 'bg-emerald-400';
         text = '☁️ Synced';
@@ -13299,19 +13402,39 @@
 
     function renderCloudSyncModalState() {
       const cfgInfo = getActiveFirebaseConfig();
+      const verifyEl = document.getElementById('cloud-sync-verify-panel');
+      const verifyEmailEl = document.getElementById('cloud-sync-verify-email');
+      const conflictEl = document.getElementById('cloud-sync-conflict-panel');
+      const conflictSummaryEl = document.getElementById('cloud-sync-conflict-summary');
       const signedInEl = document.getElementById('cloud-sync-signedin-panel');
       const authEl = document.getElementById('cloud-sync-auth-panel');
       const cfgDetails = document.getElementById('cloud-config-details');
+      const cfgLockedEl = document.getElementById('cloud-config-locked-notice');
+      const cfgEditEl = document.getElementById('cloud-config-editable-body');
       const cfgTa = document.getElementById('cloud-firebase-config-input');
       const emailEl = document.getElementById('cloud-sync-user-email');
       const lastEl = document.getElementById('cloud-sync-last-sync');
 
-      if (cfgTa && !cfgTa.value && cfgInfo) {
-        cfgTa.value = JSON.stringify(cfgInfo.cfg, null, 2);
+      if (cfgInfo && cfgInfo.locked) {
+        cfgLockedEl?.classList.remove('hidden');
+        cfgEditEl?.classList.add('hidden');
+      } else {
+        cfgLockedEl?.classList.add('hidden');
+        cfgEditEl?.classList.remove('hidden');
+        if (cfgTa && !cfgTa.value && cfgInfo) {
+          cfgTa.value = JSON.stringify(cfgInfo.cfg, null, 2);
+        }
       }
       if (cfgDetails) cfgDetails.open = !cfgInfo;
 
-      if (cloudSyncUser) {
+      if (cloudSyncUser && !cloudSyncUser.emailVerified) {
+        verifyEl?.classList.remove('hidden');
+        conflictEl?.classList.add('hidden');
+        signedInEl?.classList.add('hidden');
+        authEl?.classList.add('hidden');
+        if (verifyEmailEl) verifyEmailEl.textContent = cloudSyncUser.email || cloudSyncUser.uid;
+      } else if (cloudSyncUser) {
+        verifyEl?.classList.add('hidden');
         signedInEl?.classList.remove('hidden');
         authEl?.classList.add('hidden');
         if (emailEl) emailEl.textContent = cloudSyncUser.email || cloudSyncUser.uid;
@@ -13320,14 +13443,33 @@
             ? `Last synced: ${new Date(cloudSyncLastSyncedAt).toLocaleTimeString()}`
             : 'Ready to sync';
         }
+        if (cloudSyncConflictState && conflictEl) {
+          conflictEl.classList.remove('hidden');
+          if (conflictSummaryEl) {
+            const cTime = cloudSyncConflictState.cloudTs ? new Date(cloudSyncConflictState.cloudTs).toLocaleString() : 'unknown time';
+            conflictSummaryEl.textContent = `This device has ${cloudSyncConflictState.localSessions} unlinked local session(s), while your Cloud account already has ${cloudSyncConflictState.cloudSessions} session(s) (updated ${cTime}). Choose Pull to load your Cloud backup, or Push to overwrite Cloud with this device.`;
+          }
+        } else {
+          conflictEl?.classList.add('hidden');
+        }
       } else if (cfgInfo) {
+        verifyEl?.classList.add('hidden');
+        conflictEl?.classList.add('hidden');
         signedInEl?.classList.add('hidden');
         authEl?.classList.remove('hidden');
       } else {
+        verifyEl?.classList.add('hidden');
+        conflictEl?.classList.add('hidden');
         signedInEl?.classList.add('hidden');
         authEl?.classList.add('hidden');
       }
-      updateCloudSyncBadges(cloudSyncInFlight ? 'syncing' : 'idle');
+      if (cloudSyncInFlight) {
+        updateCloudSyncBadges('syncing');
+      } else if (cloudSyncLastError) {
+        updateCloudSyncBadges('error', cloudSyncLastError);
+      } else {
+        updateCloudSyncBadges('idle');
+      }
     }
 
     function openCloudSyncModal() {
@@ -13362,6 +13504,7 @@
     async function initCloudSyncIfConfigured(silent = true) {
       const cfgInfo = getActiveFirebaseConfig();
       if (!cfgInfo) {
+        cloudSyncLastError = '';
         updateCloudSyncBadges('idle');
         return false;
       }
@@ -13382,11 +13525,14 @@
 
         cloudSyncAuth.onAuthStateChanged((user) => {
           cloudSyncUser = user || null;
+          cloudSyncConflictState = null;
+          cloudSyncLastError = '';
           renderCloudSyncModalState();
-          if (cloudSyncUser) {
+          if (cloudSyncUser && cloudSyncUser.emailVerified) {
             syncCloudState('auto', true);
           }
         });
+        cloudSyncLastError = '';
         updateCloudSyncBadges('idle');
         return true;
       } catch (err) {
@@ -13398,6 +13544,11 @@
     }
 
     async function saveLocalFirebaseConfig() {
+      const activeCfg = getActiveFirebaseConfig();
+      if (activeCfg && activeCfg.locked) {
+        showToast('Production Firebase config is locked in this build.', 'warn');
+        return;
+      }
       const raw = (document.getElementById('cloud-firebase-config-input')?.value || '').trim();
       if (!raw) {
         showToast('Paste your Firebase config JSON first.', 'warn');
@@ -13407,8 +13558,8 @@
         // Accept either strict JSON or copied JS object literal ({ apiKey: "...", ... })
         let cleaned = raw.replace(/^[\s\S]*?(\{[\s\S]*\})[\s\S]*$/, '$1');
         cleaned = cleaned.replace(/(['"])?([a-zA-Z0-9_]+)(['"])?\s*:/g, '"$2":').replace(/'/g, '"').replace(/,\s*}/g, '}');
-        const parsed = JSON.parse(cleaned);
-        if (!parsed.apiKey || !parsed.projectId) {
+        const parsed = safeJsonParse(cleaned);
+        if (!parsed || !parsed.apiKey || !parsed.projectId) {
           throw new Error('Config must include apiKey and projectId.');
         }
         localStorage.setItem(FIREBASE_CFG_STORAGE_KEY, JSON.stringify(parsed));
@@ -13421,10 +13572,16 @@
     }
 
     function clearLocalFirebaseConfig() {
+      const activeCfg = getActiveFirebaseConfig();
+      if (activeCfg && activeCfg.locked) {
+        showToast('Production Firebase config is locked in this build.', 'warn');
+        return;
+      }
       localStorage.removeItem(FIREBASE_CFG_STORAGE_KEY);
       cloudSyncUser = null;
       cloudSyncAuth = null;
       cloudSyncDb = null;
+      cloudSyncConflictState = null;
       const ta = document.getElementById('cloud-firebase-config-input');
       if (ta) ta.value = '';
       renderCloudSyncModalState();
@@ -13447,15 +13604,60 @@
         }
         updateCloudSyncBadges('syncing');
         if (cloudSyncAuthMode === 'signup') {
-          await cloudSyncAuth.createUserWithEmailAndPassword(email, pass);
-          showToast('Account created! Syncing your workout data...', 'success');
+          const cred = await cloudSyncAuth.createUserWithEmailAndPassword(email, pass);
+          if (cred && cred.user && !cred.user.emailVerified) {
+            try { await cred.user.sendEmailVerification(); } catch (_) {}
+            showToast('Account created! Check your inbox to verify your email, then click "I\'ve Verified".', 'info');
+          } else {
+            showToast('Account created! Syncing your workout data...', 'success');
+          }
         } else {
-          await cloudSyncAuth.signInWithEmailAndPassword(email, pass);
-          showToast('Signed in! Checking Cloud Sync...', 'success');
+          const cred = await cloudSyncAuth.signInWithEmailAndPassword(email, pass);
+          if (cred && cred.user && !cred.user.emailVerified) {
+            showToast('Signed in — please verify your email to enable Cloud Sync.', 'warn');
+          } else {
+            showToast('Signed in! Checking Cloud Sync...', 'success');
+          }
         }
       } catch (err) {
         updateCloudSyncBadges('idle');
         if (errEl) { errEl.textContent = err.message || 'Authentication failed.'; errEl.classList.remove('hidden'); }
+      }
+    }
+
+    async function refreshCloudEmailVerification() {
+      if (!cloudSyncUser || !cloudSyncAuth) {
+        showToast('Sign in first.', 'warn');
+        return;
+      }
+      try {
+        await cloudSyncUser.reload();
+        cloudSyncUser = cloudSyncAuth.currentUser;
+        if (cloudSyncUser && cloudSyncUser.emailVerified) {
+          // Force fresh ID token so Firestore Security Rules immediately see email_verified == true
+          await cloudSyncUser.getIdToken(true);
+          renderCloudSyncModalState();
+          showToast('Email verified! Starting Cloud Sync...', 'success');
+          await syncCloudState('auto', false);
+        } else {
+          renderCloudSyncModalState();
+          showToast('Not verified yet — click the link in your email inbox (check spam) and try again.', 'warn');
+        }
+      } catch (err) {
+        showToast(`Could not check verification: ${err.message}`, 'error');
+      }
+    }
+
+    async function resendCloudVerificationEmail() {
+      if (!cloudSyncUser) {
+        showToast('Sign in first.', 'warn');
+        return;
+      }
+      try {
+        await cloudSyncUser.sendEmailVerification();
+        showToast(`Verification email re-sent to ${cloudSyncUser.email || 'your inbox'}.`, 'success');
+      } catch (err) {
+        showToast(`Could not send email: ${err.message}`, 'error');
       }
     }
 
@@ -13472,18 +13674,30 @@
       }
     }
 
-    async function signOutCloudSync() {
+    async function signOutCloudSync(clearLocal = false) {
+      clearTimeout(cloudSyncPushTimer);
+      cloudSyncPushTimer = null;
+      cloudSyncPendingPush = false;
+      cloudSyncConflictState = null;
       if (cloudSyncAuth) {
         try { await cloudSyncAuth.signOut(); } catch (_) {}
       }
       cloudSyncUser = null;
       cloudSyncLastSyncedAt = null;
-      renderCloudSyncModalState();
-      showToast('Signed out of Cloud Sync (your local data remains saved).', 'info');
+      if (clearLocal === true) {
+        try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
+        loadState();
+        switchTab(appState.activeTab || 'logger');
+        renderCloudSyncModalState();
+        showToast('Signed out and cleared local device data.', 'info');
+      } else {
+        renderCloudSyncModalState();
+        showToast('Signed out of Cloud Sync (your local data remains saved).', 'info');
+      }
     }
 
     function scheduleCloudSyncPush() {
-      if (!cloudSyncUser || !cloudSyncDb) return;
+      if (!cloudSyncUser || !cloudSyncDb || !cloudSyncUser.emailVerified || cloudSyncConflictState) return;
       cloudSyncPendingPush = true;
       if (!navigator.onLine) {
         updateCloudSyncBadges('idle');
@@ -13495,9 +13709,54 @@
       }, 1500);
     }
 
+    function applyCloudPayloadLocally(payloadJson, uid) {
+      const parsed = safeJsonParse(payloadJson);
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        throw new Error('Cloud backup payload is malformed.');
+      }
+      parsed._ownerUid = uid;
+      parsed._isDefaultSample = false;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+      loadState();
+      appState._ownerUid = uid;
+      appState._isDefaultSample = false;
+      saveState({ preserveTimestamp: true, skipCloudPush: true, keepSampleFlag: true });
+      switchTab(appState.activeTab || 'logger');
+    }
+
+    async function pushLocalStateToCloud(docRef, uid, ts) {
+      appState._ownerUid = uid;
+      appState._isDefaultSample = false;
+      appState._updatedAt = ts;
+      const payloadJson = JSON.stringify(appState);
+      if (payloadJson.length > MAX_CLOUD_PAYLOAD_CHARS) {
+        throw new Error('Workout backup exceeds the 900 KB cloud sync limit. Export JSON and trim old entries.');
+      }
+      saveState({ preserveTimestamp: true, skipCloudPush: true });
+      await docRef.set({
+        payloadJson,
+        updatedAt: Math.trunc(ts),
+        sessionsCount: Math.max(0, Math.min(10000, (appState.history || []).length)),
+        updatedIso: new Date(ts).toISOString().slice(0, 40)
+      });
+    }
+
+    function resolveCloudSyncConflict(choice) {
+      if (choice === 'push') {
+        syncCloudState('push', false);
+      } else {
+        syncCloudState('pull', false);
+      }
+    }
+
     async function syncCloudState(mode = 'auto', silent = false) {
       if (!cloudSyncUser || !cloudSyncDb) {
         if (!silent) showToast('Sign in to Cloud Sync first.', 'warn');
+        return;
+      }
+      if (!cloudSyncUser.emailVerified) {
+        updateCloudSyncBadges('idle');
+        if (!silent) showToast('Verify your email address first before syncing to Cloud.', 'warn');
         return;
       }
       if (!navigator.onLine) {
@@ -13511,18 +13770,14 @@
       updateCloudSyncBadges('syncing');
 
       try {
-        const docRef = cloudSyncDb.collection('users').doc(cloudSyncUser.uid).collection('gg_backup').doc('state');
+        const uid = cloudSyncUser.uid;
+        const docRef = cloudSyncDb.collection('users').doc(uid).collection('gg_backup').doc('state');
         const localTs = Number(appState._updatedAt) || 0;
 
         if (mode === 'push') {
+          cloudSyncConflictState = null;
           const ts = localTs || Date.now();
-          appState._updatedAt = ts;
-          await docRef.set({
-            payloadJson: JSON.stringify(appState),
-            updatedAt: ts,
-            sessionsCount: (appState.history || []).length,
-            updatedIso: new Date(ts).toISOString()
-          });
+          await pushLocalStateToCloud(docRef, uid, ts);
           cloudSyncPendingPush = false;
           cloudSyncLastSyncedAt = Date.now();
           updateCloudSyncBadges('idle', 'Uploaded');
@@ -13533,45 +13788,82 @@
           const cloudTs = cloudData && Number(cloudData.updatedAt) ? Number(cloudData.updatedAt) : 0;
 
           if (mode === 'pull') {
+            cloudSyncConflictState = null;
             if (!cloudData || !cloudData.payloadJson) {
               if (!silent) showToast('No cloud backup exists yet — use Push Device first.', 'warn');
             } else {
-              localStorage.setItem(STORAGE_KEY, cloudData.payloadJson);
-              loadState();
-              switchTab(appState.activeTab || 'logger');
+              applyCloudPayloadLocally(cloudData.payloadJson, uid);
               cloudSyncPendingPush = false;
               cloudSyncLastSyncedAt = Date.now();
               updateCloudSyncBadges('idle', 'Pulled from Cloud');
               if (!silent) showToast('Pulled latest workout data from Cloud!', 'success');
             }
           } else {
-            // Auto mode: newest timestamp wins (or upload local if cloud is empty)
-            if (!cloudData || !cloudData.payloadJson || localTs > cloudTs) {
-              const ts = localTs || Date.now();
-              appState._updatedAt = ts;
-              await docRef.set({
-                payloadJson: JSON.stringify(appState),
-                updatedAt: ts,
-                sessionsCount: (appState.history || []).length,
-                updatedIso: new Date(ts).toISOString()
-              });
-              cloudSyncPendingPush = false;
-              cloudSyncLastSyncedAt = Date.now();
-              updateCloudSyncBadges('idle', 'Up to date');
-              if (!silent) showToast('Synced local changes to Cloud!', 'success');
-            } else if (cloudTs > localTs) {
-              localStorage.setItem(STORAGE_KEY, cloudData.payloadJson);
-              loadState();
-              switchTab(appState.activeTab || 'logger');
-              cloudSyncPendingPush = false;
-              cloudSyncLastSyncedAt = Date.now();
-              updateCloudSyncBadges('idle', 'Updated from Cloud');
-              showToast('Synced newer workout data from another device!', 'success');
+            // Auto mode with strict account ownership & sample-data protection
+            const localOwner = typeof appState._ownerUid === 'string' && appState._ownerUid ? appState._ownerUid : null;
+            const isSample = Boolean(appState._isDefaultSample);
+            const isForeignOwner = Boolean(localOwner && localOwner !== uid);
+
+            if (cloudData && cloudData.payloadJson) {
+              if (isSample || isForeignOwner) {
+                // Never overwrite a real cloud backup with default sample data or another account's cached localStorage
+                applyCloudPayloadLocally(cloudData.payloadJson, uid);
+                cloudSyncConflictState = null;
+                cloudSyncPendingPush = false;
+                cloudSyncLastSyncedAt = Date.now();
+                updateCloudSyncBadges('idle', 'Loaded from Cloud');
+                showToast('Loaded your Cloud workout backup onto this device!', 'success');
+              } else if (!localOwner) {
+                // Local has unowned real edits AND cloud already has a backup -> require explicit user choice
+                cloudSyncConflictState = {
+                  cloudSessions: Number(cloudData.sessionsCount) || 0,
+                  localSessions: (appState.history || []).length,
+                  cloudTs,
+                  localTs
+                };
+                updateCloudSyncBadges('idle');
+                openCloudSyncModal();
+                showToast('Both this device and Cloud have workout data — choose Pull or Push.', 'warn');
+              } else if (localTs > cloudTs) {
+                const ts = localTs || Date.now();
+                await pushLocalStateToCloud(docRef, uid, ts);
+                cloudSyncPendingPush = false;
+                cloudSyncLastSyncedAt = Date.now();
+                updateCloudSyncBadges('idle', 'Up to date');
+                if (!silent) showToast('Synced local changes to Cloud!', 'success');
+              } else if (cloudTs > localTs) {
+                applyCloudPayloadLocally(cloudData.payloadJson, uid);
+                cloudSyncPendingPush = false;
+                cloudSyncLastSyncedAt = Date.now();
+                updateCloudSyncBadges('idle', 'Updated from Cloud');
+                showToast('Synced newer workout data from another device!', 'success');
+              } else {
+                cloudSyncPendingPush = false;
+                cloudSyncLastSyncedAt = Date.now();
+                updateCloudSyncBadges('idle', 'Up to date');
+                if (!silent) showToast('Already up to date with Cloud!', 'info');
+              }
             } else {
-              cloudSyncPendingPush = false;
-              cloudSyncLastSyncedAt = Date.now();
-              updateCloudSyncBadges('idle', 'Up to date');
-              if (!silent) showToast('Already up to date with Cloud!', 'info');
+              // No cloud backup exists yet for this account
+              if (isForeignOwner) {
+                // Prevent leaking a prior user's cached localStorage into a brand-new user's cloud account
+                try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
+                loadState();
+                appState._ownerUid = uid;
+                saveState({ preserveTimestamp: true, skipCloudPush: true, keepSampleFlag: true });
+                switchTab(appState.activeTab || 'logger');
+                cloudSyncPendingPush = false;
+                cloudSyncLastSyncedAt = Date.now();
+                updateCloudSyncBadges('idle', 'Clean start');
+                showToast('Cleared previous account’s local cache for your new account.', 'info');
+              } else {
+                const ts = localTs || Date.now();
+                await pushLocalStateToCloud(docRef, uid, ts);
+                cloudSyncPendingPush = false;
+                cloudSyncLastSyncedAt = Date.now();
+                updateCloudSyncBadges('idle', 'Initial backup saved');
+                if (!silent) showToast('Uploaded initial backup to Cloud Sync!', 'success');
+              }
             }
           }
         }
@@ -13609,10 +13901,12 @@
       });
       window.addEventListener('online', () => {
         updateCloudSyncBadges('idle');
-        if (cloudSyncUser && cloudSyncPendingPush) {
-          syncCloudState('push', true);
-        } else if (cloudSyncUser) {
-          syncCloudState('auto', true);
+        if (cloudSyncUser && cloudSyncUser.emailVerified && !cloudSyncConflictState) {
+          if (cloudSyncPendingPush) {
+            syncCloudState('push', true);
+          } else {
+            syncCloudState('auto', true);
+          }
         }
       });
       window.addEventListener('offline', () => {
