@@ -1,0 +1,84 @@
+const CACHE_NAME = 'gg-powerlifting-pwa-v1';
+const CORE_ASSETS = [
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png'
+];
+
+// Never intercept live auth or database sync calls
+const BYPASS_HOSTS = [
+  'firestore.googleapis.com',
+  'identitytoolkit.googleapis.com',
+  'securetoken.googleapis.com',
+  'firebaseinstallations.googleapis.com',
+  'apis.google.com'
+];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(CORE_ASSETS))
+      .then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys()
+      .then((keys) => Promise.all(
+        keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
+      ))
+      .then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+
+  let url;
+  try {
+    url = new URL(req.url);
+  } catch (_) {
+    return;
+  }
+
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
+  if (BYPASS_HOSTS.some((h) => url.hostname.includes(h))) return;
+
+  // Network-First for HTML / navigation so GitHub Pages updates appear immediately when online,
+  // while falling back smoothly to cache when offline in the gym.
+  const isNav = req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html');
+  if (isNav) {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res && res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', copy)).catch(() => {});
+          }
+          return res;
+        })
+        .catch(() => caches.match('./index.html').then((cached) => cached || caches.match('./')))
+    );
+    return;
+  }
+
+  // Stale-While-Revalidate for static assets & CDNs (Tailwind, Chart.js, Firebase SDK, fonts, icons)
+  event.respondWith(
+    caches.match(req).then((cached) => {
+      const networkFetch = fetch(req)
+        .then((res) => {
+          if (res && (res.ok || res.type === 'opaque')) {
+            const copy = res.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, copy)).catch(() => {});
+          }
+          return res;
+        })
+        .catch(() => cached);
+      return cached || networkFetch;
+    })
+  );
+});
