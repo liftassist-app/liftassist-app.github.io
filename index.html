@@ -564,6 +564,113 @@
       <!-- Estimated Powerlifting SBD Total Banner (B3) -->
       <div id="analytics-sbd-total-bar"></div>
 
+      <!-- Bodyweight Tracking, Goal Projection & Official DOTS / IPF GL -->
+      <div id="bodyweight-tracker-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2.5">
+          <div>
+            <h3 class="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
+              <span>⚖️</span> Bodyweight Tracking &amp; Goal Projection
+            </h3>
+            <p class="text-[11px] text-slate-400 mt-0.5">
+              7-day smoothed trend, projected gain/loss pace, daily energy balance (7,716 kcal/kg), and official DOTS &amp; IPF GL scores.
+            </p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="inline-flex rounded-xl overflow-hidden border border-slate-700 bg-slate-950" role="group" aria-label="Coefficient sex for DOTS and IPF GL">
+              <button type="button" id="bw-sex-male-btn" onclick="setBodyweightSex('male')" class="px-3 min-h-[36px] text-xs font-mono font-bold bg-amber-500 text-slate-950 transition">Male</button>
+              <button type="button" id="bw-sex-female-btn" onclick="setBodyweightSex('female')" class="px-3 min-h-[36px] text-xs font-mono font-bold text-slate-400 hover:text-white transition">Female</button>
+            </div>
+            <select id="bw-horizon-select" onchange="setBodyweightHorizonWeeks(this.value)" aria-label="Projection horizon" class="bg-slate-950 border border-slate-700 rounded-xl px-2.5 min-h-[36px] text-xs font-mono font-semibold text-slate-200 focus:outline-none focus:border-cyan-500">
+              <option value="4">Project 4 wks</option>
+              <option value="8">Project 8 wks</option>
+              <option value="12" selected>Project 12 wks</option>
+              <option value="16">Project 16 wks</option>
+              <option value="24">Project 24 wks</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Log Weigh-In + Goal Projection Inputs -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
+          <!-- Left: Log New Weigh-In -->
+          <div class="p-3.5 rounded-xl bg-slate-950/90 border border-slate-800 space-y-2.5">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-amber-400">Log Weigh-In</span>
+              <span id="bw-log-count-badge" class="text-[11px] font-mono text-slate-400">0 entries</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-12 gap-2">
+              <div class="col-span-1 sm:col-span-4">
+                <label for="bw-entry-date" class="block text-[11px] text-slate-400 mb-1">Date</label>
+                <input type="date" id="bw-entry-date" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 min-h-[40px] font-mono text-xs font-bold text-white focus:outline-none focus:border-amber-500" />
+              </div>
+              <div class="col-span-1 sm:col-span-3">
+                <label for="bw-entry-kg" class="block text-[11px] text-slate-400 mb-1">Weight (kg)</label>
+                <input type="number" id="bw-entry-kg" step="0.1" min="25" max="300" placeholder="e.g. 88.4" onkeydown="if(event.key==='Enter'){event.preventDefault();logBodyweightEntry();}" class="no-spinners w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 min-h-[40px] font-mono text-xs font-bold text-white placeholder-slate-500 tabular-nums focus:outline-none focus:border-amber-500" />
+              </div>
+              <div class="col-span-2 sm:col-span-5">
+                <label for="bw-entry-note" class="block text-[11px] text-slate-400 mb-1">Note (optional)</label>
+                <input type="text" id="bw-entry-note" maxlength="60" placeholder="Fasted AM, post-refeed..." onkeydown="if(event.key==='Enter'){event.preventDefault();logBodyweightEntry();}" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 min-h-[40px] text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500" />
+              </div>
+            </div>
+            <div class="flex items-center justify-end">
+              <button type="button" onclick="logBodyweightEntry()" class="w-full sm:w-auto px-4 min-h-[40px] rounded-xl text-xs font-extrabold bg-amber-500 hover:bg-amber-400 text-slate-950 transition">+ Log Weight</button>
+            </div>
+          </div>
+
+          <!-- Right: Goal Weight & Timeframe Planner -->
+          <div class="p-3.5 rounded-xl bg-slate-950/90 border border-slate-800 space-y-2.5">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Goal Weight Projection</span>
+              <div class="flex flex-wrap items-center gap-1">
+                <button type="button" onclick="applyBodyweightGoalPreset(0.25)" class="px-2 py-1 rounded-md text-[11px] font-mono font-semibold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 transition" title="Set target for +0.25% BW/week lean bulk over selected weeks">+0.25%/wk</button>
+                <button type="button" onclick="applyBodyweightGoalPreset(0)" class="px-2 py-1 rounded-md text-[11px] font-mono font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition" title="Set maintenance target">Maintain</button>
+                <button type="button" onclick="applyBodyweightGoalPreset(-0.5)" class="px-2 py-1 rounded-md text-[11px] font-mono font-semibold bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/30 transition" title="Set target for −0.5% BW/week sustainable cut over selected weeks">−0.5%/wk</button>
+                <button type="button" onclick="applyBodyweightGoalPreset(-0.75)" class="px-2 py-1 rounded-md text-[11px] font-mono font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 transition" title="Set target for −0.75% BW/week faster cut over selected weeks">−0.75%/wk</button>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-12 gap-2">
+              <div class="col-span-1 sm:col-span-4">
+                <label for="bw-goal-kg" class="block text-[11px] text-slate-400 mb-1">Goal Weight (kg)</label>
+                <input type="number" id="bw-goal-kg" step="0.1" min="25" max="300" placeholder="e.g. 92.0" onchange="updateBodyweightGoalField('targetKg', this.value)" class="no-spinners w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 min-h-[40px] font-mono text-xs font-bold text-emerald-300 placeholder-slate-500 tabular-nums focus:outline-none focus:border-emerald-500" />
+              </div>
+              <div class="col-span-1 sm:col-span-3">
+                <label for="bw-goal-weeks" class="block text-[11px] text-slate-400 mb-1">Period (wks)</label>
+                <input type="number" id="bw-goal-weeks" min="1" max="104" value="12" onchange="updateBodyweightGoalField('durationWeeks', this.value)" class="no-spinners w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 min-h-[40px] font-mono text-xs font-bold text-white tabular-nums focus:outline-none focus:border-emerald-500" />
+              </div>
+              <div class="col-span-2 sm:col-span-5">
+                <label for="bw-goal-date" class="block text-[11px] text-slate-400 mb-1">Target Date</label>
+                <input type="date" id="bw-goal-date" onchange="updateBodyweightGoalField('targetDate', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 min-h-[40px] font-mono text-xs font-bold text-cyan-300 focus:outline-none focus:border-cyan-500" />
+              </div>
+            </div>
+            <div class="flex items-center justify-between gap-2 text-[11px] text-slate-400">
+              <span id="bw-goal-pacing-hint">Set a goal weight &amp; period to project required weekly pace &amp; kcal/day.</span>
+              <button type="button" onclick="clearBodyweightGoal()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-[11px] font-semibold transition shrink-0">Clear</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI Summary Strip (Current/Trend, Actual Pace + kcal/day, Goal Pace + kcal/day, Projection, DOTS, IPF GL) -->
+        <div id="bw-kpi-strip" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2.5"></div>
+
+        <!-- Bodyweight Trend & Projection Chart -->
+        <div class="space-y-1.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span id="bw-chart-subtitle" class="text-[11px] text-slate-400">Log 1+ weigh-ins to view trend, projected weight trajectory, and goal line.</span>
+            <span id="bw-status-badge" class="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-950 text-slate-400 border border-slate-800">No weigh-ins yet</span>
+          </div>
+          <div class="h-64"><canvas id="chart-bodyweight"></canvas></div>
+        </div>
+
+        <!-- Collapsible Weigh-In History Table -->
+        <details id="bw-history-details" class="rounded-xl bg-slate-950/75 border border-slate-800 overflow-hidden">
+          <summary class="px-3.5 py-2.5 cursor-pointer text-xs font-semibold text-slate-300 hover:text-white flex items-center justify-between select-none">
+            <span>📋 Weigh-In History (<span id="bw-history-summary-count">0</span>)</span>
+            <span class="text-[11px] font-mono text-slate-400">Click to expand / edit / delete</span>
+          </summary>
+          <div id="bw-history-list" class="px-3.5 pb-3 pt-1 max-h-56 overflow-y-auto divide-y divide-slate-800/70 text-xs"></div>
+        </details>
+      </div>
+
       <!-- 4-Vector Charts Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg">
@@ -1164,9 +1271,15 @@
       <div class="p-5 space-y-4">
         <div id="session-preview-warning" class="hidden p-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-xs text-amber-200 leading-relaxed"></div>
         <div class="space-y-2.5 p-3.5 rounded-xl bg-slate-950/90 border border-slate-800">
-          <div>
-            <label for="session-preview-heading-input" class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Session Heading / Title</label>
-            <input type="text" id="session-preview-heading-input" maxlength="90" placeholder="e.g. Heavy Bench PR — Felt Fast" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 min-h-[40px] text-xs sm:text-sm font-bold text-white placeholder-slate-500 focus:outline-none focus:border-amber-500" />
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div class="sm:col-span-2">
+              <label for="session-preview-heading-input" class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Session Heading / Title</label>
+              <input type="text" id="session-preview-heading-input" maxlength="90" placeholder="e.g. Heavy Bench PR — Felt Fast" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 min-h-[40px] text-xs sm:text-sm font-bold text-white placeholder-slate-500 focus:outline-none focus:border-amber-500" />
+            </div>
+            <div>
+              <label for="session-preview-start-time-input" class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Started At</label>
+              <input type="time" id="session-preview-start-time-input" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 min-h-[40px] font-mono text-xs font-bold text-cyan-300 focus:outline-none focus:border-cyan-500" />
+            </div>
           </div>
           <div>
             <label for="session-preview-notes-input" class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Overall Session Description</label>
@@ -1780,7 +1893,15 @@
       analyticsLiftFilter: 'ALL_T1',
       analyticsIntensityMetric: 'e1rm',
       activeCycle: null,
-      diceGainz: null
+      diceGainz: null,
+      bodyweightLog: [],
+      bodyweightGoal: {
+        sex: 'male',
+        targetKg: null,
+        durationWeeks: 12,
+        targetDate: null,
+        horizonWeeks: 12
+      }
     };
 
     function createDefaultDiceGainzState() {
@@ -3872,6 +3993,42 @@
       );
     }
 
+    function normalizeBodyweightLog(rawLog) {
+      if (!Array.isArray(rawLog)) return [];
+      const byDate = new Map();
+      rawLog.forEach((item, idx) => {
+        if (!item || typeof item !== 'object') return;
+        const date = String(item.date || '').slice(0, 10);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+        const weightKg = Math.round((parseFloat(item.weightKg) || 0) * 10) / 10;
+        if (!(weightKg >= 25 && weightKg <= 300)) return;
+        byDate.set(date, {
+          id: sanitizeSafeId(item.id, 'bw_' + idx),
+          date,
+          weightKg,
+          note: String(item.note || '').trim().slice(0, 80)
+        });
+      });
+      return Array.from(byDate.values()).sort((a, b) => a.date.localeCompare(b.date));
+    }
+
+    function normalizeBodyweightGoal(rawGoal) {
+      const g = (rawGoal && typeof rawGoal === 'object') ? rawGoal : {};
+      const sex = g.sex === 'female' ? 'female' : 'male';
+      const rawTarget = (g.targetKg !== null && g.targetKg !== undefined && g.targetKg !== '') ? parseFloat(g.targetKg) : null;
+      const targetKg = (rawTarget !== null && Number.isFinite(rawTarget) && rawTarget >= 25 && rawTarget <= 300)
+        ? Math.round(rawTarget * 10) / 10
+        : null;
+      const durationWeeks = Math.max(1, Math.min(104, toIntOr(g.durationWeeks, 12)));
+      const targetDate = (typeof g.targetDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(g.targetDate.slice(0, 10)))
+        ? g.targetDate.slice(0, 10)
+        : null;
+      const validHorizons = [4, 8, 12, 16, 24];
+      const hw = toIntOr(g.horizonWeeks, 12);
+      const horizonWeeks = validHorizons.includes(hw) ? hw : 12;
+      return { sex, targetKg, durationWeeks, targetDate, horizonWeeks };
+    }
+
     function loadState() {
       let parsed = null;
       try {
@@ -3991,6 +4148,8 @@
         appState._ownerUid = (typeof parsed._ownerUid === 'string' && parsed._ownerUid.trim()) ? sanitizeSafeId(parsed._ownerUid, 'uid') : null;
         appState._isDefaultSample = parsed._isDefaultSample !== undefined ? Boolean(parsed._isDefaultSample) : !hasParsedHistory;
         appState.diceGainz = normalizeDiceGainzState(parsed.diceGainz);
+        appState.bodyweightLog = normalizeBodyweightLog(parsed.bodyweightLog);
+        appState.bodyweightGoal = normalizeBodyweightGoal(parsed.bodyweightGoal);
       } else {
         appState.split = createDefaultSplit();
         appState.roadmapWeeks = generateDefaultRoadmap(appState.phase, 6);
@@ -4003,6 +4162,8 @@
         appState._ownerUid = null;
         appState._isDefaultSample = true;
         appState.diceGainz = createDefaultDiceGainzState();
+        appState.bodyweightLog = [];
+        appState.bodyweightGoal = normalizeBodyweightGoal(null);
       }
 
       analyticsLiftFilter = appState.analyticsLiftFilter || 'ALL_T1';
@@ -4070,7 +4231,7 @@
     const ACTIVE_TIMERS_STORAGE_KEY = 'gg_active_timers_v1';
     let sessionSeconds = 0;
     let sessionInterval = null;
-    let sessionTimerState = { running: false, baseSecs: 0, startedAtMs: 0, everStarted: false, manualStart: false };
+    let sessionTimerState = { running: false, baseSecs: 0, startedAtMs: 0, workoutStartedAtMs: 0, everStarted: false, manualStart: false };
 
     let restSecondsRemaining = 0;
     let restSecondsTotal = 0;
@@ -4618,6 +4779,7 @@
             running: Boolean(sessionTimerState.running),
             baseSecs: Math.max(0, toIntOr(sessionTimerState.baseSecs, 0)),
             startedAtMs: sessionTimerState.running ? Number(sessionTimerState.startedAtMs || 0) : 0,
+            workoutStartedAtMs: Number(sessionTimerState.workoutStartedAtMs || 0),
             everStarted: Boolean(sessionTimerState.everStarted),
             manualStart: Boolean(sessionTimerState.manualStart)
           },
@@ -4926,6 +5088,44 @@
       }
     }
 
+    function formatTime24FromMs(ms) {
+      const d = new Date(ms || Date.now());
+      if (Number.isNaN(d.getTime())) return '';
+      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    }
+
+    function normalizeStartTime24(val) {
+      const s = String(val || '').trim();
+      const m = /^(\d{1,2}):(\d{2})$/.exec(s);
+      if (!m) return null;
+      const hh = parseInt(m[1], 10);
+      const mm = parseInt(m[2], 10);
+      if (hh < 0 || hh > 23 || mm < 0 || mm > 59) return null;
+      return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+    }
+
+    function formatStartTimeDisplay(hhmm) {
+      const norm = normalizeStartTime24(hhmm);
+      if (!norm) return '';
+      const [hStr, mStr] = norm.split(':');
+      const h24 = parseInt(hStr, 10);
+      const suffix = h24 >= 12 ? 'PM' : 'AM';
+      const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+      return `${h12}:${mStr} ${suffix}`;
+    }
+
+    function getDefaultWorkoutStartTime24(fallbackDurMin = 55) {
+      if (sessionTimerState && sessionTimerState.workoutStartedAtMs > 0) {
+        return formatTime24FromMs(sessionTimerState.workoutStartedAtMs);
+      }
+      const elapsed = getSessionElapsedSecs();
+      if (elapsed > 0) {
+        return formatTime24FromMs(Date.now() - elapsed * 1000);
+      }
+      const mins = Math.max(1, toIntOr(fallbackDurMin, 55));
+      return formatTime24FromMs(Date.now() - mins * 60000);
+    }
+
     function autoStartSessionTimerIfNeeded() {
       if (
         sessionTimerState.running ||
@@ -4936,10 +5136,12 @@
         return false;
       }
       unlockMobileAudio();
+      const now = Date.now();
       sessionTimerState = {
         running: true,
         baseSecs: 0,
-        startedAtMs: Date.now(),
+        startedAtMs: now,
+        workoutStartedAtMs: now,
         everStarted: true,
         manualStart: false
       };
@@ -4959,8 +5161,10 @@
         sessionTimerState.everStarted = true;
         sessionTimerState.manualStart = true;
       } else {
+        const now = Date.now();
         sessionTimerState.running = true;
-        sessionTimerState.startedAtMs = Date.now();
+        sessionTimerState.startedAtMs = now;
+        if (!sessionTimerState.workoutStartedAtMs) sessionTimerState.workoutStartedAtMs = now;
         sessionTimerState.everStarted = true;
         sessionTimerState.manualStart = true;
       }
@@ -4971,7 +5175,7 @@
     }
 
     function resetSessionTimer() {
-      sessionTimerState = { running: false, baseSecs: 0, startedAtMs: 0, everStarted: false, manualStart: false };
+      sessionTimerState = { running: false, baseSecs: 0, startedAtMs: 0, workoutStartedAtMs: 0, everStarted: false, manualStart: false };
       sessionSeconds = 0;
       ensureSessionTimerInterval();
       syncSessionClockUI();
@@ -5195,6 +5399,7 @@
             running: Boolean(data.session.running && data.session.startedAtMs > 0),
             baseSecs: Math.max(0, toIntOr(data.session.baseSecs, 0)),
             startedAtMs: Number(data.session.startedAtMs || 0),
+            workoutStartedAtMs: Number(data.session.workoutStartedAtMs || data.session.startedAtMs || 0),
             everStarted: Boolean(data.session.everStarted || data.session.running || toIntOr(data.session.baseSecs, 0) > 0),
             manualStart: Boolean(data.session.manualStart)
           };
@@ -7294,6 +7499,7 @@
 
       const m = computeActiveDayMetrics();
       const sessionNotes = String(preNotes || '').trim();
+      const sessionStartedAt = normalizeStartTime24(opts && opts.customStartTime) || getDefaultWorkoutStartTime24(m.durationMin);
 
       let t1Vol = 0, t2Vol = 0, t3Vol = 0;
       const loggedExercises = [];
@@ -7416,6 +7622,7 @@
       const entry = {
         id: 'hist_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
         date: new Date().toISOString().slice(0, 10),
+        startedAt: sessionStartedAt || null,
         dayId: day.id,
         dayName: sessionHeading,
         durationMin: m.durationMin,
@@ -7496,6 +7703,7 @@
 
       const titleEl = document.getElementById('session-preview-title');
       const headingInput = document.getElementById('session-preview-heading-input');
+      const startTimeInput = document.getElementById('session-preview-start-time-input');
       const notesInput = document.getElementById('session-preview-notes-input');
       const footerNotesEl = document.getElementById('session-notes-input');
       const warnEl = document.getElementById('session-preview-warning');
@@ -7506,6 +7714,7 @@
 
       if (titleEl) titleEl.textContent = `Review & Log ${day.shortName || day.name}`;
       if (headingInput) headingInput.value = day.name || '';
+      if (startTimeInput) startTimeInput.value = getDefaultWorkoutStartTime24(m.durationMin);
       if (notesInput) notesInput.value = footerNotesEl ? footerNotesEl.value : '';
 
       if (warnEl) {
@@ -7604,11 +7813,13 @@
       sessionCommitInFlight = true;
       try {
         const headingInput = document.getElementById('session-preview-heading-input');
+        const startTimeInput = document.getElementById('session-preview-start-time-input');
         const notesInput = document.getElementById('session-preview-notes-input');
         const customHeading = headingInput ? headingInput.value : '';
+        const customStartTime = startTimeInput ? startTimeInput.value : '';
         const customNotes = notesInput ? notesInput.value : '';
         closeSessionPreviewModal();
-        executeSessionLog(forceTickAll, { customHeading, customNotes });
+        executeSessionLog(forceTickAll, { customHeading, customStartTime, customNotes });
       } finally {
         setTimeout(() => { sessionCommitInFlight = false; }, 400);
       }
@@ -10666,6 +10877,7 @@
       }
 
       renderSBDTotalBanner(scopedSessions, tf);
+      renderBodyweightSection(scopedSessions, tf);
       renderIntensityChart(history, parsedFilter);
       renderVolumeChart(history, parsedFilter);
       renderDensityChart(history, parsedFilter);
@@ -10737,6 +10949,10 @@
       const scopeTag = activeTf === 'currentMeso'
         ? ' · Current Mesocycle'
         : (activeTf === 'currentMacro' ? ' · Current Macrocycle' : '');
+      const latestBw = getLatestBodyweightKg();
+      const bwSex = (appState.bodyweightGoal && appState.bodyweightGoal.sex === 'female') ? 'female' : 'male';
+      const dotsVal = (sbd > 0 && latestBw >= 40) ? calculateDOTS(sbd, latestBw, bwSex) : 0;
+      const glVal = (sbd > 0 && latestBw >= 40) ? calculateIPFGL(sbd, latestBw, bwSex) : 0;
 
       el.innerHTML = `
         <div class="bg-slate-900 border border-amber-500/25 rounded-2xl px-4 py-3.5 shadow-lg flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
@@ -10751,6 +10967,8 @@
               <span class="px-2 py-1 rounded-lg bg-slate-950 border border-slate-800 text-slate-200"><span class="text-slate-400">BN</span> <strong class="text-sky-300">${bn || '—'}</strong></span>
               <span class="px-2 py-1 rounded-lg bg-slate-950 border border-slate-800 text-slate-200"><span class="text-slate-400">DL</span> <strong class="text-emerald-300">${dl || '—'}</strong></span>
               <span class="px-2 py-1 rounded-lg bg-slate-950 border border-slate-800 text-slate-300"><span class="text-slate-400">4-Lift (+OHP ${oh || '—'}):</span> <strong class="text-white">${fourLift > 0 ? `${fourLift} kg` : '—'}</strong></span>
+              ${dotsVal > 0 ? `<span class="px-2 py-1 rounded-lg bg-purple-500/15 border border-purple-500/35 text-purple-200" title="Official DOTS (${bwSex === 'female' ? 'Female' : 'Male'} @ ${latestBw} kg BW)"><span class="text-purple-300/80">DOTS</span> <strong class="text-white">${dotsVal.toFixed(2)}</strong></span>` : ''}
+              ${glVal > 0 ? `<span class="px-2 py-1 rounded-lg bg-cyan-500/15 border border-cyan-500/35 text-cyan-200" title="Official IPF GL Classic Raw 3-Lift (${bwSex === 'female' ? 'Female' : 'Male'} @ ${latestBw} kg BW)"><span class="text-cyan-300/80">IPF GL</span> <strong class="text-white">${glVal.toFixed(2)}</strong></span>` : ''}
             </div>
           </div>
           <div class="flex flex-wrap items-center gap-1.5">
@@ -10760,6 +10978,728 @@
           </div>
         </div>
       `;
+    }
+
+    /* =========================================================================
+       BODYWEIGHT TRACKING, GOAL PROJECTION, DAILY ENERGY & OFFICIAL DOTS / IPF GL
+       ========================================================================= */
+    const BW_KCAL_PER_KG = 7716.18; // Exact 3,500 kcal/lb × 2.20462262 lb/kg
+    let lastBwDeleteUndoSnapshot = null;
+
+    function isoDateToDayNum(iso) {
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || '').slice(0, 10));
+      if (!m) return null;
+      return Math.floor(Date.UTC(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10)) / 86400000);
+    }
+
+    function dayNumToIsoDate(dayNum) {
+      const d = new Date(Math.round(dayNum) * 86400000);
+      return d.toISOString().slice(0, 10);
+    }
+
+    function getTodayLocalIsoDate() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function getLatestBodyweightKg() {
+      const log = Array.isArray(appState.bodyweightLog) ? appState.bodyweightLog : [];
+      if (!log.length) return 0;
+      return parseFloat(log[log.length - 1].weightKg) || 0;
+    }
+
+    // Official DOTS formula (2019–present, OpenPowerlifting standard; BW clamped 40–210 kg M / 40–150 kg F)
+    function calculateDOTS(totalKg, bwKg, sex = 'male') {
+      const total = parseFloat(totalKg) || 0;
+      const rawBw = parseFloat(bwKg) || 0;
+      if (!(total > 0) || !(rawBw >= 40)) return 0;
+      const isFemale = sex === 'female';
+      const bw = isFemale ? Math.min(150, Math.max(40, rawBw)) : Math.min(210, Math.max(40, rawBw));
+      const c = isFemale
+        ? [-0.0000010706, 0.0005158568, -0.1126655495, 13.6175032, -57.96288]
+        : [-0.0000010930, 0.0007391293, -0.1918759221, 24.0900756, -307.75076];
+      const denom = ((((c[0] * bw + c[1]) * bw + c[2]) * bw + c[3]) * bw) + c[4];
+      if (!(denom > 0)) return 0;
+      return Math.round(((total * 500) / denom) * 100) / 100;
+    }
+
+    // Official IPF GL (Goodlift) formula (May 2020–present, Classic Raw 3-Lift)
+    function calculateIPFGL(totalKg, bwKg, sex = 'male') {
+      const total = parseFloat(totalKg) || 0;
+      const bw = parseFloat(bwKg) || 0;
+      if (!(total > 0) || !(bw >= 40)) return 0;
+      const isFemale = sex === 'female';
+      const A = isFemale ? 610.32796 : 1199.72839;
+      const B = isFemale ? 1045.59282 : 1025.18162;
+      const C = isFemale ? 0.03048 : 0.00921;
+      const denom = A - B * Math.exp(-C * bw);
+      if (!(denom > 0)) return 0;
+      return Math.round(((total * 100) / denom) * 100) / 100;
+    }
+
+    function getActiveAnalyticsSBDTotal(scopedSessions = null, tf = null) {
+      const activeTf = tf || document.getElementById('analytics-timeframe-filter')?.value || appState.analyticsTimeframe || 'all';
+      const isCycleScope = (activeTf === 'currentMeso' || activeTf === 'currentMacro');
+      const src = isCycleScope ? (scopedSessions || getActiveAnalyticsScopedHistory()) : (appState.history || []);
+      const nowBest = computeBig4E1RMsUpTo(null, src);
+      const fallback = isCycleScope ? { squat: 0, bench: 0, deadlift: 0, ohp: 0 } : computeTrainingDataE1RMs();
+      const sq = Math.round((nowBest.squat || fallback.squat || 0) * 10) / 10;
+      const bn = Math.round((nowBest.bench || fallback.bench || 0) * 10) / 10;
+      const dl = Math.round((nowBest.deadlift || fallback.deadlift || 0) * 10) / 10;
+      return Math.round((sq + bn + dl) * 10) / 10;
+    }
+
+    function computeBodyweightAnalytics(log, goal) {
+      const sorted = normalizeBodyweightLog(log);
+      const g = normalizeBodyweightGoal(goal);
+      const todayIso = getTodayLocalIsoDate();
+      const todayDay = isoDateToDayNum(todayIso);
+
+      const entries = sorted.map(e => ({ ...e, dayNum: isoDateToDayNum(e.date) })).filter(e => e.dayNum !== null);
+      // 7-day calendar trailing average for smooth trend (resistant to daily water/sodium noise)
+      const trendByIdx = entries.map((e, idx) => {
+        let sum = 0;
+        let cnt = 0;
+        for (let j = idx; j >= 0; j--) {
+          if (e.dayNum - entries[j].dayNum <= 6) {
+            sum += entries[j].weightKg;
+            cnt++;
+          } else {
+            break;
+          }
+        }
+        return cnt > 0 ? Math.round((sum / cnt) * 100) / 100 : e.weightKg;
+      });
+
+      const latest = entries.length ? entries[entries.length - 1] : null;
+      const latestKg = latest ? latest.weightKg : 0;
+      const currentTrendKg = entries.length ? trendByIdx[entries.length - 1] : 0;
+      const anchorDay = latest ? latest.dayNum : todayDay;
+      const anchorDate = latest ? latest.date : todayIso;
+
+      // OLS linear regression over last 28 days (or full log if < 2 points in 28d)
+      let hasRate = false;
+      let kgPerDay = 0;
+      let actualKgPerWeek = 0;
+      let actualPctPerWeek = 0;
+      let actualKcalPerDay = 0;
+      let regWindowDays = 0;
+      let regPointCount = 0;
+
+      if (entries.length >= 2) {
+        let regPts = entries.filter(e => (latest.dayNum - e.dayNum) <= 28);
+        if (regPts.length < 2) regPts = entries;
+        const span = regPts[regPts.length - 1].dayNum - regPts[0].dayNum;
+        if (span >= 1) {
+          const n = regPts.length;
+          const meanX = regPts.reduce((s, p) => s + p.dayNum, 0) / n;
+          const meanY = regPts.reduce((s, p) => s + p.weightKg, 0) / n;
+          let num = 0;
+          let den = 0;
+          regPts.forEach(p => {
+            const dx = p.dayNum - meanX;
+            num += dx * (p.weightKg - meanY);
+            den += dx * dx;
+          });
+          if (den > 0) {
+            hasRate = true;
+            kgPerDay = num / den;
+            actualKgPerWeek = kgPerDay * 7;
+            actualPctPerWeek = currentTrendKg > 0 ? (actualKgPerWeek / currentTrendKg) * 100 : 0;
+            actualKcalPerDay = Math.round(kgPerDay * BW_KCAL_PER_KG);
+            regWindowDays = span;
+            regPointCount = n;
+          }
+        }
+      }
+
+      // Goal target resolution (syncs targetDate <-> durationWeeks cleanly)
+      let resolvedTargetDate = g.targetDate;
+      let daysToGoal = g.durationWeeks * 7;
+      if (resolvedTargetDate) {
+        const tDay = isoDateToDayNum(resolvedTargetDate);
+        if (tDay !== null && tDay > anchorDay) {
+          daysToGoal = tDay - anchorDay;
+        } else {
+          daysToGoal = Math.max(7, g.durationWeeks * 7);
+          resolvedTargetDate = dayNumToIsoDate(anchorDay + daysToGoal);
+        }
+      } else {
+        daysToGoal = Math.max(7, g.durationWeeks * 7);
+        resolvedTargetDate = dayNumToIsoDate(anchorDay + daysToGoal);
+      }
+      const weeksToGoal = Math.round((daysToGoal / 7) * 10) / 10;
+
+      const hasGoal = g.targetKg !== null && currentTrendKg > 0;
+      const deltaToGoalKg = hasGoal ? (g.targetKg - currentTrendKg) : 0;
+      const requiredKgPerWeek = hasGoal ? ((deltaToGoalKg / daysToGoal) * 7) : 0;
+      const requiredPctPerWeek = (hasGoal && currentTrendKg > 0) ? ((requiredKgPerWeek / currentTrendKg) * 100) : 0;
+      const requiredKcalPerDay = hasGoal ? Math.round((deltaToGoalKg * BW_KCAL_PER_KG) / daysToGoal) : 0;
+
+      const horizonDays = Math.max(g.horizonWeeks * 7, hasGoal ? daysToGoal : 0);
+      const projectedAtHorizonKg = (hasRate && currentTrendKg > 0)
+        ? Math.round((currentTrendKg + kgPerDay * horizonDays) * 10) / 10
+        : null;
+      const projectedAtGoalDateKg = (hasGoal && hasRate)
+        ? Math.round((currentTrendKg + kgPerDay * daysToGoal) * 10) / 10
+        : null;
+
+      // Estimated arrival date at current trend rate
+      let estArrivalDate = null;
+      let estWeeksToGoal = null;
+      let goalStatus = null;
+      if (hasGoal) {
+        if (Math.abs(deltaToGoalKg) < 0.15) {
+          goalStatus = { label: 'Goal Reached!', tone: 'emerald' };
+        } else if (!hasRate) {
+          goalStatus = { label: 'Need 2+ Weigh-Ins', tone: 'slate' };
+        } else if (deltaToGoalKg * kgPerDay <= 0) {
+          goalStatus = { label: 'Opposite Trend', tone: 'rose' };
+        } else {
+          if (Math.abs(actualKgPerWeek) >= 0.02) {
+            const rawDays = Math.round(deltaToGoalKg / kgPerDay);
+            if (rawDays > 0 && rawDays <= 3650) {
+              estArrivalDate = dayNumToIsoDate(anchorDay + rawDays);
+              estWeeksToGoal = Math.round((rawDays / 7) * 10) / 10;
+            }
+          }
+          const ratio = Math.abs(requiredKgPerWeek) > 0.01 ? (actualKgPerWeek / requiredKgPerWeek) : 1;
+          if (ratio >= 0.8 && ratio <= 1.25) goalStatus = { label: 'On Track', tone: 'emerald' };
+          else if (ratio > 1.25) goalStatus = { label: 'Ahead of Pace', tone: 'cyan' };
+          else goalStatus = { label: 'Behind Pace', tone: 'amber' };
+        }
+      }
+
+      return {
+        entries,
+        trendByIdx,
+        latest,
+        latestKg,
+        currentTrendKg,
+        anchorDay,
+        anchorDate,
+        hasRate,
+        kgPerDay,
+        actualKgPerWeek,
+        actualPctPerWeek,
+        actualKcalPerDay,
+        regWindowDays,
+        regPointCount,
+        goal: g,
+        hasGoal,
+        resolvedTargetDate,
+        daysToGoal,
+        weeksToGoal,
+        deltaToGoalKg,
+        requiredKgPerWeek,
+        requiredPctPerWeek,
+        requiredKcalPerDay,
+        horizonDays,
+        projectedAtHorizonKg,
+        projectedAtGoalDateKg,
+        estArrivalDate,
+        estWeeksToGoal,
+        goalStatus
+      };
+    }
+
+    function setBodyweightSex(sex) {
+      if (!appState.bodyweightGoal) appState.bodyweightGoal = normalizeBodyweightGoal(null);
+      appState.bodyweightGoal.sex = sex === 'female' ? 'female' : 'male';
+      saveState();
+      renderAnalytics();
+    }
+
+    function setBodyweightHorizonWeeks(val) {
+      if (!appState.bodyweightGoal) appState.bodyweightGoal = normalizeBodyweightGoal(null);
+      const valid = [4, 8, 12, 16, 24];
+      const hw = toIntOr(val, 12);
+      appState.bodyweightGoal.horizonWeeks = valid.includes(hw) ? hw : 12;
+      saveState();
+      renderBodyweightSection();
+    }
+
+    function logBodyweightEntry() {
+      const dateEl = document.getElementById('bw-entry-date');
+      const kgEl = document.getElementById('bw-entry-kg');
+      const noteEl = document.getElementById('bw-entry-note');
+      const date = String(dateEl ? dateEl.value : '').slice(0, 10) || getTodayLocalIsoDate();
+      const weightKg = Math.round((parseFloat(kgEl ? kgEl.value : '') || 0) * 10) / 10;
+      if (!(weightKg >= 25 && weightKg <= 300)) {
+        showToast('Enter a valid bodyweight between 25 and 300 kg.', 'warn');
+        if (kgEl) kgEl.focus();
+        return;
+      }
+      const note = String(noteEl ? noteEl.value : '').trim().slice(0, 80);
+      if (!Array.isArray(appState.bodyweightLog)) appState.bodyweightLog = [];
+      const existingIdx = appState.bodyweightLog.findIndex(e => e.date === date);
+      if (existingIdx >= 0) {
+        appState.bodyweightLog[existingIdx] = {
+          ...appState.bodyweightLog[existingIdx],
+          weightKg,
+          note
+        };
+        showToast(`Updated ${date} weigh-in to ${weightKg.toFixed(1)} kg.`, 'success');
+      } else {
+        appState.bodyweightLog.push({
+          id: 'bw_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5),
+          date,
+          weightKg,
+          note
+        });
+        showToast(`Logged ${weightKg.toFixed(1)} kg on ${date}.`, 'success');
+      }
+      appState.bodyweightLog = normalizeBodyweightLog(appState.bodyweightLog);
+      if (kgEl) kgEl.value = '';
+      if (noteEl) noteEl.value = '';
+      saveState();
+      renderAnalytics();
+    }
+
+    function loadBodyweightIntoForm(date) {
+      const entry = (appState.bodyweightLog || []).find(e => e.date === date);
+      if (!entry) return;
+      const dateEl = document.getElementById('bw-entry-date');
+      const kgEl = document.getElementById('bw-entry-kg');
+      const noteEl = document.getElementById('bw-entry-note');
+      if (dateEl) dateEl.value = entry.date;
+      if (kgEl) {
+        kgEl.value = entry.weightKg;
+        kgEl.focus();
+      }
+      if (noteEl) noteEl.value = entry.note || '';
+      showToast(`Loaded ${entry.date} (${entry.weightKg} kg) into form — edit and press + Log Weight to update.`, 'info');
+    }
+
+    function undoLastBodyweightDelete() {
+      if (!lastBwDeleteUndoSnapshot) return;
+      appState.bodyweightLog = JSON.parse(JSON.stringify(lastBwDeleteUndoSnapshot));
+      lastBwDeleteUndoSnapshot = null;
+      saveState();
+      renderAnalytics();
+      showToast('Restored deleted weigh-in.', 'info');
+    }
+
+    function deleteBodyweightEntry(date) {
+      lastBwDeleteUndoSnapshot = JSON.parse(JSON.stringify(appState.bodyweightLog || []));
+      appState.bodyweightLog = (appState.bodyweightLog || []).filter(e => e.date !== date);
+      saveState();
+      renderAnalytics();
+      showToast(`Deleted ${date} weigh-in.`, 'info', {
+        actionLabel: 'Undo',
+        durationMs: 7000,
+        onAction: undoLastBodyweightDelete
+      });
+    }
+
+    function updateBodyweightGoalField(field, val) {
+      if (!appState.bodyweightGoal) appState.bodyweightGoal = normalizeBodyweightGoal(null);
+      const log = normalizeBodyweightLog(appState.bodyweightLog);
+      const anchorIso = log.length ? log[log.length - 1].date : getTodayLocalIsoDate();
+      const anchorDay = isoDateToDayNum(anchorIso);
+
+      if (field === 'targetKg') {
+        const trimmed = String(val || '').trim();
+        if (!trimmed) {
+          appState.bodyweightGoal.targetKg = null;
+        } else {
+          const n = Math.round((parseFloat(trimmed) || 0) * 10) / 10;
+          if (n >= 25 && n <= 300) {
+            appState.bodyweightGoal.targetKg = n;
+            if (!appState.bodyweightGoal.targetDate) {
+              appState.bodyweightGoal.targetDate = dayNumToIsoDate(anchorDay + appState.bodyweightGoal.durationWeeks * 7);
+            }
+          }
+        }
+      } else if (field === 'durationWeeks') {
+        const wks = Math.max(1, Math.min(104, toIntOr(val, 12)));
+        appState.bodyweightGoal.durationWeeks = wks;
+        appState.bodyweightGoal.targetDate = dayNumToIsoDate(anchorDay + wks * 7);
+      } else if (field === 'targetDate') {
+        const iso = String(val || '').slice(0, 10);
+        const tDay = isoDateToDayNum(iso);
+        if (tDay !== null && tDay > anchorDay) {
+          appState.bodyweightGoal.targetDate = iso;
+          appState.bodyweightGoal.durationWeeks = Math.max(1, Math.min(104, Math.round((tDay - anchorDay) / 7)));
+        }
+      }
+      saveState();
+      renderBodyweightSection();
+    }
+
+    function applyBodyweightGoalPreset(pctPerWeek) {
+      const log = normalizeBodyweightLog(appState.bodyweightLog);
+      if (!log.length) {
+        showToast('Log at least 1 weigh-in first to apply a %/week goal preset.', 'warn');
+        return;
+      }
+      if (!appState.bodyweightGoal) appState.bodyweightGoal = normalizeBodyweightGoal(null);
+      const info = computeBodyweightAnalytics(log, appState.bodyweightGoal);
+      const wks = Math.max(1, Math.min(104, toIntOr(document.getElementById('bw-goal-weeks')?.value, appState.bodyweightGoal.durationWeeks || 12)));
+      const targetKg = Math.round((info.currentTrendKg * (1 + (pctPerWeek / 100) * wks)) * 10) / 10;
+      appState.bodyweightGoal.durationWeeks = wks;
+      appState.bodyweightGoal.targetDate = dayNumToIsoDate(info.anchorDay + wks * 7);
+      appState.bodyweightGoal.targetKg = Math.max(25, Math.min(300, targetKg));
+      saveState();
+      renderBodyweightSection();
+      const lbl = pctPerWeek === 0 ? 'Maintenance' : `${pctPerWeek > 0 ? '+' : ''}${pctPerWeek}%/wk`;
+      showToast(`Goal set (${lbl} over ${wks} wks): ${appState.bodyweightGoal.targetKg.toFixed(1)} kg by ${appState.bodyweightGoal.targetDate}.`, 'success');
+    }
+
+    function clearBodyweightGoal() {
+      if (!appState.bodyweightGoal) appState.bodyweightGoal = normalizeBodyweightGoal(null);
+      appState.bodyweightGoal.targetKg = null;
+      appState.bodyweightGoal.targetDate = null;
+      saveState();
+      renderBodyweightSection();
+      showToast('Cleared bodyweight goal target.', 'info');
+    }
+
+    function renderBodyweightSection(scopedSessions = null, tf = null) {
+      const section = document.getElementById('bodyweight-tracker-section');
+      if (!section) return;
+      appState.bodyweightLog = normalizeBodyweightLog(appState.bodyweightLog);
+      appState.bodyweightGoal = normalizeBodyweightGoal(appState.bodyweightGoal);
+
+      const bw = computeBodyweightAnalytics(appState.bodyweightLog, appState.bodyweightGoal);
+      const sbdTotal = getActiveAnalyticsSBDTotal(scopedSessions, tf);
+      const sex = bw.goal.sex;
+
+      // Sync controls cleanly without stomping actively focused inputs
+      const dateInput = document.getElementById('bw-entry-date');
+      if (dateInput && !dateInput.value) dateInput.value = getTodayLocalIsoDate();
+
+      const maleBtn = document.getElementById('bw-sex-male-btn');
+      const femaleBtn = document.getElementById('bw-sex-female-btn');
+      if (maleBtn && femaleBtn) {
+        maleBtn.className = sex === 'male'
+          ? 'px-3 min-h-[36px] text-xs font-mono font-bold bg-amber-500 text-slate-950 transition'
+          : 'px-3 min-h-[36px] text-xs font-mono font-bold text-slate-400 hover:text-white transition';
+        femaleBtn.className = sex === 'female'
+          ? 'px-3 min-h-[36px] text-xs font-mono font-bold bg-amber-500 text-slate-950 transition'
+          : 'px-3 min-h-[36px] text-xs font-mono font-bold text-slate-400 hover:text-white transition';
+      }
+
+      const horSel = document.getElementById('bw-horizon-select');
+      if (horSel) horSel.value = String(bw.goal.horizonWeeks);
+
+      const goalKgEl = document.getElementById('bw-goal-kg');
+      const goalWksEl = document.getElementById('bw-goal-weeks');
+      const goalDateEl = document.getElementById('bw-goal-date');
+      if (goalKgEl && document.activeElement !== goalKgEl) {
+        goalKgEl.value = bw.goal.targetKg !== null ? bw.goal.targetKg : '';
+      }
+      if (goalWksEl && document.activeElement !== goalWksEl) {
+        goalWksEl.value = bw.goal.durationWeeks;
+      }
+      if (goalDateEl && document.activeElement !== goalDateEl) {
+        goalDateEl.value = bw.resolvedTargetDate || '';
+      }
+
+      const countBadge = document.getElementById('bw-log-count-badge');
+      if (countBadge) countBadge.textContent = `${bw.entries.length} entr${bw.entries.length === 1 ? 'y' : 'ies'}`;
+      const histCnt = document.getElementById('bw-history-summary-count');
+      if (histCnt) histCnt.textContent = String(bw.entries.length);
+
+      // Goal pacing hint
+      const hintEl = document.getElementById('bw-goal-pacing-hint');
+      if (hintEl) {
+        if (bw.hasGoal) {
+          const sign = bw.requiredKcalPerDay > 0 ? '+' : '';
+          const absPct = Math.abs(bw.requiredPctPerWeek);
+          let paceCue = 'Sustainable powerlifting rate';
+          if (bw.requiredKgPerWeek > 0 && absPct > 0.55) paceCue = 'Aggressive surplus (higher fat gain risk)';
+          else if (bw.requiredKgPerWeek < 0 && absPct > 1.0) paceCue = 'Aggressive deficit (watch T1 bar speed & recovery)';
+          else if (Math.abs(bw.deltaToGoalKg) < 0.15) paceCue = 'Right at target weight';
+          hintEl.innerHTML = `<span class="text-slate-200 font-semibold">${paceCue}</span> · Need <span class="font-mono text-emerald-300">${sign}${bw.requiredKcalPerDay} kcal/day</span> (${bw.requiredKgPerWeek >= 0 ? '+' : ''}${bw.requiredKgPerWeek.toFixed(2)} kg/wk over ${bw.weeksToGoal} wks).`;
+        } else if (bw.entries.length > 0) {
+          hintEl.textContent = 'Enter a goal weight or tap a %/wk preset to project required weekly rate & daily kcal.';
+        } else {
+          hintEl.textContent = 'Log your first weigh-in on the left, then set a goal weight & timeframe.';
+        }
+      }
+
+      // Compute official DOTS & IPF GL at current BW AND projected at goal BW
+      const curDots = (sbdTotal > 0 && bw.latestKg >= 40) ? calculateDOTS(sbdTotal, bw.latestKg, sex) : 0;
+      const curGl = (sbdTotal > 0 && bw.latestKg >= 40) ? calculateIPFGL(sbdTotal, bw.latestKg, sex) : 0;
+      const goalDots = (sbdTotal > 0 && bw.hasGoal && bw.goal.targetKg >= 40) ? calculateDOTS(sbdTotal, bw.goal.targetKg, sex) : 0;
+      const goalGl = (sbdTotal > 0 && bw.hasGoal && bw.goal.targetKg >= 40) ? calculateIPFGL(sbdTotal, bw.goal.targetKg, sex) : 0;
+
+      // Render 6-Card KPI Strip
+      const kpiStrip = document.getElementById('bw-kpi-strip');
+      if (kpiStrip) {
+        const fmtSigned = (n, dec = 2) => `${n > 0 ? '+' : ''}${n.toFixed(dec)}`;
+        const fmtKcal = (n) => `${n > 0 ? '+' : ''}${n.toLocaleString()} kcal/d`;
+        const actualTone = bw.hasRate
+          ? (bw.actualKgPerWeek > 0.05 ? 'text-emerald-400' : (bw.actualKgPerWeek < -0.05 ? 'text-sky-400' : 'text-slate-200'))
+          : 'text-slate-400';
+        const goalTone = bw.hasGoal
+          ? (bw.requiredKgPerWeek > 0.05 ? 'text-emerald-400' : (bw.requiredKgPerWeek < -0.05 ? 'text-sky-400' : 'text-slate-200'))
+          : 'text-slate-400';
+
+        const projMain = bw.hasGoal && bw.projectedAtGoalDateKg !== null
+          ? `${bw.projectedAtGoalDateKg.toFixed(1)} kg`
+          : (bw.projectedAtHorizonKg !== null ? `${bw.projectedAtHorizonKg.toFixed(1)} kg` : '—');
+        const projSub = bw.hasGoal
+          ? (bw.estArrivalDate
+              ? `ETA @ pace: ${bw.estArrivalDate} (${bw.estWeeksToGoal}w)`
+              : (bw.goalStatus ? bw.goalStatus.label : `By ${bw.resolvedTargetDate}`))
+          : (bw.projectedAtHorizonKg !== null ? `Projected in ${bw.goal.horizonWeeks} wks` : 'Log 2+ dates to project');
+
+        kpiStrip.innerHTML = `
+          <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+            <div class="text-[11px] uppercase tracking-wider text-slate-400">Current / 7d Trend</div>
+            <div class="font-mono text-lg font-extrabold text-white mt-0.5 tabular-nums">${bw.latestKg > 0 ? `${bw.latestKg.toFixed(1)} kg` : '—'}</div>
+            <div class="text-[11px] font-mono text-sky-300 mt-0.5 tabular-nums">${bw.currentTrendKg > 0 ? `7d avg: ${bw.currentTrendKg.toFixed(1)} kg` : 'No weigh-ins yet'}</div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-slate-950 border border-slate-800" title="OLS linear trend over recent ${bw.regWindowDays || 0}-day window (${bw.regPointCount} weigh-ins) · 7,716 kcal/kg">
+            <div class="text-[11px] uppercase tracking-wider text-slate-400">Actual Pace &amp; Energy</div>
+            <div class="font-mono text-lg font-extrabold ${actualTone} mt-0.5 tabular-nums">${bw.hasRate ? `${fmtSigned(bw.actualKgPerWeek, 2)} kg/w` : '—'}</div>
+            <div class="text-[11px] font-mono text-slate-300 mt-0.5 tabular-nums">${bw.hasRate ? `${fmtKcal(bw.actualKcalPerDay)} (${fmtSigned(bw.actualPctPerWeek, 2)}%)` : 'Need 2+ dates'}</div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-slate-950 border border-slate-800" title="Required pace & daily energy surplus/deficit to reach goal weight by ${escapeHtml(bw.resolvedTargetDate || '')} (7,716 kcal/kg)">
+            <div class="text-[11px] uppercase tracking-wider text-slate-400">Goal Pace &amp; Energy</div>
+            <div class="font-mono text-lg font-extrabold ${goalTone} mt-0.5 tabular-nums">${bw.hasGoal ? `${fmtSigned(bw.requiredKgPerWeek, 2)} kg/w` : '—'}</div>
+            <div class="text-[11px] font-mono text-emerald-300 mt-0.5 tabular-nums">${bw.hasGoal ? `${fmtKcal(bw.requiredKcalPerDay)} (${fmtSigned(bw.requiredPctPerWeek, 2)}%)` : 'Set goal weight'}</div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+            <div class="text-[11px] uppercase tracking-wider text-slate-400">${bw.hasGoal ? `Proj. @ ${bw.resolvedTargetDate.slice(5)}` : `Proj. (${bw.goal.horizonWeeks}w)`}</div>
+            <div class="font-mono text-lg font-extrabold text-cyan-300 mt-0.5 tabular-nums">${projMain}</div>
+            <div class="text-[11px] font-mono text-slate-300 mt-0.5 truncate" title="${escapeHtml(projSub)}">${escapeHtml(projSub)}</div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-slate-950 border border-purple-500/25" title="Official DOTS formula (${sex === 'female' ? 'Female' : 'Male'}) using SBD Total ${sbdTotal} kg @ ${bw.latestKg || '—'} kg BW">
+            <div class="text-[11px] uppercase tracking-wider text-purple-300">DOTS (${sex === 'female' ? 'F' : 'M'})</div>
+            <div class="font-mono text-lg font-extrabold text-white mt-0.5 tabular-nums">${curDots > 0 ? curDots.toFixed(2) : '—'}</div>
+            <div class="text-[11px] font-mono text-purple-300/90 mt-0.5 tabular-nums">${goalDots > 0 ? `→ ${goalDots.toFixed(2)} @ ${bw.goal.targetKg} kg` : (sbdTotal > 0 ? `SBD ${sbdTotal} kg` : 'Log SBD + BW')}</div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-slate-950 border border-cyan-500/25" title="Official IPF GL Classic Raw 3-Lift (${sex === 'female' ? 'Female' : 'Male'}) using SBD Total ${sbdTotal} kg @ ${bw.latestKg || '—'} kg BW">
+            <div class="text-[11px] uppercase tracking-wider text-cyan-300">IPF GL (${sex === 'female' ? 'F' : 'M'})</div>
+            <div class="font-mono text-lg font-extrabold text-white mt-0.5 tabular-nums">${curGl > 0 ? curGl.toFixed(2) : '—'}</div>
+            <div class="text-[11px] font-mono text-cyan-300/90 mt-0.5 tabular-nums">${goalGl > 0 ? `→ ${goalGl.toFixed(2)} @ ${bw.goal.targetKg} kg` : 'Classic Raw 3-Lift'}</div>
+          </div>
+        `;
+      }
+
+      // Status badge & subtitle
+      const subEl = document.getElementById('bw-chart-subtitle');
+      const statusBadge = document.getElementById('bw-status-badge');
+      if (subEl) {
+        if (!bw.entries.length) {
+          subEl.textContent = 'Log your first weigh-in above to track 7-day trend, projected gain/loss, and goal line.';
+        } else if (bw.hasGoal && bw.hasRate) {
+          subEl.textContent = `Actual + 7d Trend (${bw.currentTrendKg.toFixed(1)} kg) · Dashed Cyan = Current Pace (${bw.actualKgPerWeek >= 0 ? '+' : ''}${bw.actualKgPerWeek.toFixed(2)} kg/wk) · Dashed Emerald = Goal (${bw.goal.targetKg} kg by ${bw.resolvedTargetDate})`;
+        } else if (bw.hasGoal) {
+          subEl.textContent = `Goal trajectory from ${bw.currentTrendKg.toFixed(1)} kg → ${bw.goal.targetKg} kg by ${bw.resolvedTargetDate} (log 2+ dates to overlay actual pace projection)`;
+        } else if (bw.hasRate) {
+          subEl.textContent = `Actual + 7d Trend (${bw.currentTrendKg.toFixed(1)} kg) · Dashed Cyan = Current Pace projected ${bw.goal.horizonWeeks} wks forward`;
+        } else {
+          subEl.textContent = `Baseline logged (${bw.latestKg.toFixed(1)} kg on ${bw.latest.date}) — log a 2nd date to compute weekly pace & kcal/day`;
+        }
+      }
+      if (statusBadge) {
+        if (bw.goalStatus) {
+          const toneMap = {
+            emerald: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40',
+            cyan: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40',
+            amber: 'bg-amber-500/15 text-amber-300 border-amber-500/40',
+            rose: 'bg-rose-500/15 text-rose-300 border-rose-500/40',
+            slate: 'bg-slate-950 text-slate-300 border-slate-700'
+          };
+          statusBadge.textContent = bw.goalStatus.label;
+          statusBadge.className = `text-[11px] font-mono font-bold px-2.5 py-0.5 rounded border ${toneMap[bw.goalStatus.tone] || toneMap.slate}`;
+        } else if (bw.hasRate) {
+          const dir = bw.actualKgPerWeek > 0.05 ? 'Gaining' : (bw.actualKgPerWeek < -0.05 ? 'Losing' : 'Maintaining');
+          statusBadge.textContent = `${dir} · ${bw.actualKcalPerDay >= 0 ? '+' : ''}${bw.actualKcalPerDay} kcal/d`;
+          statusBadge.className = 'text-[11px] font-mono font-bold px-2.5 py-0.5 rounded border bg-cyan-500/15 text-cyan-300 border-cyan-500/35';
+        } else {
+          statusBadge.textContent = bw.entries.length ? 'Baseline Logged' : 'No weigh-ins yet';
+          statusBadge.className = 'text-[11px] font-mono px-2.5 py-0.5 rounded border bg-slate-950 text-slate-400 border-slate-800';
+        }
+      }
+
+      // Render Weigh-In History list (newest first)
+      const histEl = document.getElementById('bw-history-list');
+      if (histEl) {
+        if (!bw.entries.length) {
+          histEl.innerHTML = `<div class="py-3 text-slate-400 text-center">No weigh-ins logged yet.</div>`;
+        } else {
+          histEl.innerHTML = [...bw.entries].reverse().map((e, revIdx) => {
+            const origIdx = bw.entries.length - 1 - revIdx;
+            const tr = bw.trendByIdx[origIdx];
+            const prev = origIdx > 0 ? bw.entries[origIdx - 1] : null;
+            const diff = prev ? Math.round((e.weightKg - prev.weightKg) * 10) / 10 : null;
+            const diffHtml = diff !== null
+              ? `<span class="font-mono text-[11px] ${diff > 0 ? 'text-emerald-400' : (diff < 0 ? 'text-sky-400' : 'text-slate-400')}">${diff > 0 ? '+' : ''}${diff.toFixed(1)}</span>`
+              : `<span class="font-mono text-[11px] text-slate-500">—</span>`;
+            return `
+              <div class="py-2 flex flex-wrap items-center justify-between gap-2">
+                <div class="flex flex-wrap items-center gap-2.5">
+                  <span class="font-mono font-bold text-white">${escapeHtml(e.date)}</span>
+                  <span class="font-mono font-extrabold text-amber-300 tabular-nums">${e.weightKg.toFixed(1)} kg</span>
+                  ${diffHtml}
+                  <span class="font-mono text-[11px] text-sky-300/85">7d: ${tr.toFixed(1)} kg</span>
+                  ${e.note ? `<span class="text-slate-400 italic">— ${escapeHtml(e.note)}</span>` : ''}
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <button type="button" data-date="${escapeHtml(e.date)}" onclick="loadBodyweightIntoForm(this.dataset.date)" class="px-2 py-1 rounded-md bg-slate-800 hover:bg-amber-500/20 text-slate-200 hover:text-amber-200 border border-slate-700 text-[11px] font-semibold transition">Edit</button>
+                  <button type="button" data-date="${escapeHtml(e.date)}" onclick="deleteBodyweightEntry(this.dataset.date)" class="px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 text-[11px] transition">Delete</button>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      // Render Bodyweight Trend + Projection Chart
+      renderBodyweightChart(bw);
+    }
+
+    function renderBodyweightChart(bw) {
+      destroyChart('bodyweight');
+      const canvas = document.getElementById('chart-bodyweight');
+      if (!canvas || typeof Chart === 'undefined') return;
+
+      if (!bw.entries.length) {
+        chartInstances.bodyweight = new Chart(canvas, {
+          type: 'line',
+          data: { labels: ['Log your first weigh-in'], datasets: [{ label: 'Bodyweight (kg)', data: [], borderColor: '#f59e0b' }] },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } },
+            scales: {
+              x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e293b' } },
+              y: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e293b' } }
+            }
+          }
+        });
+        return;
+      }
+
+      // Build unified chronological timeline: all logged dates + weekly future projection dates + exact goal date
+      const daySet = new Set(bw.entries.map(e => e.dayNum));
+      const futureHorizonDays = (bw.hasRate || bw.hasGoal) ? bw.horizonDays : 0;
+      if (futureHorizonDays > 0) {
+        for (let d = 7; d <= futureHorizonDays; d += 7) {
+          daySet.add(bw.anchorDay + d);
+        }
+        daySet.add(bw.anchorDay + futureHorizonDays);
+      }
+      if (bw.hasGoal) {
+        const goalDay = isoDateToDayNum(bw.resolvedTargetDate);
+        if (goalDay !== null && goalDay > bw.anchorDay) daySet.add(goalDay);
+      }
+
+      const timelineDays = Array.from(daySet).sort((a, b) => a - b);
+      const labels = timelineDays.map(dayNumToIsoDate);
+
+      const entryByDay = new Map();
+      const trendByDay = new Map();
+      bw.entries.forEach((e, idx) => {
+        entryByDay.set(e.dayNum, e.weightKg);
+        trendByDay.set(e.dayNum, bw.trendByIdx[idx]);
+      });
+
+      const actualData = timelineDays.map(d => (entryByDay.has(d) ? entryByDay.get(d) : null));
+      const trendData = timelineDays.map(d => (trendByDay.has(d) ? trendByDay.get(d) : null));
+
+      const datasets = [
+        {
+          label: 'Actual Weigh-In (kg)',
+          data: actualData,
+          borderColor: 'rgba(245, 158, 11, 0.55)',
+          backgroundColor: '#f59e0b',
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          borderWidth: 1.5,
+          tension: 0.15,
+          spanGaps: true
+        },
+        {
+          label: '7-Day Trend (kg)',
+          data: trendData,
+          borderColor: '#38bdf8',
+          backgroundColor: 'rgba(56, 189, 248, 0.14)',
+          pointRadius: 2.5,
+          pointHoverRadius: 5,
+          borderWidth: 2.5,
+          tension: 0.3,
+          fill: false,
+          spanGaps: true
+        }
+      ];
+
+      if (bw.hasRate) {
+        const projData = timelineDays.map(d => {
+          if (d < bw.anchorDay) return null;
+          if (d === bw.anchorDay) return Math.round(bw.currentTrendKg * 10) / 10;
+          return Math.round((bw.currentTrendKg + bw.kgPerDay * (d - bw.anchorDay)) * 10) / 10;
+        });
+        datasets.push({
+          label: `Projected Pace (${bw.actualKgPerWeek >= 0 ? '+' : ''}${bw.actualKgPerWeek.toFixed(2)} kg/wk)`,
+          data: projData,
+          borderColor: '#22d3ee',
+          borderDash: [6, 4],
+          pointRadius: timelineDays.map(d => d === timelineDays[timelineDays.length - 1] ? 5 : 2),
+          pointBackgroundColor: '#22d3ee',
+          borderWidth: 2,
+          tension: 0,
+          spanGaps: true
+        });
+      }
+
+      if (bw.hasGoal) {
+        const goalDay = isoDateToDayNum(bw.resolvedTargetDate);
+        const goalSpan = Math.max(1, (goalDay || (bw.anchorDay + bw.daysToGoal)) - bw.anchorDay);
+        const goalData = timelineDays.map(d => {
+          if (d < bw.anchorDay || (goalDay && d > goalDay)) return null;
+          if (d === bw.anchorDay) return Math.round(bw.currentTrendKg * 10) / 10;
+          const frac = (d - bw.anchorDay) / goalSpan;
+          return Math.round((bw.currentTrendKg + bw.deltaToGoalKg * frac) * 10) / 10;
+        });
+        datasets.push({
+          label: `Goal Trajectory (${bw.goal.targetKg.toFixed(1)} kg · ${bw.requiredKcalPerDay >= 0 ? '+' : ''}${bw.requiredKcalPerDay} kcal/d)`,
+          data: goalData,
+          borderColor: '#10b981',
+          borderDash: [4, 4],
+          pointRadius: timelineDays.map(d => d === goalDay ? 6 : 2),
+          pointStyle: timelineDays.map(d => d === goalDay ? 'rectRounded' : 'circle'),
+          pointBackgroundColor: '#10b981',
+          borderWidth: 2,
+          tension: 0,
+          spanGaps: true
+        });
+      }
+
+      chartInstances.bodyweight = new Chart(canvas, {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { labels: { color: '#cbd5e1', font: { size: 10 }, usePointStyle: true, boxWidth: 8 } },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => ctx.parsed.y !== null ? `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)} kg` : null
+              }
+            }
+          },
+          scales: {
+            x: { ticks: { color: '#94a3b8', font: { size: 10 }, maxTicksLimit: 10 }, grid: { color: '#1e293b' } },
+            y: {
+              ticks: { color: '#cbd5e1', font: { size: 10 }, callback: (v) => `${v} kg` },
+              grid: { color: '#1e293b' }
+            }
+          }
+        }
+      });
     }
 
     function renderFeedbackDigest(scopedSessions = null) {
@@ -11877,20 +12817,28 @@
       const q = (document.getElementById('history-search-input')?.value || '').trim().toLowerCase();
       const srcHist = scopedSessions || getActiveAnalyticsScopedHistory();
       const rows = [...srcHist]
-        .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')))
+        .sort((a, b) => {
+          const ka = `${a.date || ''} ${a.startedAt || ''}`;
+          const kb = `${b.date || ''} ${b.startedAt || ''}`;
+          return kb.localeCompare(ka);
+        })
         .filter(s => {
         if (!q) return true;
         const cmTxt = s.cycleMeta ? `${s.cycleMeta.macrocycleName || ''} ${s.cycleMeta.mesoName || ''} wk ${s.cycleMeta.week || ''}` : '';
-        const blob = `${s.date} ${s.dayName} ${cmTxt} ${s.notes || ''} ${(s.exercises || []).map(e => `${e.exercise} ${e.limiter || ''} ${e.supersetGroup ? 'ss-' + e.supersetGroup : ''} ${e.notes || ''}`).join(' ')}`.toLowerCase();
+        const timeTxt = s.startedAt ? `${s.startedAt} ${formatStartTimeDisplay(s.startedAt)}` : '';
+        const blob = `${s.date} ${timeTxt} ${s.dayName} ${cmTxt} ${s.notes || ''} ${(s.exercises || []).map(e => `${e.exercise} ${e.limiter || ''} ${e.supersetGroup ? 'ss-' + e.supersetGroup : ''} ${e.notes || ''}`).join(' ')}`.toLowerCase();
         return blob.includes(q);
       });
 
       tbody.innerHTML = rows.length
-        ? rows.map(s => `
+        ? rows.map(s => {
+            const startTimeLabel = formatStartTimeDisplay(s.startedAt);
+            return `
             <tr class="hover:bg-slate-800/30 align-top">
               <td class="py-3 pr-3 whitespace-nowrap">
                 <div class="font-mono font-bold text-white flex items-center gap-1.5 flex-wrap">
                   <span>${escapeHtml(s.date)}</span>
+                  ${startTimeLabel ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-slate-800/90 text-cyan-300 border border-slate-700 tabular-nums" title="Workout start time (${escapeHtml(s.startedAt)})">🕒 ${escapeHtml(startTimeLabel)}</span>` : ''}
                   ${s.cycleMeta ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40" title="${escapeHtml(`${s.cycleMeta.macrocycleName || ''} · ${s.cycleMeta.mesoName || ''}`)}">Wk ${toIntOr(s.cycleMeta.week, 1)}</span>` : ''}
                   ${s.diceSession ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/40" title="Dice Gainz Session #${s.diceSession.sessionNumber || ''}">🎲 #${s.diceSession.sessionNumber || ''}</span>` : ''}
                 </div>
@@ -11963,7 +12911,8 @@
                 </div>
               </td>
             </tr>
-          `).join('')
+          `;
+          }).join('')
         : `<tr><td colspan="5" class="py-6 text-center text-xs text-slate-400">No logged sessions found.</td></tr>`;
     }
 
@@ -12301,10 +13250,14 @@
       }).join('');
 
       body.innerHTML = `
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-xl bg-slate-950 border border-slate-800">
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 p-3.5 rounded-xl bg-slate-950 border border-slate-800">
           <div>
             <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Session Date</label>
             <input type="date" value="${escapeHtml(d.date || '')}" oninput="updateHistoryDraftMeta('date', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 min-h-[40px] font-mono text-xs font-bold text-white focus:outline-none focus:border-amber-500" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Started At</label>
+            <input type="time" value="${escapeHtml(normalizeStartTime24(d.startedAt) || '')}" oninput="updateHistoryDraftMeta('startedAt', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 min-h-[40px] font-mono text-xs font-bold text-cyan-300 focus:outline-none focus:border-cyan-500" />
           </div>
           <div>
             <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Day / Session Name</label>
@@ -12314,7 +13267,7 @@
             <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Session Duration (min)</label>
             <input type="number" min="1" max="300" value="${Math.max(1, toIntOr(d.durationMin, 45))}" oninput="updateHistoryDraftMeta('durationMin', this.value)" class="no-spinners w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 min-h-[40px] font-mono text-xs font-bold text-cyan-300 focus:outline-none focus:border-cyan-500" />
           </div>
-          <div class="sm:col-span-3">
+          <div class="sm:col-span-4">
             <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Session Notes</label>
             <input type="text" value="${escapeHtml(d.notes || '')}" oninput="updateHistoryDraftMeta('notes', this.value)" placeholder="Overall session notes..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 min-h-[38px] text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500" />
           </div>
@@ -12450,6 +13403,7 @@
       return {
         ...draft,
         date: String(draft.date || new Date().toISOString().slice(0, 10)).slice(0, 10),
+        startedAt: normalizeStartTime24(draft.startedAt) || null,
         dayName: String(draft.dayName || 'Logged Session').trim() || 'Logged Session',
         durationMin: durMin,
         notes: String(draft.notes || '').trim(),
@@ -12484,7 +13438,7 @@
       lastHistoryEditUndoSnapshot = JSON.parse(JSON.stringify(appState.history));
       const updated = recalculateHistoryEntryMetrics(editingHistoryDraft);
       appState.history[idx] = updated;
-      appState.history.sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+      appState.history.sort((a, b) => `${a.date || ''} ${a.startedAt || ''}`.localeCompare(`${b.date || ''} ${b.startedAt || ''}`));
       syncRoadmapBaseLoadsFromTrainingData(false);
       saveState();
       closeEditHistoryModal();
@@ -12680,7 +13634,8 @@
             'savedMacrocyclesLibrary',
             'fullHistoryAndAnalyticsPrefs',
             'activeCycleContext',
-            'diceGainzState'
+            'diceGainzState',
+            'bodyweightLogAndGoal'
           ],
           counts: {
             sessions: sessCount,
