@@ -15,7 +15,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
 
   <!-- Defense-in-depth CSP: restrict script, font, and network endpoints -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com https://www.gstatic.com https://cdn.jsdelivr.net; frame-src 'self' https://lift-assist-85f6c.firebaseapp.com; object-src 'none'; base-uri 'self';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com https://www.gstatic.com https://cdn.jsdelivr.net; frame-src 'self' https://lift-assist-85f6c.firebaseapp.com; object-src 'none'; base-uri 'self';" />
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -230,6 +230,12 @@
             <div class="flex flex-wrap items-center gap-1.5">
               <button type="button" id="auto-rest-toggle-btn" onclick="toggleAutoRest()" class="px-3 min-h-[44px] sm:min-h-[36px] rounded-lg text-xs font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/25 transition" title="Automatically launch GG RM or VDS rest timer when checking off a set">
                 ⚡ Auto-Rest: ON
+              </button>
+              <button type="button" id="bg-alert-toggle-btn" onclick="toggleBgAudioKeepAlive()" class="px-3 min-h-[44px] sm:min-h-[36px] rounded-lg text-xs font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/25 transition" title="Keep mobile rest audio alive while screen is locked or backgrounded (toggle OFF if using Spotify/Apple Music on iOS)">
+                🔔 BG Sound: ON
+              </button>
+              <button type="button" id="rest-notify-btn" onclick="requestRestNotificationPermission()" class="px-3 min-h-[44px] sm:min-h-[36px] rounded-lg text-xs font-mono font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition" title="Enable OS lock-screen notifications when rest timer completes">
+                📲 Alerts
               </button>
               <button type="button" onclick="startRestTimer(210, 'T1 RM'); toggleRestPresetsPanel(false)" class="px-3 min-h-[44px] sm:min-h-[36px] rounded-lg text-xs font-mono font-semibold bg-slate-800 hover:bg-amber-500/20 text-amber-300 border border-slate-700 hover:border-amber-500/40 transition">T1 RM 3:30</button>
               <button type="button" onclick="startRestTimer(120, 'T1 VDS'); toggleRestPresetsPanel(false)" class="px-3 min-h-[44px] sm:min-h-[36px] rounded-lg text-xs font-mono font-semibold bg-slate-800 hover:bg-amber-500/20 text-amber-200 border border-slate-700 hover:border-amber-500/40 transition">T1 VDS 2:00</button>
@@ -597,6 +603,7 @@
             <span id="density-chart-badge" class="text-[11px] font-mono px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">KG / MIN</span>
           </div>
           <div class="h-64"><canvas id="chart-density"></canvas></div>
+          <div id="density-superset-callout" class="hidden mt-3 px-3 py-2 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/35 text-[11px] text-fuchsia-200 leading-relaxed"></div>
         </div>
 
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg flex flex-col justify-between gap-3">
@@ -1156,6 +1163,16 @@
       </div>
       <div class="p-5 space-y-4">
         <div id="session-preview-warning" class="hidden p-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-xs text-amber-200 leading-relaxed"></div>
+        <div class="space-y-2.5 p-3.5 rounded-xl bg-slate-950/90 border border-slate-800">
+          <div>
+            <label for="session-preview-heading-input" class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Session Heading / Title</label>
+            <input type="text" id="session-preview-heading-input" maxlength="90" placeholder="e.g. Heavy Bench PR — Felt Fast" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 min-h-[40px] text-xs sm:text-sm font-bold text-white placeholder-slate-500 focus:outline-none focus:border-amber-500" />
+          </div>
+          <div>
+            <label for="session-preview-notes-input" class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Overall Session Description</label>
+            <textarea id="session-preview-notes-input" rows="2" placeholder="Readiness, sleep, bar speed, wins, or adjustments for next week..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 resize-y"></textarea>
+          </div>
+        </div>
         <div id="session-preview-metrics" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5"></div>
         <div class="space-y-2">
           <div class="text-xs font-bold uppercase tracking-wider text-slate-300">Next-Session Roll-Forward Preview</div>
@@ -1165,6 +1182,27 @@
           <button type="button" onclick="closeSessionPreviewModal()" class="px-4 min-h-[44px] sm:min-h-[38px] rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white transition">Cancel</button>
           <button type="button" id="session-preview-tickall-btn" onclick="commitSessionFromPreview(true)" class="hidden px-4 min-h-[44px] sm:min-h-[38px] rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 transition">Tick All &amp; Log Full Session</button>
           <button type="button" id="session-preview-confirm-btn" onclick="commitSessionFromPreview(false)" class="px-4 min-h-[44px] sm:min-h-[38px] rounded-xl text-xs font-extrabold bg-amber-500 hover:bg-amber-400 text-slate-950 transition">Confirm &amp; Log Session</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Submitted Session History Modal -->
+  <div id="edit-history-modal" role="dialog" aria-modal="true" aria-labelledby="edit-history-modal-title" onclick="if (event.target === this) closeEditHistoryModal()" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div tabindex="-1" class="bg-slate-900 border border-slate-700 rounded-2xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/95 shrink-0">
+        <div>
+          <h3 id="edit-history-modal-title" class="text-base font-extrabold text-white">Edit Logged Session</h3>
+          <p class="text-xs text-slate-400">Adjust date, sets, reps, warm-ups, timers, or notes — tonnage, density, e1RM, and charts recalculate automatically.</p>
+        </div>
+        <button type="button" onclick="closeEditHistoryModal()" class="text-slate-400 hover:text-white text-lg px-2 min-h-[40px] min-w-[40px] rounded-lg" aria-label="Close Edit Logged Session">✕</button>
+      </div>
+      <div id="edit-history-modal-body" class="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1"></div>
+      <div class="px-5 py-3.5 border-t border-slate-800 bg-slate-900/95 flex flex-wrap items-center justify-between gap-2 shrink-0">
+        <button type="button" onclick="addExerciseToHistoryDraft()" class="px-3.5 min-h-[44px] sm:min-h-[38px] rounded-xl text-xs font-bold bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/35 transition">+ Add Exercise</button>
+        <div class="flex items-center gap-2 ml-auto">
+          <button type="button" onclick="closeEditHistoryModal()" class="px-4 min-h-[44px] sm:min-h-[38px] rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white transition">Cancel</button>
+          <button type="button" onclick="saveEditedHistoryEntry()" class="px-4 min-h-[44px] sm:min-h-[38px] rounded-xl text-xs font-extrabold bg-amber-500 hover:bg-amber-400 text-slate-950 transition">Save Changes</button>
         </div>
       </div>
     </div>
@@ -2276,6 +2314,15 @@
       const supersetGroup = ['A', 'B', 'C'].includes(opts.supersetGroup) ? opts.supersetGroup : null;
       const restOffsetSecs = Math.max(-120, Math.min(120, toIntOr(opts.restOffsetSecs, 0)));
       const stopwatchSecs = Math.max(0, toIntOr(opts.stopwatchSecs, 0));
+      const warmupSets = Array.isArray(opts.warmupSets)
+        ? opts.warmupSets
+            .filter(w => w && typeof w === 'object')
+            .map(w => ({
+              weight: Math.max(0, Math.round((parseFloat(w.weight) || 0) * 10) / 10),
+              reps: Math.max(1, Math.min(50, toIntOr(w.reps, 5))),
+              done: Boolean(w.done)
+            }))
+        : null;
       return {
         id: sanitizeSafeId(opts.id, 'lift'),
         tier,
@@ -2303,6 +2350,8 @@
         restOffsetSecs,
         supersetGroup,
         stopwatchSecs,
+        warmupSets,
+        warmupCustomized: Boolean(opts.warmupCustomized),
         rmDone: Boolean(opts.rmDone),
         setsDone: Array.isArray(opts.setsDone) ? Array.from({ length: fSets }, (_, i) => Boolean(opts.setsDone[i])) : Array(fSets).fill(false),
         plannedTarget: opts.plannedTarget || null,
@@ -2428,7 +2477,81 @@
 
     const openWarmupCardIds = new Set();
     const openConfigCardIds = new Set();
-    const warmupCheckedMap = {};
+
+    function ensureExerciseWarmupSets(ex, forceRegen = false) {
+      if (!ex) return [];
+      if (forceRegen || !Array.isArray(ex.warmupSets)) {
+        const prevDone = (!forceRegen && Array.isArray(ex.warmupSets)) ? ex.warmupSets.map(w => Boolean(w && w.done)) : [];
+        const generated = buildBarbellWarmupSets(ex.weight, ex.exercise);
+        ex.warmupSets = generated.map((ws, idx) => ({
+          weight: ws.weight,
+          reps: ws.reps,
+          done: Boolean(prevDone[idx])
+        }));
+        if (forceRegen) ex.warmupCustomized = false;
+      }
+      return ex.warmupSets;
+    }
+
+    function formatWarmupSetsSummary(warmupSets) {
+      if (!Array.isArray(warmupSets) || !warmupSets.length) return '';
+      return warmupSets
+        .filter(w => w && toIntOr(w.reps, 0) > 0)
+        .map(w => {
+          const wt = Math.max(0, parseFloat(w.weight) || 0);
+          const wTxt = wt > 0 ? `${wt} kg` : 'BW';
+          return `${wTxt}×${toIntOr(w.reps, 1)}`;
+        })
+        .join(' · ');
+    }
+
+    function renderWarmupDrawerHtml(ex, exIdx) {
+      if (!ex || !openWarmupCardIds.has(ex.id)) return '';
+      const warmupSets = ensureExerciseWarmupSets(ex, false);
+      const doneCount = warmupSets.filter(w => w && w.done).length;
+      const workWt = Math.max(0, parseFloat(ex.weight) || 0);
+      return `
+        <div class="px-3 py-2.5 rounded-xl bg-orange-500/10 border border-orange-500/30 space-y-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-xs font-mono font-extrabold text-orange-300">🔥 Warm-Up Sets → ${workWt > 0 ? `${workWt} kg` : 'BW'}${doneCount > 0 ? ` (${doneCount} done)` : ''}</span>
+            <span class="text-[11px] text-orange-200/80">Editable · Logged in history · Excluded from volume &amp; density</span>
+          </div>
+          ${warmupSets.length ? `
+            <div class="space-y-1.5">
+              ${warmupSets.map((ws, wIdx) => {
+                const wDone = Boolean(ws && ws.done);
+                const wKg = Math.max(0, parseFloat(ws.weight) || 0);
+                const wReps = Math.max(1, toIntOr(ws.reps, 5));
+                const pctTxt = workWt > 0 ? `${Math.round((wKg / workWt) * 100)}%` : '';
+                return `
+                  <div class="flex flex-wrap items-center gap-1.5 p-1.5 rounded-lg border transition ${
+                    wDone ? 'bg-orange-500/20 border-orange-400/60' : 'bg-slate-950/80 border-orange-500/25'
+                  }">
+                    <button type="button" onclick="toggleWarmupSetDone(${exIdx}, ${wIdx})" class="px-2.5 min-h-[38px] rounded-lg font-mono text-xs font-bold border transition whitespace-nowrap ${
+                      wDone ? 'bg-orange-500 text-slate-950 border-orange-400' : 'bg-slate-900 text-orange-200 border-orange-500/35 hover:border-orange-400'
+                    }" title="Mark warm-up set ${wIdx + 1} complete">${wDone ? '✓ ' : ''}W${wIdx + 1}</button>
+                    <div class="inline-flex items-center gap-1">
+                      <input type="number" step="0.5" min="0" value="${wKg}" aria-label="Warm-up set ${wIdx + 1} weight in kg" onchange="updateWarmupSetField(${exIdx}, ${wIdx}, 'weight', this.value)" class="no-spinners w-16 sm:w-20 bg-slate-900 border border-slate-700 rounded-lg px-2 min-h-[38px] font-mono text-xs font-bold text-white text-center tabular-nums focus:outline-none focus:border-orange-400" />
+                      <span class="text-[11px] font-mono text-slate-400">kg ×</span>
+                      <input type="number" min="1" max="50" value="${wReps}" aria-label="Warm-up set ${wIdx + 1} reps" onchange="updateWarmupSetField(${exIdx}, ${wIdx}, 'reps', this.value)" class="no-spinners w-14 bg-slate-900 border border-slate-700 rounded-lg px-2 min-h-[38px] font-mono text-xs font-bold text-orange-200 text-center tabular-nums focus:outline-none focus:border-orange-400" />
+                    </div>
+                    ${pctTxt ? `<span class="text-[11px] font-mono text-orange-300/75 ml-0.5">${pctTxt}</span>` : ''}
+                    <button type="button" onclick="removeWarmupSet(${exIdx}, ${wIdx})" class="ml-auto min-h-[38px] min-w-[38px] rounded-lg bg-slate-900 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-slate-800 text-xs transition inline-flex items-center justify-center" title="Remove warm-up set" aria-label="Remove warm-up set ${wIdx + 1}">✕</button>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          ` : `<div class="text-xs text-orange-200/80">No auto-ramp generated for ${workWt > 0 ? `${workWt} kg` : 'Bodyweight'} — tap <strong>+ Add Set</strong> to log custom warm-up/feeler sets.</div>`}
+          <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-orange-500/20">
+            <div class="flex items-center gap-1.5">
+              <button type="button" onclick="addWarmupSet(${exIdx})" class="px-2.5 min-h-[36px] rounded-lg text-xs font-mono font-bold bg-orange-500/20 hover:bg-orange-500/30 text-orange-200 border border-orange-500/40 transition">+ Add Set</button>
+              <button type="button" onclick="resetWarmupSets(${exIdx})" class="px-2.5 min-h-[36px] rounded-lg text-xs font-mono font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 transition" title="Regenerate progressive barbell warm-up ramp from working weight">↺ Reset Ramp</button>
+            </div>
+            <span class="px-2 py-1 rounded-lg font-mono text-[11px] font-extrabold bg-amber-500/20 text-amber-200 border border-amber-500/40">Work: ${workWt > 0 ? `${workWt} kg` : 'BW'}</span>
+          </div>
+        </div>
+      `;
+    }
 
     function makeT3Exercise(name, weight, sets, goalReps, notes = '', opts = {}) {
       const meta = findExerciseMeta(name);
@@ -2444,6 +2567,15 @@
         : (t3Mode === 'perset'
             ? Array.from({ length: count }, (_, i) => Math.max(1, t3Max - i))
             : buildDefaultT3SetReps(count, goal - 3));
+      const warmupSets = Array.isArray(opts.warmupSets)
+        ? opts.warmupSets
+            .filter(w => w && typeof w === 'object')
+            .map(w => ({
+              weight: Math.max(0, Math.round((parseFloat(w.weight) || 0) * 10) / 10),
+              reps: Math.max(1, Math.min(50, toIntOr(w.reps, 5))),
+              done: Boolean(w.done)
+            }))
+        : null;
       return {
         id: sanitizeSafeId(opts.id, 'lift'),
         tier: 'T3',
@@ -2464,6 +2596,8 @@
         restOffsetSecs: Math.max(-60, Math.min(120, toIntOr(opts.restOffsetSecs, 0))),
         supersetGroup: normalizeSupersetGroup(opts.supersetGroup),
         stopwatchSecs: Math.max(0, toIntOr(opts.stopwatchSecs, 0)),
+        warmupSets,
+        warmupCustomized: Boolean(opts.warmupCustomized),
         setsDone: Array.isArray(opts.setsDone) ? opts.setsDone.slice(0, count) : Array(count).fill(false),
         plannedTarget: opts.plannedTarget || null,
         diceMeta: opts.diceMeta || null,
@@ -3688,6 +3822,8 @@
             restOffsetSecs: Math.max(-60, Math.min(120, toIntOr(ex.restOffsetSecs, 0))),
             supersetGroup: normalizeSupersetGroup(ex.supersetGroup),
             stopwatchSecs: Math.max(0, toIntOr(ex.stopwatchSecs, 0)),
+            warmupSets: Array.isArray(ex.warmupSets) ? ex.warmupSets : null,
+            warmupCustomized: Boolean(ex.warmupCustomized),
             setsDone,
             plannedTarget: ex.plannedTarget || null,
             diceMeta: ex.diceMeta || null
@@ -3726,6 +3862,8 @@
           restOffsetSecs: Math.max(-120, Math.min(120, toIntOr(ex.restOffsetSecs, 0))),
           supersetGroup: normalizeSupersetGroup(ex.supersetGroup),
           stopwatchSecs: Math.max(0, toIntOr(ex.stopwatchSecs, 0)),
+          warmupSets: Array.isArray(ex.warmupSets) ? ex.warmupSets : null,
+          warmupCustomized: Boolean(ex.warmupCustomized),
           rmDone: Boolean(ex.rmDone),
           setsDone,
           plannedTarget: ex.plannedTarget || null,
@@ -3748,6 +3886,7 @@
         appState.phase = parsed.phase === 'intensification' ? 'intensification' : 'accumulation';
         appState.audioEnabled = parsed.audioEnabled !== undefined ? Boolean(parsed.audioEnabled) : true;
         appState.autoRestEnabled = parsed.autoRestEnabled !== undefined ? Boolean(parsed.autoRestEnabled) : true;
+        appState.bgAudioKeepAlive = parsed.bgAudioKeepAlive !== undefined ? Boolean(parsed.bgAudioKeepAlive) : true;
         appState.baseLoadPct = parseFloat(parsed.baseLoadPct) > 0 ? parseFloat(parsed.baseLoadPct) : (appState.phase === 'intensification' ? 87.5 : 82.5);
         appState.muscleSource = parsed.muscleSource === 'logged' ? 'logged' : 'programmed';
         appState.muscleSinglesMode = parsed.muscleSinglesMode === 'raw' ? 'raw' : 'weighted';
@@ -3926,16 +4065,282 @@
     }
 
     /* =========================================================================
-       7. NAVIGATION, TOASTS & AUDIO / TIMER ENGINE
+       7. NAVIGATION, TOASTS & WALL-CLOCK BACKGROUND AUDIO / TIMER ENGINE
        ========================================================================= */
+    const ACTIVE_TIMERS_STORAGE_KEY = 'gg_active_timers_v1';
     let sessionSeconds = 0;
     let sessionInterval = null;
+    let sessionTimerState = { running: false, baseSecs: 0, startedAtMs: 0, everStarted: false, manualStart: false };
+
     let restSecondsRemaining = 0;
     let restSecondsTotal = 0;
     let restInterval = null;
     let restPaused = false;
     let restLabel = 'Ready';
+    let restTimerState = {
+      running: false,
+      paused: false,
+      totalSecs: 0,
+      remainingSecs: 0,
+      endsAtMs: 0,
+      label: 'Ready',
+      completedTriggered: false
+    };
+
     let audioCtx = null;
+    let restChimeAudioEl = null;
+    let restKeepAliveAudioEl = null;
+    let cachedChimeWavUri = null;
+    let cachedSilentWavUri = null;
+    let audioUnlocked = false;
+    let restWakeLockSentinel = null;
+
+    function buildMonoPcmWavDataUri(samples, sampleRate = 22050) {
+      const numSamples = samples.length;
+      const buf = new ArrayBuffer(44 + numSamples * 2);
+      const view = new DataView(buf);
+      const writeStr = (off, str) => {
+        for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i));
+      };
+      writeStr(0, 'RIFF');
+      view.setUint32(4, 36 + numSamples * 2, true);
+      writeStr(8, 'WAVE');
+      writeStr(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, 1, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      writeStr(36, 'data');
+      view.setUint32(40, numSamples * 2, true);
+      let offset = 44;
+      for (let i = 0; i < numSamples; i++) {
+        const clamped = Math.max(-1, Math.min(1, samples[i]));
+        view.setInt16(offset, clamped < 0 ? clamped * 0x8000 : clamped * 0x7FFF, true);
+        offset += 2;
+      }
+      const bytes = new Uint8Array(buf);
+      let bin = '';
+      const chunkSize = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+      }
+      return 'data:audio/wav;base64,' + btoa(bin);
+    }
+
+    function getChimeWavUri() {
+      if (cachedChimeWavUri) return cachedChimeWavUri;
+      const sr = 22050;
+      const totalSecs = 0.72;
+      const samples = new Float32Array(Math.floor(sr * totalSecs));
+      const notes = [
+        { start: 0.00, dur: 0.18, freq: 880 },
+        { start: 0.22, dur: 0.18, freq: 880 },
+        { start: 0.44, dur: 0.24, freq: 1046.5 }
+      ];
+      notes.forEach(n => {
+        const sIdx = Math.floor(n.start * sr);
+        const len = Math.floor(n.dur * sr);
+        for (let i = 0; i < len && (sIdx + i) < samples.length; i++) {
+          const t = i / sr;
+          const attack = Math.min(1, t / 0.015);
+          const release = Math.max(0, 1 - Math.max(0, t - (n.dur - 0.07)) / 0.07);
+          const env = attack * release * 0.42;
+          samples[sIdx + i] += Math.sin(2 * Math.PI * n.freq * t) * env;
+        }
+      });
+      cachedChimeWavUri = buildMonoPcmWavDataUri(samples, sr);
+      return cachedChimeWavUri;
+    }
+
+    function getSilentKeepAliveWavUri() {
+      if (cachedSilentWavUri) return cachedSilentWavUri;
+      const sr = 8000;
+      const samples = new Float32Array(sr); // 1 second silent loop
+      cachedSilentWavUri = buildMonoPcmWavDataUri(samples, sr);
+      return cachedSilentWavUri;
+    }
+
+    function ensureTimerAudioElements() {
+      if (!restChimeAudioEl && typeof Audio !== 'undefined') {
+        restChimeAudioEl = new Audio(getChimeWavUri());
+        restChimeAudioEl.preload = 'auto';
+        restChimeAudioEl.setAttribute('playsinline', '');
+      }
+      if (!restKeepAliveAudioEl && typeof Audio !== 'undefined') {
+        restKeepAliveAudioEl = new Audio(getSilentKeepAliveWavUri());
+        restKeepAliveAudioEl.loop = true;
+        restKeepAliveAudioEl.preload = 'auto';
+        restKeepAliveAudioEl.volume = 0.01;
+        restKeepAliveAudioEl.setAttribute('playsinline', '');
+      }
+    }
+
+    function unlockMobileAudio() {
+      try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (Ctx) {
+          if (!audioCtx) audioCtx = new Ctx();
+          if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+        }
+        ensureTimerAudioElements();
+        if (!audioUnlocked && restChimeAudioEl) {
+          const prevVol = restChimeAudioEl.volume;
+          restChimeAudioEl.volume = 0;
+          const p = restChimeAudioEl.play();
+          if (p && typeof p.then === 'function') {
+            p.then(() => {
+              restChimeAudioEl.pause();
+              restChimeAudioEl.currentTime = 0;
+              restChimeAudioEl.volume = prevVol || 1;
+              audioUnlocked = true;
+            }).catch(() => {
+              restChimeAudioEl.volume = prevVol || 1;
+            });
+          } else {
+            restChimeAudioEl.volume = prevVol || 1;
+          }
+        }
+      } catch (_) {}
+    }
+
+    function isBgAudioKeepAliveEnabled() {
+      return appState.bgAudioKeepAlive !== false;
+    }
+
+    function startBackgroundKeepAlive() {
+      if (!appState.audioEnabled || !isBgAudioKeepAliveEnabled()) return;
+      try {
+        ensureTimerAudioElements();
+        if (restKeepAliveAudioEl && restKeepAliveAudioEl.paused) {
+          restKeepAliveAudioEl.play().catch(() => {});
+        }
+      } catch (_) {}
+    }
+
+    function stopBackgroundKeepAlive() {
+      try {
+        if (restKeepAliveAudioEl && !restKeepAliveAudioEl.paused) {
+          restKeepAliveAudioEl.pause();
+          restKeepAliveAudioEl.currentTime = 0;
+        }
+      } catch (_) {}
+    }
+
+    async function acquireRestWakeLock() {
+      try {
+        if (!('wakeLock' in navigator) || document.visibilityState !== 'visible') return;
+        if (restWakeLockSentinel) return;
+        restWakeLockSentinel = await navigator.wakeLock.request('screen');
+        restWakeLockSentinel.addEventListener('release', () => {
+          restWakeLockSentinel = null;
+        });
+      } catch (_) {}
+    }
+
+    function releaseRestWakeLock() {
+      try {
+        if (restWakeLockSentinel) {
+          restWakeLockSentinel.release().catch(() => {});
+          restWakeLockSentinel = null;
+        }
+      } catch (_) {}
+    }
+
+    function updateBgAlertUI() {
+      const bgBtn = document.getElementById('bg-alert-toggle-btn');
+      if (bgBtn) {
+        const on = isBgAudioKeepAliveEnabled();
+        bgBtn.textContent = on ? '🔔 BG Sound: ON' : '🔕 BG Sound: OFF';
+        bgBtn.className = on
+          ? 'px-3 min-h-[44px] sm:min-h-[36px] rounded-lg text-xs font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/25 transition'
+          : 'px-3 min-h-[44px] sm:min-h-[36px] rounded-lg text-xs font-mono font-bold bg-slate-800 text-slate-400 border border-slate-700 hover:text-white transition';
+      }
+      const nBtn = document.getElementById('rest-notify-btn');
+      if (nBtn) {
+        if (typeof Notification === 'undefined') {
+          nBtn.classList.add('hidden');
+        } else if (Notification.permission === 'granted') {
+          nBtn.textContent = '📲 Alerts: ON';
+          nBtn.className = 'px-3 min-h-[44px] sm:min-h-[36px] rounded-lg text-xs font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 transition';
+        } else if (Notification.permission === 'denied') {
+          nBtn.textContent = '📲 Alerts: Blocked';
+          nBtn.className = 'px-3 min-h-[44px] sm:min-h-[36px] rounded-lg text-xs font-mono font-semibold bg-slate-800 text-slate-500 border border-slate-700 transition';
+        } else {
+          nBtn.textContent = '📲 Enable Alerts';
+          nBtn.className = 'px-3 min-h-[44px] sm:min-h-[36px] rounded-lg text-xs font-mono font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition';
+        }
+      }
+    }
+
+    function toggleBgAudioKeepAlive() {
+      appState.bgAudioKeepAlive = !isBgAudioKeepAliveEnabled();
+      if (!appState.bgAudioKeepAlive) stopBackgroundKeepAlive();
+      else if (restTimerState.running && !restTimerState.paused) startBackgroundKeepAlive();
+      saveState();
+      updateBgAlertUI();
+      showToast(
+        appState.bgAudioKeepAlive
+          ? 'Background rest audio keep-alive enabled (keeps rest chime reliable when screen locks).'
+          : 'Background audio keep-alive disabled (music apps will never be interrupted; enable Alerts for lock-screen chimes).',
+        'info'
+      );
+    }
+
+    async function requestRestNotificationPermission() {
+      if (typeof Notification === 'undefined') {
+        showToast('OS Notifications are not supported in this browser.', 'warn');
+        return;
+      }
+      if (Notification.permission === 'granted') {
+        showToast('Lock-screen rest notifications are already enabled!', 'success');
+        updateBgAlertUI();
+        return;
+      }
+      if (Notification.permission === 'denied') {
+        showToast('Notifications are blocked in your browser site settings. Re-enable them there to get lock-screen alerts.', 'warn');
+        updateBgAlertUI();
+        return;
+      }
+      try {
+        const res = await Notification.requestPermission();
+        updateBgAlertUI();
+        if (res === 'granted') showToast('Lock-screen rest notifications enabled!', 'success');
+        else showToast('Rest notifications were not granted.', 'info');
+      } catch (_) {}
+    }
+
+    function sendRestCompleteNotification(label) {
+      if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+      const title = `${label || 'Rest'} Complete — Ready for Next Set`;
+      const opts = {
+        body: 'Time to get back under the bar. Tap to return to Lift Assist.',
+        icon: './icon-192.png',
+        badge: './icon-192.png',
+        tag: 'lift-assist-rest-done',
+        renotify: true,
+        silent: false,
+        vibrate: [250, 120, 250, 120, 350]
+      };
+      try {
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+          navigator.serviceWorker.ready
+            .then(reg => {
+              if (reg && typeof reg.showNotification === 'function') {
+                return reg.showNotification(title, opts);
+              }
+              new Notification(title, opts);
+            })
+            .catch(() => {
+              try { new Notification(title, opts); } catch (_) {}
+            });
+        } else {
+          new Notification(title, opts);
+        }
+      } catch (_) {}
+    }
 
     function showToast(message, type = 'info', opts = {}) {
       const container = document.getElementById('toast-container');
@@ -3982,13 +4387,12 @@
       setTimeout(dismiss, durationMs);
     }
 
-    function playTimerBeep() {
-      if (!appState.audioEnabled) return;
+    function playWebAudioBeep() {
       try {
         const Ctx = window.AudioContext || window.webkitAudioContext;
         if (!Ctx) return;
         if (!audioCtx) audioCtx = new Ctx();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
         const now = audioCtx.currentTime;
         [0, 0.22, 0.44].forEach((offset, i) => {
           const osc = audioCtx.createOscillator();
@@ -4004,8 +4408,31 @@
           osc.stop(now + offset + 0.2);
         });
       } catch (err) {
-        console.warn('Audio beep skipped:', err);
+        console.warn('Web Audio beep skipped:', err);
       }
+    }
+
+    function playTimerBeep() {
+      if (!appState.audioEnabled) return;
+      try {
+        if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+          navigator.vibrate([250, 120, 250, 120, 350]);
+        }
+      } catch (_) {}
+      try {
+        ensureTimerAudioElements();
+        if (restChimeAudioEl) {
+          restChimeAudioEl.currentTime = 0;
+          restChimeAudioEl.volume = 1;
+          const p = restChimeAudioEl.play();
+          if (p && typeof p.catch === 'function') {
+            p.catch(() => playWebAudioBeep());
+            return;
+          }
+          return;
+        }
+      } catch (_) {}
+      playWebAudioBeep();
     }
 
     function formatClock(sec) {
@@ -4023,7 +4450,10 @@
     }
 
     function toggleAudioAlert() {
+      unlockMobileAudio();
       appState.audioEnabled = !appState.audioEnabled;
+      if (!appState.audioEnabled) stopBackgroundKeepAlive();
+      else if (restTimerState.running && !restTimerState.paused) startBackgroundKeepAlive();
       saveState();
       updateAudioUI();
       showToast(`Timer audio alerts ${appState.audioEnabled ? 'enabled' : 'muted'}.`, 'info');
@@ -4124,39 +4554,151 @@
       return `${m}:${String(r).padStart(2, '0')}`;
     }
 
-    // Phase 7B: Per-Card Exercise Stopwatch Runtime (Book p. 63 Quarter-Set & Density Timing)
+    function parseDurationToSecs(val) {
+      if (typeof val === 'number' && Number.isFinite(val)) return Math.max(0, Math.round(val));
+      const s = String(val || '').trim();
+      if (!s) return 0;
+      if (s.includes(':')) {
+        const parts = s.split(':').map(p => parseInt(p.trim(), 10));
+        if (parts.length === 2 && !Number.isNaN(parts[0]) && !Number.isNaN(parts[1])) {
+          return Math.max(0, parts[0] * 60 + Math.max(0, parts[1]));
+        }
+      }
+      const n = parseInt(s, 10);
+      return Number.isNaN(n) ? 0 : Math.max(0, n);
+    }
+
+    // Phase 7B + Gym-Floor v2: Superset-Linked Exercise Stopwatch Runtime (Wall-Clock + Persisted)
     const exerciseStopwatchRuntime = {};
     let exerciseStopwatchTickInterval = null;
 
-    function getExerciseElapsedSecs(ex) {
+    function getActiveDayForExercise(ex) {
+      const activeDay = appState.split && appState.split[appState.activeDayIndex];
+      if (activeDay && Array.isArray(activeDay.exercises) && activeDay.exercises.some(item => item === ex || (ex && item.id === ex.id))) {
+        return activeDay;
+      }
+      if (Array.isArray(appState.split) && ex && ex.id) {
+        return appState.split.find(d => Array.isArray(d.exercises) && d.exercises.some(item => item.id === ex.id)) || activeDay;
+      }
+      return activeDay || null;
+    }
+
+    function getExerciseTimerGroup(day, ex) {
+      if (!ex || !ex.id) {
+        return { key: '', isLinked: false, group: null, members: [], partners: [] };
+      }
+      const d = day || getActiveDayForExercise(ex);
+      const grp = normalizeSupersetGroup(ex.supersetGroup);
+      if (grp && d && Array.isArray(d.exercises)) {
+        const members = d.exercises.filter(item => normalizeSupersetGroup(item.supersetGroup) === grp);
+        if (members.length >= 2) {
+          return {
+            key: `ss_${d.id || 'day'}_${grp}`,
+            isLinked: true,
+            group: grp,
+            members,
+            partners: members.filter(m => m.id !== ex.id)
+          };
+        }
+      }
+      return {
+        key: ex.id,
+        isLinked: false,
+        group: null,
+        members: [ex],
+        partners: []
+      };
+    }
+
+    function saveActiveTimersState() {
+      try {
+        const payload = {
+          savedAtMs: Date.now(),
+          session: {
+            running: Boolean(sessionTimerState.running),
+            baseSecs: Math.max(0, toIntOr(sessionTimerState.baseSecs, 0)),
+            startedAtMs: sessionTimerState.running ? Number(sessionTimerState.startedAtMs || 0) : 0,
+            everStarted: Boolean(sessionTimerState.everStarted),
+            manualStart: Boolean(sessionTimerState.manualStart)
+          },
+          rest: {
+            running: Boolean(restTimerState.running),
+            paused: Boolean(restTimerState.paused),
+            totalSecs: Math.max(0, toIntOr(restTimerState.totalSecs, 0)),
+            remainingSecs: Math.max(0, toIntOr(restTimerState.remainingSecs, 0)),
+            endsAtMs: (restTimerState.running && !restTimerState.paused) ? Number(restTimerState.endsAtMs || 0) : 0,
+            label: String(restTimerState.label || 'Ready'),
+            completedTriggered: Boolean(restTimerState.completedTriggered)
+          },
+          stopwatches: {}
+        };
+        Object.entries(exerciseStopwatchRuntime).forEach(([k, rt]) => {
+          if (!rt) return;
+          payload.stopwatches[k] = {
+            running: Boolean(rt.running),
+            baseSecs: Math.max(0, toIntOr(rt.baseSecs, 0)),
+            startedAtMs: rt.running ? Number(rt.startedAtMs || 0) : 0,
+            everStarted: Boolean(rt.everStarted),
+            manualStart: Boolean(rt.manualStart)
+          };
+        });
+        localStorage.setItem(ACTIVE_TIMERS_STORAGE_KEY, JSON.stringify(payload));
+      } catch (_) {}
+    }
+
+    function getExerciseElapsedSecs(ex, day = null) {
       if (!ex || !ex.id) return 0;
-      const rt = exerciseStopwatchRuntime[ex.id];
+      const tg = getExerciseTimerGroup(day, ex);
+      const rt = exerciseStopwatchRuntime[tg.key];
       if (rt && rt.running) {
         return Math.max(0, rt.baseSecs + Math.floor((Date.now() - rt.startedAtMs) / 1000));
+      }
+      if (rt && rt.baseSecs > 0) {
+        return Math.max(0, toIntOr(rt.baseSecs, 0));
+      }
+      if (tg.isLinked) {
+        return tg.members.reduce((mx, m) => Math.max(mx, toIntOr(m.stopwatchSecs, 0)), 0);
       }
       return Math.max(0, toIntOr(ex.stopwatchSecs, 0));
     }
 
-    function isExerciseStopwatchRunning(exId) {
-      return Boolean(exId && exerciseStopwatchRuntime[exId] && exerciseStopwatchRuntime[exId].running);
+    function isExerciseStopwatchRunning(exOrId, day = null) {
+      if (!exOrId) return false;
+      if (typeof exOrId === 'string') {
+        if (exerciseStopwatchRuntime[exOrId] && exerciseStopwatchRuntime[exOrId].running) return true;
+        const d = day || (appState.split && appState.split[appState.activeDayIndex]);
+        const found = d && Array.isArray(d.exercises) ? d.exercises.find(e => e.id === exOrId) : null;
+        if (found) {
+          const tg = getExerciseTimerGroup(d, found);
+          return Boolean(exerciseStopwatchRuntime[tg.key] && exerciseStopwatchRuntime[tg.key].running);
+        }
+        return false;
+      }
+      const tg = getExerciseTimerGroup(day, exOrId);
+      return Boolean(tg.key && exerciseStopwatchRuntime[tg.key] && exerciseStopwatchRuntime[tg.key].running);
+    }
+
+    function syncAllExerciseStopwatchDom() {
+      const day = appState.split && appState.split[appState.activeDayIndex];
+      if (!day || !Array.isArray(day.exercises)) return;
+      day.exercises.forEach(ex => {
+        if (!ex || !ex.id) return;
+        const el = document.getElementById(`ex-sw-time-${ex.id}`);
+        if (el) el.textContent = formatShortDuration(getExerciseElapsedSecs(ex, day));
+      });
     }
 
     function ensureExerciseStopwatchInterval() {
       const anyRunning = Object.values(exerciseStopwatchRuntime).some(rt => rt && rt.running);
       if (anyRunning && !exerciseStopwatchTickInterval) {
         exerciseStopwatchTickInterval = setInterval(() => {
-          let active = 0;
-          Object.entries(exerciseStopwatchRuntime).forEach(([id, rt]) => {
-            if (!rt || !rt.running) return;
-            active++;
-            const secs = Math.max(0, rt.baseSecs + Math.floor((Date.now() - rt.startedAtMs) / 1000));
-            const el = document.getElementById(`ex-sw-time-${id}`);
-            if (el) el.textContent = formatShortDuration(secs);
-          });
-          if (active === 0) {
+          const stillRunning = Object.values(exerciseStopwatchRuntime).some(rt => rt && rt.running);
+          if (!stillRunning) {
             clearInterval(exerciseStopwatchTickInterval);
             exerciseStopwatchTickInterval = null;
+            return;
           }
+          syncAllExerciseStopwatchDom();
         }, 1000);
       } else if (!anyRunning && exerciseStopwatchTickInterval) {
         clearInterval(exerciseStopwatchTickInterval);
@@ -4164,44 +4706,138 @@
       }
     }
 
-    function toggleExerciseStopwatch(exIdx) {
-      const ex = appState.split[appState.activeDayIndex]?.exercises[exIdx];
+    function isExerciseFinalSetDone(ex) {
+      if (!ex) return false;
+      if (ex.tier === 'T3') {
+        const count = Math.max(1, toIntOr(ex.sets, 3));
+        return Boolean(Array.isArray(ex.setsDone) && ex.setsDone[count - 1]);
+      }
+      const style = normalizeRmStyle(ex.rmStyle);
+      if (style === 'bookend') return Boolean(ex.bookendDone);
+      if (style === 'skipVds' || style === 'lastSetRm') return Boolean(ex.rmDone);
+      const fuCount = Math.max(0, toIntOr(ex.fuSets, 0));
+      if (style === 'skipRm') {
+        return fuCount > 0 && Boolean(Array.isArray(ex.setsDone) && ex.setsDone[fuCount - 1]);
+      }
+      // Standard GG T1/T2: final VDS set checked (or RM checked if 0 VDS sets planned)
+      if (fuCount > 0) {
+        return Boolean(Array.isArray(ex.setsDone) && ex.setsDone[fuCount - 1]);
+      }
+      return Boolean(ex.rmDone);
+    }
+
+    function handleWorkingSetTimerAutoLogic(exIdx, justChecked) {
+      if (!justChecked) return;
+      unlockMobileAudio();
+      const day = appState.split && appState.split[appState.activeDayIndex];
+      const ex = day && day.exercises[exIdx];
       if (!ex) return;
-      const rt = exerciseStopwatchRuntime[ex.id];
+
+      const tg = getExerciseTimerGroup(day, ex);
+      const rt = exerciseStopwatchRuntime[tg.key];
+      const currentElapsed = getExerciseElapsedSecs(ex, day);
+      const alreadyStarted = Boolean((rt && (rt.running || rt.manualStart || rt.everStarted)) || currentElapsed > 0);
+      const timerLabel = tg.isLinked ? `SS-${tg.group} linked` : ex.exercise;
+
+      // 1) Auto-start with +25s seed on first working set if not already manually started
+      if (!alreadyStarted) {
+        exerciseStopwatchRuntime[tg.key] = {
+          running: true,
+          baseSecs: 25,
+          startedAtMs: Date.now(),
+          everStarted: true,
+          manualStart: false
+        };
+        tg.members.forEach(m => { m.stopwatchSecs = 25; });
+        ensureExerciseStopwatchInterval();
+        saveActiveTimersState();
+        showToast(`⏱ ${timerLabel} timer auto-started (+25s)`, 'info');
+      }
+
+      // 2) Auto-pause when final working set is complete (for supersets: all partners' final sets complete)
+      const activeRt = exerciseStopwatchRuntime[tg.key];
+      if (activeRt && activeRt.running && tg.members.every(isExerciseFinalSetDone)) {
+        const elapsed = Math.max(0, activeRt.baseSecs + Math.floor((Date.now() - activeRt.startedAtMs) / 1000));
+        tg.members.forEach(m => { m.stopwatchSecs = elapsed; });
+        exerciseStopwatchRuntime[tg.key] = {
+          running: false,
+          baseSecs: elapsed,
+          startedAtMs: 0,
+          everStarted: true,
+          manualStart: Boolean(activeRt.manualStart)
+        };
+        ensureExerciseStopwatchInterval();
+        saveActiveTimersState();
+        showToast(`⏱ ${timerLabel} timer paused at ${formatShortDuration(elapsed)}`, 'success');
+      }
+    }
+
+    function toggleExerciseStopwatch(exIdx) {
+      unlockMobileAudio();
+      const day = appState.split && appState.split[appState.activeDayIndex];
+      const ex = day && day.exercises[exIdx];
+      if (!ex) return;
+      const tg = getExerciseTimerGroup(day, ex);
+      const rt = exerciseStopwatchRuntime[tg.key];
       if (rt && rt.running) {
         const elapsed = Math.max(0, rt.baseSecs + Math.floor((Date.now() - rt.startedAtMs) / 1000));
-        ex.stopwatchSecs = elapsed;
-        exerciseStopwatchRuntime[ex.id] = { running: false, baseSecs: elapsed, startedAtMs: 0 };
+        tg.members.forEach(m => { m.stopwatchSecs = elapsed; });
+        exerciseStopwatchRuntime[tg.key] = {
+          running: false,
+          baseSecs: elapsed,
+          startedAtMs: 0,
+          everStarted: true,
+          manualStart: true
+        };
         ensureExerciseStopwatchInterval();
+        saveActiveTimersState();
         saveState();
         renderLogger();
       } else {
-        const base = Math.max(0, toIntOr(ex.stopwatchSecs, 0));
-        exerciseStopwatchRuntime[ex.id] = { running: true, baseSecs: base, startedAtMs: Date.now() };
+        const base = getExerciseElapsedSecs(ex, day);
+        exerciseStopwatchRuntime[tg.key] = {
+          running: true,
+          baseSecs: base,
+          startedAtMs: Date.now(),
+          everStarted: true,
+          manualStart: true
+        };
         ensureExerciseStopwatchInterval();
+        saveActiveTimersState();
         renderLogger();
       }
     }
 
     function resetExerciseStopwatch(exIdx) {
-      const ex = appState.split[appState.activeDayIndex]?.exercises[exIdx];
+      const day = appState.split && appState.split[appState.activeDayIndex];
+      const ex = day && day.exercises[exIdx];
       if (!ex) return;
-      ex.stopwatchSecs = 0;
-      delete exerciseStopwatchRuntime[ex.id];
+      const tg = getExerciseTimerGroup(day, ex);
+      tg.members.forEach(m => {
+        m.stopwatchSecs = 0;
+        delete exerciseStopwatchRuntime[m.id];
+      });
+      delete exerciseStopwatchRuntime[tg.key];
       ensureExerciseStopwatchInterval();
+      saveActiveTimersState();
       saveState();
       renderLogger();
     }
 
     function flushAndStopDayStopwatches(day) {
       if (!day || !Array.isArray(day.exercises)) return;
+      const clearedKeys = new Set();
       day.exercises.forEach(ex => {
         if (!ex || !ex.id) return;
-        const elapsed = getExerciseElapsedSecs(ex);
+        const tg = getExerciseTimerGroup(day, ex);
+        const elapsed = getExerciseElapsedSecs(ex, day);
         ex.stopwatchSecs = elapsed;
-        delete exerciseStopwatchRuntime[ex.id];
+        clearedKeys.add(ex.id);
+        if (tg.key) clearedKeys.add(tg.key);
       });
+      clearedKeys.forEach(k => { delete exerciseStopwatchRuntime[k]; });
       ensureExerciseStopwatchInterval();
+      saveActiveTimersState();
     }
 
     function getNextSupersetPartner(day, exIdx) {
@@ -4250,44 +4886,96 @@
       const dock = document.getElementById('timer-dock');
       if (!dock) return;
       const isLogger = (appState.activeTab || 'logger') === 'logger';
-      const timerActive = Boolean(sessionInterval || restInterval || restPaused || restSecondsRemaining > 0);
+      const timerActive = Boolean(sessionTimerState.running || restTimerState.running || restPaused || restSecondsRemaining > 0);
       dock.classList.toggle('hidden', !isLogger && !timerActive);
     }
 
-    function toggleSessionTimer() {
+    function getSessionElapsedSecs() {
+      if (sessionTimerState.running && sessionTimerState.startedAtMs > 0) {
+        return Math.max(0, sessionTimerState.baseSecs + Math.floor((Date.now() - sessionTimerState.startedAtMs) / 1000));
+      }
+      return Math.max(0, toIntOr(sessionTimerState.baseSecs, 0));
+    }
+
+    function syncSessionClockUI() {
+      sessionSeconds = getSessionElapsedSecs();
+      const el = document.getElementById('session-clock-display');
       const btn = document.getElementById('session-toggle-btn');
-      if (sessionInterval) {
+      if (el) el.textContent = formatClock(sessionSeconds);
+      if (btn) {
+        btn.textContent = sessionTimerState.running ? 'Pause' : (sessionSeconds > 0 ? 'Resume' : 'Start');
+      }
+      if (sessionSeconds >= 60) {
+        const durInput = document.getElementById('manual-duration-input');
+        if (durInput && document.activeElement !== durInput) {
+          const mins = Math.max(1, Math.round(sessionSeconds / 60));
+          if (String(durInput.value) !== String(mins)) {
+            durInput.value = mins;
+            updateLiveMetrics();
+          }
+        }
+      }
+    }
+
+    function ensureSessionTimerInterval() {
+      if (sessionTimerState.running && !sessionInterval) {
+        sessionInterval = setInterval(syncSessionClockUI, 1000);
+      } else if (!sessionTimerState.running && sessionInterval) {
         clearInterval(sessionInterval);
         sessionInterval = null;
-        if (btn) btn.textContent = 'Resume';
-      } else {
-        sessionInterval = setInterval(() => {
-          sessionSeconds += 1;
-          const el = document.getElementById('session-clock-display');
-          if (el) el.textContent = formatClock(sessionSeconds);
-          if (sessionSeconds >= 60) {
-            const durInput = document.getElementById('manual-duration-input');
-            if (durInput && document.activeElement !== durInput) {
-              durInput.value = Math.max(1, Math.round(sessionSeconds / 60));
-              updateLiveMetrics();
-            }
-          }
-        }, 1000);
-        if (btn) btn.textContent = 'Pause';
       }
+    }
+
+    function autoStartSessionTimerIfNeeded() {
+      if (
+        sessionTimerState.running ||
+        sessionTimerState.manualStart ||
+        sessionTimerState.everStarted ||
+        getSessionElapsedSecs() > 0
+      ) {
+        return false;
+      }
+      unlockMobileAudio();
+      sessionTimerState = {
+        running: true,
+        baseSecs: 0,
+        startedAtMs: Date.now(),
+        everStarted: true,
+        manualStart: false
+      };
+      ensureSessionTimerInterval();
+      syncSessionClockUI();
+      saveActiveTimersState();
+      syncTimerDockVisibility();
+      return true;
+    }
+
+    function toggleSessionTimer() {
+      unlockMobileAudio();
+      if (sessionTimerState.running) {
+        sessionTimerState.baseSecs = getSessionElapsedSecs();
+        sessionTimerState.running = false;
+        sessionTimerState.startedAtMs = 0;
+        sessionTimerState.everStarted = true;
+        sessionTimerState.manualStart = true;
+      } else {
+        sessionTimerState.running = true;
+        sessionTimerState.startedAtMs = Date.now();
+        sessionTimerState.everStarted = true;
+        sessionTimerState.manualStart = true;
+      }
+      ensureSessionTimerInterval();
+      syncSessionClockUI();
+      saveActiveTimersState();
       syncTimerDockVisibility();
     }
 
     function resetSessionTimer() {
-      if (sessionInterval) {
-        clearInterval(sessionInterval);
-        sessionInterval = null;
-      }
+      sessionTimerState = { running: false, baseSecs: 0, startedAtMs: 0, everStarted: false, manualStart: false };
       sessionSeconds = 0;
-      const el = document.getElementById('session-clock-display');
-      const btn = document.getElementById('session-toggle-btn');
-      if (el) el.textContent = '00:00';
-      if (btn) btn.textContent = 'Start';
+      ensureSessionTimerInterval();
+      syncSessionClockUI();
+      saveActiveTimersState();
       syncTimerDockVisibility();
     }
 
@@ -4305,7 +4993,7 @@
       const pct = restSecondsTotal > 0 ? Math.max(0, Math.min(100, (restSecondsRemaining / restSecondsTotal) * 100)) : 0;
       if (bar) bar.style.width = `${pct}%`;
 
-      const active = restInterval !== null || restPaused;
+      const active = restTimerState.running || restPaused;
       [plusBtn, pauseBtn, stopBtn].forEach(b => {
         if (b) b.classList.toggle('hidden', !active);
       });
@@ -4320,34 +5008,87 @@
       syncTimerDockVisibility();
     }
 
+    function handleRestTimerComplete(silentStale = false) {
+      if (restTimerState.completedTriggered) return;
+      restTimerState.completedTriggered = true;
+      restTimerState.running = false;
+      restTimerState.paused = false;
+      restTimerState.remainingSecs = 0;
+      restTimerState.endsAtMs = 0;
+      if (restInterval) {
+        clearInterval(restInterval);
+        restInterval = null;
+      }
+      restPaused = false;
+      restSecondsRemaining = 0;
+      const baseLbl = restTimerState.label || restLabel || 'Rest';
+      restLabel = `${baseLbl} Done!`;
+      stopBackgroundKeepAlive();
+      releaseRestWakeLock();
+      saveActiveTimersState();
+      updateRestDisplay();
+
+      const box = document.getElementById('rest-countdown-box');
+      if (box) box.classList.add('timer-alert-glow');
+
+      if (!silentStale) {
+        playTimerBeep();
+        sendRestCompleteNotification(baseLbl);
+        const srLive = document.getElementById('sr-timer-live');
+        if (srLive) {
+          srLive.textContent = '';
+          setTimeout(() => { srLive.textContent = `${baseLbl} rest complete. Ready for your next set.`; }, 40);
+        }
+        showToast(`${baseLbl} rest complete — ready for your next set!`, 'warn');
+      }
+    }
+
+    function tickRestTimerFromWallClock() {
+      if (!restTimerState.running || restTimerState.paused) return;
+      const msLeft = restTimerState.endsAtMs - Date.now();
+      const secsLeft = Math.max(0, Math.ceil(msLeft / 1000));
+      restSecondsRemaining = secsLeft;
+      restTimerState.remainingSecs = secsLeft;
+      if (msLeft <= 0) {
+        handleRestTimerComplete(false);
+      } else {
+        updateRestDisplay();
+      }
+    }
+
+    function ensureRestTimerInterval() {
+      if (restTimerState.running && !restTimerState.paused && !restInterval) {
+        restInterval = setInterval(tickRestTimerFromWallClock, 500);
+      } else if ((!restTimerState.running || restTimerState.paused) && restInterval) {
+        clearInterval(restInterval);
+        restInterval = null;
+      }
+    }
+
     function startRestTimer(seconds, label = 'Rest') {
-      if (restInterval) clearInterval(restInterval);
-      restSecondsRemaining = Math.max(1, toIntOr(seconds, 90));
-      restSecondsTotal = restSecondsRemaining;
+      unlockMobileAudio();
+      if (restInterval) {
+        clearInterval(restInterval);
+        restInterval = null;
+      }
+      const dur = Math.max(1, toIntOr(seconds, 90));
+      restSecondsRemaining = dur;
+      restSecondsTotal = dur;
       restLabel = label;
       restPaused = false;
-      restInterval = setInterval(() => {
-        if (restPaused) return;
-        restSecondsRemaining -= 1;
-        if (restSecondsRemaining <= 0) {
-          restSecondsRemaining = 0;
-          clearInterval(restInterval);
-          restInterval = null;
-          restLabel = `${label} Done!`;
-          updateRestDisplay();
-          const box = document.getElementById('rest-countdown-box');
-          if (box) box.classList.add('timer-alert-glow');
-          playTimerBeep();
-          const srLive = document.getElementById('sr-timer-live');
-          if (srLive) {
-            srLive.textContent = '';
-            setTimeout(() => { srLive.textContent = `${label} rest complete. Ready for your next set.`; }, 40);
-          }
-          showToast(`${label} rest complete — ready for your next set!`, 'warn');
-        } else {
-          updateRestDisplay();
-        }
-      }, 1000);
+      restTimerState = {
+        running: true,
+        paused: false,
+        totalSecs: dur,
+        remainingSecs: dur,
+        endsAtMs: Date.now() + dur * 1000,
+        label,
+        completedTriggered: false
+      };
+      startBackgroundKeepAlive();
+      acquireRestWakeLock();
+      ensureRestTimerInterval();
+      saveActiveTimersState();
       updateRestDisplay();
     }
 
@@ -4358,27 +5099,167 @@
     }
 
     function addRestTime(deltaSec) {
-      restSecondsRemaining = Math.max(1, restSecondsRemaining + deltaSec);
+      const d = toIntOr(deltaSec, 30);
+      if (restTimerState.running && !restTimerState.paused) {
+        restTimerState.endsAtMs = Math.max(Date.now() + 1000, restTimerState.endsAtMs + d * 1000);
+        restSecondsRemaining = Math.max(1, Math.ceil((restTimerState.endsAtMs - Date.now()) / 1000));
+        restTimerState.remainingSecs = restSecondsRemaining;
+      } else {
+        restSecondsRemaining = Math.max(1, restSecondsRemaining + d);
+        restTimerState.remainingSecs = restSecondsRemaining;
+      }
       restSecondsTotal = Math.max(restSecondsTotal, restSecondsRemaining);
+      restTimerState.totalSecs = restSecondsTotal;
+      saveActiveTimersState();
       updateRestDisplay();
     }
 
     function toggleRestTimer() {
-      if (!restInterval && !restPaused) return;
-      restPaused = !restPaused;
+      if (!restTimerState.running && !restPaused) return;
+      unlockMobileAudio();
+      if (!restPaused) {
+        // Pause
+        restSecondsRemaining = Math.max(1, Math.ceil((restTimerState.endsAtMs - Date.now()) / 1000));
+        restPaused = true;
+        restTimerState.paused = true;
+        restTimerState.remainingSecs = restSecondsRemaining;
+        restTimerState.endsAtMs = 0;
+        stopBackgroundKeepAlive();
+        releaseRestWakeLock();
+      } else {
+        // Resume
+        restPaused = false;
+        restTimerState.running = true;
+        restTimerState.paused = false;
+        restTimerState.endsAtMs = Date.now() + Math.max(1, restSecondsRemaining) * 1000;
+        restTimerState.completedTriggered = false;
+        startBackgroundKeepAlive();
+        acquireRestWakeLock();
+      }
+      ensureRestTimerInterval();
+      saveActiveTimersState();
       updateRestDisplay();
     }
 
     function stopRestTimer() {
-      if (restInterval) clearInterval(restInterval);
-      restInterval = null;
+      if (restInterval) {
+        clearInterval(restInterval);
+        restInterval = null;
+      }
       restPaused = false;
       restSecondsRemaining = 0;
       restSecondsTotal = 0;
       restLabel = 'Ready';
+      restTimerState = {
+        running: false,
+        paused: false,
+        totalSecs: 0,
+        remainingSecs: 0,
+        endsAtMs: 0,
+        label: 'Ready',
+        completedTriggered: false
+      };
+      stopBackgroundKeepAlive();
+      releaseRestWakeLock();
+      saveActiveTimersState();
       const box = document.getElementById('rest-countdown-box');
       if (box) box.classList.remove('timer-alert-glow');
       updateRestDisplay();
+    }
+
+    function reconcileAllTimersNow() {
+      if (sessionTimerState.running) {
+        syncSessionClockUI();
+        ensureSessionTimerInterval();
+      }
+      if (restTimerState.running && !restTimerState.paused) {
+        tickRestTimerFromWallClock();
+        if (restTimerState.running && document.visibilityState === 'visible') {
+          acquireRestWakeLock();
+        }
+      }
+      syncAllExerciseStopwatchDom();
+      ensureExerciseStopwatchInterval();
+    }
+
+    function restoreActiveTimersState() {
+      try {
+        const raw = localStorage.getItem(ACTIVE_TIMERS_STORAGE_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        if (!data || typeof data !== 'object') return;
+
+        // 1) Session Stopwatch
+        if (data.session) {
+          sessionTimerState = {
+            running: Boolean(data.session.running && data.session.startedAtMs > 0),
+            baseSecs: Math.max(0, toIntOr(data.session.baseSecs, 0)),
+            startedAtMs: Number(data.session.startedAtMs || 0),
+            everStarted: Boolean(data.session.everStarted || data.session.running || toIntOr(data.session.baseSecs, 0) > 0),
+            manualStart: Boolean(data.session.manualStart)
+          };
+          syncSessionClockUI();
+          ensureSessionTimerInterval();
+        }
+
+        // 2) Exercise / Superset Stopwatches
+        if (data.stopwatches && typeof data.stopwatches === 'object') {
+          Object.entries(data.stopwatches).forEach(([k, rt]) => {
+            if (!rt) return;
+            exerciseStopwatchRuntime[k] = {
+              running: Boolean(rt.running && rt.startedAtMs > 0),
+              baseSecs: Math.max(0, toIntOr(rt.baseSecs, 0)),
+              startedAtMs: Number(rt.startedAtMs || 0),
+              everStarted: Boolean(rt.everStarted),
+              manualStart: Boolean(rt.manualStart)
+            };
+          });
+          ensureExerciseStopwatchInterval();
+        }
+
+        // 3) Rest Timer
+        if (data.rest) {
+          const r = data.rest;
+          restSecondsTotal = Math.max(0, toIntOr(r.totalSecs, 0));
+          restLabel = String(r.label || 'Ready');
+          if (r.running && !r.paused && r.endsAtMs > 0) {
+            const msLeft = r.endsAtMs - Date.now();
+            restTimerState = {
+              running: true,
+              paused: false,
+              totalSecs: restSecondsTotal,
+              remainingSecs: Math.max(0, Math.ceil(msLeft / 1000)),
+              endsAtMs: Number(r.endsAtMs),
+              label: restLabel,
+              completedTriggered: Boolean(r.completedTriggered)
+            };
+            restPaused = false;
+            restSecondsRemaining = restTimerState.remainingSecs;
+            if (msLeft <= 0) {
+              // If expired over 10 minutes ago, restore silently without startling beep
+              const stale = (Date.now() - r.endsAtMs) > 10 * 60 * 1000;
+              handleRestTimerComplete(stale);
+            } else {
+              ensureRestTimerInterval();
+              updateRestDisplay();
+            }
+          } else if (r.paused && r.remainingSecs > 0) {
+            restPaused = true;
+            restSecondsRemaining = Math.max(1, toIntOr(r.remainingSecs, 0));
+            restTimerState = {
+              running: false,
+              paused: true,
+              totalSecs: restSecondsTotal,
+              remainingSecs: restSecondsRemaining,
+              endsAtMs: 0,
+              label: restLabel,
+              completedTriggered: false
+            };
+            updateRestDisplay();
+          }
+        }
+        syncTimerDockVisibility();
+      } catch (_) {}
     }
 
     function switchTab(tabName) {
@@ -4528,21 +5409,36 @@
     }
 
     function renderCardStopwatchHtml(ex, exIdx, lastEntry) {
-      const elapsed = getExerciseElapsedSecs(ex);
-      const running = isExerciseStopwatchRunning(ex.id);
+      const day = appState.split && appState.split[appState.activeDayIndex];
+      const tg = getExerciseTimerGroup(day, ex);
+      const elapsed = getExerciseElapsedSecs(ex, day);
+      const running = isExerciseStopwatchRunning(ex, day);
       const isQuarter = ex.tier === 'T2' && ex.fuMode === 'quarter';
       const swCls = running
-        ? 'bg-cyan-500/25 text-cyan-200 border-cyan-400/70 animate-pulse'
+        ? (tg.isLinked
+            ? 'bg-fuchsia-500/25 text-fuchsia-200 border-fuchsia-400/75 animate-pulse'
+            : 'bg-cyan-500/25 text-cyan-200 border-cyan-400/70 animate-pulse')
         : (elapsed > 0
-            ? 'bg-cyan-500/15 text-cyan-200 border-cyan-500/40 hover:border-cyan-400'
-            : (isQuarter
-                ? 'bg-cyan-500/10 text-cyan-300 border-cyan-500/40 hover:border-cyan-400'
-                : 'bg-slate-800 text-slate-300 border-slate-700 hover:text-white'));
+            ? (tg.isLinked
+                ? 'bg-fuchsia-500/15 text-fuchsia-200 border-fuchsia-500/45 hover:border-fuchsia-400'
+                : 'bg-cyan-500/15 text-cyan-200 border-cyan-500/40 hover:border-cyan-400')
+            : (tg.isLinked
+                ? 'bg-fuchsia-500/10 text-fuchsia-300 border-fuchsia-500/35 hover:border-fuchsia-400'
+                : (isQuarter
+                    ? 'bg-cyan-500/10 text-cyan-300 border-cyan-500/40 hover:border-cyan-400'
+                    : 'bg-slate-800 text-slate-300 border-slate-700 hover:text-white')));
       const prevDur = lastEntry && lastEntry.durationSecs > 0 ? lastEntry.durationSecs : 0;
+      const partnerList = tg.partners.map(p => p.exercise).join(', ');
+      const swTip = tg.isLinked
+        ? `Linked Superset Timer (SS-${tg.group}) shared with ${partnerList}. Starts, pauses & resets together; auto-starts (+25s) on first working set and auto-pauses when all SS-${tg.group} exercises finish.`
+        : (isQuarter
+            ? 'Quarter-Set Density Stopwatch (Book p. 63: auto-starts +25s on first set & auto-pauses on final VDS)'
+            : 'Per-Exercise Stopwatch (auto-starts +25s on first working set if not manually started; auto-pauses on final VDS)');
+      const linkedPrefix = tg.isLinked ? `<span class="mr-1">⛓ SS-${tg.group}</span>` : '';
       return `
         <div class="inline-flex items-center gap-1.5">
-          <button type="button" onclick="toggleExerciseStopwatch(${exIdx})" class="px-2.5 min-h-[44px] sm:min-h-[36px] rounded-xl text-xs font-mono font-bold border transition inline-flex items-center justify-center whitespace-nowrap ${swCls}" title="${isQuarter ? 'Quarter-Set Density Stopwatch (Book p. 63: time from RM to last double & beat last session!)' : 'Per-Exercise Stopwatch (click to Start/Pause; saved in completed session log)'}">⏱ <span id="ex-sw-time-${escapeHtml(ex.id)}" class="ml-1 tabular-nums">${formatShortDuration(elapsed)}</span>${running ? ' ⏸' : ''}</button>
-          ${elapsed > 0 ? `<button type="button" onclick="resetExerciseStopwatch(${exIdx})" class="min-h-[44px] min-w-[44px] sm:min-h-[36px] sm:min-w-[36px] rounded-xl text-xs font-mono bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition inline-flex items-center justify-center" title="Reset exercise stopwatch" aria-label="Reset exercise stopwatch">↺</button>` : ''}
+          <button type="button" onclick="toggleExerciseStopwatch(${exIdx})" class="px-2.5 min-h-[44px] sm:min-h-[36px] rounded-xl text-xs font-mono font-bold border transition inline-flex items-center justify-center whitespace-nowrap ${swCls}" title="${escapeHtml(swTip)}">${linkedPrefix}⏱ <span id="ex-sw-time-${escapeHtml(ex.id)}" class="ml-1 tabular-nums">${formatShortDuration(elapsed)}</span>${running ? ' ⏸' : ''}</button>
+          ${elapsed > 0 ? `<button type="button" onclick="resetExerciseStopwatch(${exIdx})" class="min-h-[44px] min-w-[44px] sm:min-h-[36px] sm:min-w-[36px] rounded-xl text-xs font-mono bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition inline-flex items-center justify-center" title="${tg.isLinked ? `Reset linked SS-${tg.group} stopwatch` : 'Reset exercise stopwatch'}" aria-label="Reset exercise stopwatch">↺</button>` : ''}
           ${prevDur > 0 ? `<span class="px-2 py-1 rounded-lg text-[11px] font-mono bg-slate-950 text-cyan-300/90 border border-slate-800 whitespace-nowrap" title="Previous logged exercise duration to beat (Book p. 63)">Prev ${formatShortDuration(prevDur)}</span>` : ''}
         </div>
       `;
@@ -4673,6 +5569,8 @@
         const bridgeRmTarget = Math.max(5, Math.min(10, set1 || Math.round(avgReps) || 8));
 
         const configOpen = openConfigCardIds.has(ex.id);
+        const warmupOpenT3 = openWarmupCardIds.has(ex.id);
+        const t3WarmupDoneCount = Array.isArray(ex.warmupSets) ? ex.warmupSets.filter(w => w && w.done).length : 0;
         const grp = normalizeSupersetGroup(ex.supersetGroup);
         const ssStyle = getSupersetStyle(grp);
         const hasT3CustomCfg = Boolean(grp || isPerSet);
@@ -4699,6 +5597,9 @@
                 </div>
               </div>
               <div class="flex flex-wrap items-center gap-1.5 sm:shrink-0">
+                <button type="button" data-id="${escapeHtml(ex.id)}" onclick="toggleWarmupDrawer(this.dataset.id)" class="px-2.5 min-h-[44px] sm:min-h-[36px] rounded-xl text-xs font-mono font-bold border transition whitespace-nowrap ${
+                  warmupOpenT3 ? 'bg-orange-500/20 text-orange-200 border-orange-500/50' : (t3WarmupDoneCount > 0 ? 'bg-orange-500/15 text-orange-300 border-orange-500/40' : 'bg-slate-800 text-orange-300/90 border-slate-700 hover:border-orange-500/40')
+                }" title="Toggle Editable Warm-Up Sets (logged in history, excluded from volume & density)">Warm-Up${t3WarmupDoneCount > 0 ? ` (${t3WarmupDoneCount})` : ''}</button>
                 ${renderCardStopwatchHtml(ex, exIdx, lastEntry)}
                 <button type="button" onclick="toggleAllExerciseSets(${exIdx})" class="px-3 min-h-[44px] sm:min-h-[36px] rounded-xl text-xs font-mono font-bold border transition whitespace-nowrap ${
                   allDone ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-slate-800 text-slate-200 border-slate-700 hover:border-emerald-500/40'
@@ -4708,6 +5609,8 @@
                 }" title="Configure T3 mode, superset, reorder, or remove lift" aria-label="Configure lift">⋯</button>
               </div>
             </div>
+
+            ${renderWarmupDrawerHtml(ex, exIdx)}
 
             ${configOpen ? `
               <!-- Collapsible Card Configure Drawer (Progressive Disclosure — zero feature loss) -->
@@ -4953,32 +5856,10 @@
         (ex.rmReps >= 10 && ex.effort === 'Easy')
       );
 
-      // Collapsible Barbell Warm-Up Ramp (KG, Book p. 37)
+      // Collapsible Editable Warm-Up Ramp (KG, Book p. 37 — logged, excluded from volume/density)
       const warmupOpen = openWarmupCardIds.has(ex.id);
-      const warmupSets = warmupOpen ? buildBarbellWarmupSets(ex.weight, ex.exercise) : [];
-      const warmupDoneArr = warmupCheckedMap[ex.id] || [];
-      const warmupDrawerHtml = warmupOpen ? `
-        <div class="px-3 py-2.5 rounded-xl bg-orange-500/10 border border-orange-500/30 space-y-2">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <span class="text-[11px] font-mono font-extrabold text-orange-300">🔥 Barbell Warm-Up Ramp → ${ex.weight} kg (Book p. 37)</span>
-            <span class="text-[11px] text-orange-200/75">Tap sets as you ramp up · smaller jumps near work weight</span>
-          </div>
-          ${warmupSets.length ? `
-            <div class="flex flex-wrap items-center gap-1.5">
-              ${warmupSets.map((ws, wIdx) => {
-                const wDone = Boolean(warmupDoneArr[wIdx]);
-                return `
-                  <button type="button" data-id="${escapeHtml(ex.id)}" onclick="toggleWarmupSetDone(this.dataset.id, ${wIdx})" class="px-2 py-1 rounded-lg font-mono text-[11px] font-bold border transition ${
-                    wDone ? 'bg-orange-500 text-slate-950 border-orange-400' : 'bg-slate-950 text-orange-200 border-orange-500/35 hover:border-orange-400'
-                  }" title="${ws.pct}% of working weight">${wDone ? '✓ ' : ''}${ws.weight} kg ×${ws.reps}</button>
-                `;
-              }).join('<span class="text-orange-400/50 text-xs">→</span>')}
-              <span class="text-orange-400/50 text-xs">→</span>
-              <span class="px-2 py-1 rounded-lg font-mono text-[11px] font-extrabold bg-amber-500/20 text-amber-200 border border-amber-500/40">Work: ${ex.weight} kg</span>
-            </div>
-          ` : `<div class="text-[11px] text-orange-200/80">Light working load (${ex.weight} kg) — 1–2 quick feeler sets at empty bar / light load is plenty.</div>`}
-        </div>
-      ` : '';
+      const warmupDoneCount = Array.isArray(ex.warmupSets) ? ex.warmupSets.filter(w => w && w.done).length : 0;
+      const warmupDrawerHtml = renderWarmupDrawerHtml(ex, exIdx);
 
       const rmChipHtml = hasRm ? `
         <label class="inline-flex items-center gap-2 px-3.5 min-h-[44px] rounded-xl border cursor-pointer transition ${
@@ -5060,8 +5941,8 @@
             </div>
             <div class="flex flex-wrap items-center gap-1.5 sm:shrink-0">
               <button type="button" data-id="${escapeHtml(ex.id)}" onclick="toggleWarmupDrawer(this.dataset.id)" class="px-2.5 min-h-[44px] sm:min-h-[36px] rounded-xl text-xs font-mono font-bold border transition whitespace-nowrap ${
-                warmupOpen ? 'bg-orange-500/20 text-orange-200 border-orange-500/50' : 'bg-slate-800 text-orange-300/90 border-slate-700 hover:border-orange-500/40'
-              }" title="Toggle KG Barbell Warm-Up Ramp (Book p. 37)">Warm-Up</button>
+                warmupOpen ? 'bg-orange-500/20 text-orange-200 border-orange-500/50' : (warmupDoneCount > 0 ? 'bg-orange-500/15 text-orange-300 border-orange-500/40' : 'bg-slate-800 text-orange-300/90 border-slate-700 hover:border-orange-500/40')
+              }" title="Toggle Editable Warm-Up Ramp (logged in history, excluded from volume & density)">Warm-Up${warmupDoneCount > 0 ? ` (${warmupDoneCount})` : ''}</button>
               ${renderCardStopwatchHtml(ex, exIdx, lastEntry)}
               <button type="button" onclick="toggleAllExerciseSets(${exIdx})" class="px-2.5 min-h-[44px] sm:min-h-[36px] rounded-xl text-xs font-mono font-bold border transition whitespace-nowrap ${
                 allDone ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-slate-800 text-slate-200 border-slate-700 hover:border-emerald-500/40'
@@ -5398,6 +6279,11 @@
       const ex = appState.split[appState.activeDayIndex]?.exercises[exIdx];
       if (!ex) return;
       ex[field] = val;
+      if (field === 'weight' && !ex.warmupCustomized && Array.isArray(ex.warmupSets)) {
+        const prevDone = ex.warmupSets.map(w => Boolean(w && w.done));
+        const regenerated = buildBarbellWarmupSets(ex.weight, ex.exercise);
+        ex.warmupSets = regenerated.map((ws, i) => ({ weight: ws.weight, reps: ws.reps, done: Boolean(prevDone[i]) }));
+      }
       if (field === 'fuSets' && ex.tier !== 'T3') {
         const count = Math.max(0, toIntOr(val, 0));
         ex.setsDone = Array.from({ length: count }, (_, i) => Boolean(ex.setsDone && ex.setsDone[i]));
@@ -5517,6 +6403,8 @@
       if (!ex || ex.tier === 'T3') return;
       ex.bookendDone = !ex.bookendDone;
       if (ex.bookendDone) {
+        autoStartSessionTimerIfNeeded();
+        handleWorkingSetTimerAutoLogic(exIdx, true);
         triggerSmartAutoRest(exIdx, true, `${ex.tier} RM2 (${formatEffortLabel(ex.endEffort || ex.effort)})`);
       }
       saveState();
@@ -5548,11 +6436,69 @@
       renderLogger();
     }
 
-    function toggleWarmupSetDone(cardId, wIdx) {
-      if (!cardId) return;
-      if (!Array.isArray(warmupCheckedMap[cardId])) warmupCheckedMap[cardId] = [];
-      warmupCheckedMap[cardId][wIdx] = !warmupCheckedMap[cardId][wIdx];
+    function toggleWarmupSetDone(exIdx, wIdx) {
+      const ex = appState.split[appState.activeDayIndex]?.exercises[exIdx];
+      if (!ex) return;
+      const list = ensureExerciseWarmupSets(ex, false);
+      if (!list[wIdx]) return;
+      list[wIdx].done = !list[wIdx].done;
+      if (list[wIdx].done) {
+        const started = autoStartSessionTimerIfNeeded();
+        if (started) showToast('⏱ Session timer auto-started.', 'info');
+      }
+      saveState();
       renderLogger();
+    }
+
+    function updateWarmupSetField(exIdx, wIdx, field, val) {
+      const ex = appState.split[appState.activeDayIndex]?.exercises[exIdx];
+      if (!ex) return;
+      const list = ensureExerciseWarmupSets(ex, false);
+      if (!list[wIdx]) return;
+      if (field === 'weight') {
+        list[wIdx].weight = Math.max(0, Math.round((parseFloat(val) || 0) * 10) / 10);
+      } else if (field === 'reps') {
+        list[wIdx].reps = Math.max(1, Math.min(50, toIntOr(val, 5)));
+      }
+      ex.warmupCustomized = true;
+      saveState();
+      renderLogger();
+    }
+
+    function addWarmupSet(exIdx) {
+      const ex = appState.split[appState.activeDayIndex]?.exercises[exIdx];
+      if (!ex) return;
+      const list = ensureExerciseWarmupSets(ex, false);
+      const workWt = Math.max(0, parseFloat(ex.weight) || 0);
+      let nextWt = workWt > 0 ? roundTo2_5(workWt * 0.5) : 0;
+      if (list.length > 0) {
+        const lastWt = Math.max(0, parseFloat(list[list.length - 1].weight) || 0);
+        nextWt = workWt > 0 ? Math.min(Math.max(0, workWt - 2.5), roundTo2_5(lastWt + 10)) : lastWt;
+      }
+      list.push({ weight: Math.max(0, nextWt), reps: list.length >= 2 ? 3 : 5, done: false });
+      ex.warmupCustomized = true;
+      saveState();
+      renderLogger();
+    }
+
+    function removeWarmupSet(exIdx, wIdx) {
+      const ex = appState.split[appState.activeDayIndex]?.exercises[exIdx];
+      if (!ex) return;
+      const list = ensureExerciseWarmupSets(ex, false);
+      if (wIdx < 0 || wIdx >= list.length) return;
+      list.splice(wIdx, 1);
+      ex.warmupCustomized = true;
+      saveState();
+      renderLogger();
+    }
+
+    function resetWarmupSets(exIdx) {
+      const ex = appState.split[appState.activeDayIndex]?.exercises[exIdx];
+      if (!ex) return;
+      ensureExerciseWarmupSets(ex, true);
+      saveState();
+      renderLogger();
+      showToast(`Reset warm-up ramp for ${ex.exercise}.`, 'info');
     }
 
     function setActiveT3Mode(exIdx, newMode) {
@@ -5704,15 +6650,84 @@
     }
 
     function cycleExerciseSuperset(exIdx) {
-      const ex = appState.split[appState.activeDayIndex]?.exercises[exIdx];
+      const day = appState.split[appState.activeDayIndex];
+      const ex = day && day.exercises[exIdx];
       if (!ex) return;
       const order = [null, 'A', 'B', 'C'];
       const curr = normalizeSupersetGroup(ex.supersetGroup);
       const next = order[(order.indexOf(curr) + 1) % order.length];
+
+      // Preserve elapsed & running stopwatch state seamlessly when joining/leaving a superset group
+      const oldTg = getExerciseTimerGroup(day, ex);
+      const oldRt = exerciseStopwatchRuntime[oldTg.key] ? { ...exerciseStopwatchRuntime[oldTg.key] } : null;
+      const oldElapsed = getExerciseElapsedSecs(ex, day);
+
+      if (oldTg.isLinked) {
+        // Detaching from a linked superset: keep remaining member(s) running cleanly
+        const remaining = oldTg.members.filter(m => m.id !== ex.id);
+        if (remaining.length === 1) {
+          const solo = remaining[0];
+          solo.stopwatchSecs = oldElapsed;
+          if (oldRt) exerciseStopwatchRuntime[solo.id] = { ...oldRt };
+          delete exerciseStopwatchRuntime[oldTg.key];
+        }
+        ex.stopwatchSecs = oldElapsed;
+      } else {
+        ex.stopwatchSecs = oldElapsed;
+        delete exerciseStopwatchRuntime[ex.id];
+      }
+
       ex.supersetGroup = next;
+
+      // If joining a new linked superset group (2+ members), unify into one shared timer
+      const newTg = getExerciseTimerGroup(day, ex);
+      if (newTg.isLinked) {
+        let bestRt = exerciseStopwatchRuntime[newTg.key] || null;
+        let maxSecs = Math.max(0, toIntOr(ex.stopwatchSecs, 0));
+        newTg.members.forEach(m => {
+          const mRt = exerciseStopwatchRuntime[m.id];
+          const mSecs = mRt && mRt.running
+            ? Math.max(0, mRt.baseSecs + Math.floor((Date.now() - mRt.startedAtMs) / 1000))
+            : Math.max(0, toIntOr(m.stopwatchSecs, 0));
+          maxSecs = Math.max(maxSecs, mSecs);
+          if (mRt && mRt.running && (!bestRt || !bestRt.running)) {
+            bestRt = { ...mRt };
+          } else if (mRt && !bestRt) {
+            bestRt = { ...mRt };
+          }
+          delete exerciseStopwatchRuntime[m.id];
+        });
+        if (!bestRt && oldRt && oldRt.running && !oldTg.isLinked) {
+          bestRt = { ...oldRt };
+        }
+        if (bestRt) {
+          if (!bestRt.running) bestRt.baseSecs = Math.max(bestRt.baseSecs || 0, maxSecs);
+          exerciseStopwatchRuntime[newTg.key] = bestRt;
+        } else if (maxSecs > 0) {
+          exerciseStopwatchRuntime[newTg.key] = {
+            running: false,
+            baseSecs: maxSecs,
+            startedAtMs: 0,
+            everStarted: true,
+            manualStart: false
+          };
+        }
+        newTg.members.forEach(m => { m.stopwatchSecs = maxSecs; });
+      } else if (oldRt && !oldTg.isLinked) {
+        exerciseStopwatchRuntime[ex.id] = { ...oldRt };
+      }
+
+      ensureExerciseStopwatchInterval();
+      saveActiveTimersState();
       saveState();
       renderLogger();
-      showToast(next ? `Grouped ${ex.exercise} into Superset SS-${next} (Book pp. 29, 36, 44).` : `Removed ${ex.exercise} from Superset group.`, 'info');
+      const linkedNote = newTg.isLinked
+        ? ` — timer linked with ${newTg.partners.map(p => p.exercise).join(', ')}.`
+        : '.';
+      showToast(
+        next ? `Grouped ${ex.exercise} into Superset SS-${next}${linkedNote}` : `Removed ${ex.exercise} from Superset group.`,
+        'info'
+      );
     }
 
     function stepT1BridgeMixVds(exIdx) {
@@ -5765,6 +6780,8 @@
       if (!ex || ex.tier === 'T3') return;
       ex.rmDone = !ex.rmDone;
       if (ex.rmDone) {
+        autoStartSessionTimerIfNeeded();
+        handleWorkingSetTimerAutoLogic(exIdx, true);
         triggerSmartAutoRest(exIdx, true);
       }
       saveState();
@@ -5777,6 +6794,8 @@
       if (!Array.isArray(ex.setsDone)) ex.setsDone = [];
       ex.setsDone[setIdx] = !ex.setsDone[setIdx];
       if (ex.setsDone[setIdx]) {
+        autoStartSessionTimerIfNeeded();
+        handleWorkingSetTimerAutoLogic(exIdx, true);
         triggerSmartAutoRest(exIdx, false);
       }
       saveState();
@@ -5796,6 +6815,7 @@
         ex.setsDone = style !== 'skipVds' ? Array(ex.fuSets).fill(target) : [];
         ex.bookendDone = style === 'bookend' ? target : false;
       }
+      if (target) autoStartSessionTimerIfNeeded();
       saveState();
       renderLogger();
     }
@@ -6091,6 +7111,15 @@
       if (footDens) footDens.textContent = `${m.density.toFixed(1)} kg/min`;
     }
 
+    function resetWarmupsAfterRollForward(ex) {
+      if (!ex || !Array.isArray(ex.warmupSets)) return;
+      if (!ex.warmupCustomized) {
+        ex.warmupSets = null;
+      } else {
+        ex.warmupSets.forEach(w => { if (w) w.done = false; });
+      }
+    }
+
     function rollForwardExercise(ex) {
       const stats = getExerciseCompletedStats(ex);
       if (stats.completedSets === 0) return;
@@ -6128,6 +7157,7 @@
           ex.statusLocked = false;
           ex.stopwatchSecs = 0;
           ex.setsDone = Array(ex.sets).fill(false);
+          resetWarmupsAfterRollForward(ex);
           return;
         }
 
@@ -6146,6 +7176,7 @@
         ex.statusLocked = false;
         ex.stopwatchSecs = 0;
         ex.setsDone = Array(ex.sets).fill(false);
+        resetWarmupsAfterRollForward(ex);
         return;
       }
 
@@ -6225,12 +7256,21 @@
       ex.rmDone = false;
       ex.bookendDone = false;
       ex.setsDone = Array(ex.fuSets).fill(false);
+      resetWarmupsAfterRollForward(ex);
     }
 
-    function executeSessionLog(forceTickAll = false) {
+    function executeSessionLog(forceTickAll = false, opts = {}) {
       const day = appState.split[appState.activeDayIndex];
       if (!day) return;
-      const preNotes = document.getElementById('session-notes-input')?.value || '';
+      // Sync live session clock before reading durationMin so auto-started/running time is captured
+      syncSessionClockUI();
+      const notesEl = document.getElementById('session-notes-input');
+      const preNotes = (opts && typeof opts.customNotes === 'string')
+        ? opts.customNotes
+        : (notesEl ? notesEl.value : '');
+      const sessionHeading = (opts && typeof opts.customHeading === 'string' && opts.customHeading.trim())
+        ? opts.customHeading.trim()
+        : day.name;
       lastSessionUndoSnapshot = {
         split: JSON.parse(JSON.stringify(appState.split)),
         historyLen: (appState.history || []).length,
@@ -6253,8 +7293,7 @@
       }
 
       const m = computeActiveDayMetrics();
-      const notesEl = document.getElementById('session-notes-input');
-      const sessionNotes = notesEl ? notesEl.value.trim() : '';
+      const sessionNotes = String(preNotes || '').trim();
 
       let t1Vol = 0, t2Vol = 0, t3Vol = 0;
       const loggedExercises = [];
@@ -6295,6 +7334,15 @@
           ? null
           : vdsRepsArr.filter((_, idx) => Boolean(ex.setsDone && ex.setsDone[idx]));
 
+        const loggedWarmups = Array.isArray(ex.warmupSets)
+          ? ex.warmupSets
+              .filter(w => w && w.done && toIntOr(w.reps, 0) > 0)
+              .map(w => ({
+                weight: Math.max(0, Math.round((parseFloat(w.weight) || 0) * 10) / 10),
+                reps: Math.max(1, toIntOr(w.reps, 1))
+              }))
+          : [];
+
         loggedExercises.push({
           tier: ex.tier,
           exercise: ex.exercise,
@@ -6324,7 +7372,8 @@
           limiter: (ex.tier !== 'T3' && ex.limiter && ex.limiter !== 'Standard') ? normalizeLimiter(ex.limiter) : null,
           restOffsetSecs: toIntOr(ex.restOffsetSecs, 0) || null,
           supersetGroup: normalizeSupersetGroup(ex.supersetGroup),
-          durationSecs: getExerciseElapsedSecs(ex) > 0 ? getExerciseElapsedSecs(ex) : null,
+          durationSecs: getExerciseElapsedSecs(ex, day) > 0 ? getExerciseElapsedSecs(ex, day) : null,
+          warmupSets: loggedWarmups.length > 0 ? loggedWarmups : null,
           diceMeta: ex.diceMeta ? {
             rolledRm: ex.diceMeta.rolledRm,
             actualRm: ex.tier === 'T3' ? (Array.isArray(ex.setReps) ? toIntOr(ex.setReps[0], 0) : 0) : ex.rmReps,
@@ -6340,6 +7389,26 @@
         });
       });
 
+      // Annotate superset-linked exercises with partner metadata & shared timer attribution for 4-Vector Analytics
+      const ssGroupsLogged = {};
+      loggedExercises.forEach(le => {
+        const g = normalizeSupersetGroup(le.supersetGroup);
+        if (!g) return;
+        if (!ssGroupsLogged[g]) ssGroupsLogged[g] = [];
+        ssGroupsLogged[g].push(le);
+      });
+      Object.values(ssGroupsLogged).forEach(members => {
+        if (members.length < 2) return;
+        const combinedTon = Math.round(members.reduce((sum, item) => sum + (parseFloat(item.tonnage) || 0), 0));
+        const sharedSecs = members.reduce((mx, item) => Math.max(mx, toIntOr(item.durationSecs, 0)), 0);
+        members.forEach(item => {
+          item.supersetPartners = members.filter(other => other !== item).map(other => other.exercise);
+          item.supersetCombinedTonnage = combinedTon;
+          item.supersetSharedTimer = sharedSecs > 0;
+          if (sharedSecs > 0) item.durationSecs = sharedSecs;
+        });
+      });
+
       const activeDiceSess = appState.diceGainz && appState.diceGainz.activeSession ? appState.diceGainz.activeSession : null;
       const isDiceLogged = Boolean(activeDiceSess) || loggedExercises.some(le => Boolean(le.diceMeta));
       const cycleCtx = getCurrentCycleContext();
@@ -6348,7 +7417,7 @@
         id: 'hist_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
         date: new Date().toISOString().slice(0, 10),
         dayId: day.id,
-        dayName: day.name,
+        dayName: sessionHeading,
         durationMin: m.durationMin,
         totalTonnage: m.completedTonnage,
         totalReps: m.completedReps,
@@ -6384,11 +7453,17 @@
         if (appState.diceGainz) appState.diceGainz.activeSession = null;
       }
       if (notesEl) notesEl.value = '';
+      const previewHeadingEl = document.getElementById('session-preview-heading-input');
+      const previewNotesEl = document.getElementById('session-preview-notes-input');
+      if (previewHeadingEl) previewHeadingEl.value = '';
+      if (previewNotesEl) previewNotesEl.value = '';
+      // Auto-stop session timer & any active rest countdown upon submission
       resetSessionTimer();
+      stopRestTimer();
       syncRoadmapBaseLoadsFromTrainingData(false);
       saveState();
       renderLogger();
-      showToast(`Logged ${day.shortName} (${m.completedTonnage.toLocaleString()} kg) & rolled targets forward!`, 'success', {
+      showToast(`Logged ${sessionHeading} (${m.completedTonnage.toLocaleString()} kg) & rolled targets forward!`, 'success', {
         actionLabel: 'Undo',
         durationMs: 7000,
         onAction: undoLastSessionLog
@@ -6416,9 +7491,13 @@
     function openSessionPreviewModal() {
       const day = appState.split[appState.activeDayIndex];
       if (!day) return;
+      syncSessionClockUI();
       const m = computeActiveDayMetrics();
 
       const titleEl = document.getElementById('session-preview-title');
+      const headingInput = document.getElementById('session-preview-heading-input');
+      const notesInput = document.getElementById('session-preview-notes-input');
+      const footerNotesEl = document.getElementById('session-notes-input');
       const warnEl = document.getElementById('session-preview-warning');
       const metricsEl = document.getElementById('session-preview-metrics');
       const liftsEl = document.getElementById('session-preview-lifts');
@@ -6426,6 +7505,8 @@
       const confirmBtn = document.getElementById('session-preview-confirm-btn');
 
       if (titleEl) titleEl.textContent = `Review & Log ${day.shortName || day.name}`;
+      if (headingInput) headingInput.value = day.name || '';
+      if (notesInput) notesInput.value = footerNotesEl ? footerNotesEl.value : '';
 
       if (warnEl) {
         if (m.completedSets === 0) {
@@ -6487,6 +7568,10 @@
           rollForwardExercise(simClone);
           const afterTxt = formatRollForwardSummary(simClone);
           const actionTag = ex.status || 'Hold';
+          const doneWarmups = Array.isArray(ex.warmupSets)
+            ? ex.warmupSets.filter(w => w && w.done && toIntOr(w.reps, 0) > 0)
+            : [];
+          const warmupSummary = formatWarmupSetsSummary(doneWarmups);
           return `
             <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1 text-xs">
               <div class="flex flex-wrap items-center justify-between gap-2">
@@ -6501,6 +7586,7 @@
                 <span class="text-amber-400 mx-1.5">→</span>
                 <span class="text-white font-semibold">${escapeHtml(afterTxt)}</span>
               </div>
+              ${warmupSummary ? `<div class="text-[11px] font-mono text-orange-300/85">🔥 Warm-up logged: ${escapeHtml(warmupSummary)} <span class="text-slate-500">(excl. from vol/density)</span></div>` : ''}
             </div>
           `;
         }).join('');
@@ -6517,8 +7603,12 @@
       if (sessionCommitInFlight) return;
       sessionCommitInFlight = true;
       try {
+        const headingInput = document.getElementById('session-preview-heading-input');
+        const notesInput = document.getElementById('session-preview-notes-input');
+        const customHeading = headingInput ? headingInput.value : '';
+        const customNotes = notesInput ? notesInput.value : '';
         closeSessionPreviewModal();
-        executeSessionLog(forceTickAll);
+        executeSessionLog(forceTickAll, { customHeading, customNotes });
       } finally {
         setTimeout(() => { sessionCommitInFlight = false; }, 400);
       }
@@ -9977,6 +11067,7 @@
       const canvas = document.getElementById('chart-density');
       const subtitleEl = document.getElementById('density-chart-subtitle');
       const badgeEl = document.getElementById('density-chart-badge');
+      const ssCalloutEl = document.getElementById('density-superset-callout');
       if (!canvas || typeof Chart === 'undefined') return;
 
       const setBadge = (text, tone = 'cyan') => {
@@ -9984,15 +11075,17 @@
         badgeEl.textContent = text;
         const toneCls = tone === 'emerald'
           ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
-          : (tone === 'amber'
-              ? 'bg-amber-500/15 text-amber-300 border-amber-500/40'
-              : 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30');
+          : (tone === 'fuchsia'
+              ? 'bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/40'
+              : (tone === 'amber'
+                  ? 'bg-amber-500/15 text-amber-300 border-amber-500/40'
+                  : 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30'));
         badgeEl.className = `text-[11px] font-mono px-2 py-0.5 rounded border ${toneCls}`;
       };
 
       if (parsedFilter && parsedFilter.mode === 'single') {
-        // Unified per-lift timeline preserving BOTH true ⏱ Stopwatch points and Session-Est. points
-        // without dropping non-stopwatch sessions or drawing misleading cliffs between mixed sources.
+        // Unified per-lift timeline preserving BOTH true ⏱ Stopwatch points (solo & linked superset)
+        // and Session-Est. points without dropping non-stopwatch sessions or hiding superset sharing.
         const labels = [];
         const swDens = [];
         const estDens = [];
@@ -10001,17 +11094,40 @@
         const pointMeta = [];
         let swCount = 0;
         let estCount = 0;
+        let linkedSsCount = 0;
+        const linkedPartnerSet = new Set();
 
         history.forEach(sess => {
-          const matches = (sess.exercises || []).filter(e =>
+          const allEx = sess.exercises || [];
+          const matches = allEx.filter(e =>
             e.exercise === parsedFilter.name &&
             (parsedFilter.tier === 'T3' ? e.tier === 'T3' : e.tier !== 'T3')
           );
           if (!matches.length) return;
           const liftTon = matches.reduce((s, m) => s + (parseFloat(m.tonnage) || 0), 0);
-          const totSecs = matches.reduce((s, m) => s + toIntOr(m.durationSecs, 0), 0);
+          const totSecs = matches.reduce((s, m) => Math.max(s, toIntOr(m.durationSecs, 0)), 0);
           const durMin = Math.max(1, parseFloat(sess.durationMin) || 55);
           const hasStopwatch = totSecs > 0;
+
+          // Detect linked superset timer (works both for newly logged metadata and retroactive SS logs)
+          const firstWithSs = matches.find(m => normalizeSupersetGroup(m.supersetGroup));
+          const ssGrp = firstWithSs ? normalizeSupersetGroup(firstWithSs.supersetGroup) : null;
+          const ssMembers = ssGrp ? allEx.filter(e => normalizeSupersetGroup(e.supersetGroup) === ssGrp) : [];
+          const isLinkedSs = Boolean(ssGrp && hasStopwatch && (ssMembers.length >= 2 || firstWithSs?.supersetSharedTimer));
+          let ssPartners = [];
+          let combinedSsTon = Math.round(liftTon);
+          let combinedSsDens = 0;
+          if (isLinkedSs) {
+            linkedSsCount++;
+            ssPartners = (Array.isArray(firstWithSs.supersetPartners) && firstWithSs.supersetPartners.length)
+              ? firstWithSs.supersetPartners
+              : ssMembers.filter(e => e.exercise !== parsedFilter.name).map(e => e.exercise);
+            ssPartners.forEach(p => linkedPartnerSet.add(`SS-${ssGrp}: ${p}`));
+            combinedSsTon = firstWithSs.supersetCombinedTonnage > 0
+              ? Math.round(firstWithSs.supersetCombinedTonnage)
+              : Math.round(ssMembers.reduce((s, e) => s + (parseFloat(e.tonnage) || 0), 0));
+            combinedSsDens = Math.round((combinedSsTon / (totSecs / 60)) * 10) / 10;
+          }
 
           labels.push(sess.label || sess.date);
           if (hasStopwatch) {
@@ -10032,7 +11148,13 @@
             liftTon: Math.round(liftTon),
             totSecs,
             durMin: Math.round(durMin),
-            sessDens: sess.density || 0
+            sessDens: sess.density || 0,
+            isLinkedSs,
+            ssGrp,
+            ssPartners,
+            ssMemberCount: Math.max(ssMembers.length, ssPartners.length + 1),
+            combinedSsTon,
+            combinedSsDens
           });
         });
 
@@ -10042,17 +11164,17 @@
 
         if (swCount > 0) {
           datasets.push({
-            label: '⏱ Stopwatch Density (kg/min)',
+            label: linkedSsCount > 0 ? '⏱ Stopwatch Density (● Solo · ▢ ⛓ Linked SS)' : '⏱ Stopwatch Density (kg/min)',
             sourceType: 'stopwatch',
             data: swDens,
             borderColor: '#10b981',
             backgroundColor: 'rgba(16,185,129,0.16)',
-            pointStyle: 'circle',
-            pointRadius: 5.5,
-            pointHoverRadius: 7,
-            pointBackgroundColor: '#10b981',
-            pointBorderColor: '#ecfdf5',
-            pointBorderWidth: 1.5,
+            pointStyle: pointMeta.map(m => m.isLinkedSs ? 'rectRounded' : 'circle'),
+            pointRadius: pointMeta.map(m => m.isLinkedSs ? 6.5 : 5.5),
+            pointHoverRadius: 8,
+            pointBackgroundColor: pointMeta.map(m => m.isLinkedSs ? '#d946ef' : '#10b981'),
+            pointBorderColor: pointMeta.map(m => m.isLinkedSs ? '#fae8ff' : '#ecfdf5'),
+            pointBorderWidth: 1.75,
             spanGaps: true,
             tension: 0.25,
             fill: isPureSw,
@@ -10083,14 +11205,14 @@
 
         if (swCount > 0) {
           datasets.push({
-            label: '⏱ Lift Time (min)',
+            label: linkedSsCount > 0 ? '⏱ Lift / Shared SS Time (min)' : '⏱ Lift Time (min)',
             sourceType: 'swTime',
             data: swMins,
             borderColor: '#c084fc',
             borderDash: [2, 3],
-            pointStyle: 'circle',
-            pointRadius: 3.5,
-            pointBackgroundColor: '#c084fc',
+            pointStyle: pointMeta.map(m => m.isLinkedSs ? 'rectRounded' : 'circle'),
+            pointRadius: pointMeta.map(m => m.isLinkedSs ? 4.5 : 3.5),
+            pointBackgroundColor: pointMeta.map(m => m.isLinkedSs ? '#e879f9' : '#c084fc'),
             spanGaps: true,
             tension: 0.25,
             yAxisID: 'y1'
@@ -10112,15 +11234,29 @@
           });
         }
 
-        if (isPureSw) {
+        if (isPureSw && linkedSsCount > 0) {
+          setBadge(`⏱ SW (${swCount}) · ⛓ ${linkedSsCount} LINKED SS`, 'fuchsia');
+          if (subtitleEl) subtitleEl.textContent = `${parsedFilter.name} — ● Solo Stopwatch · ▢ Fuchsia = ⛓ Shared Superset Timer (hover for combined SS density)`;
+        } else if (isPureSw) {
           setBadge(`⏱ STOPWATCH (${swCount}/${swCount})`, 'emerald');
           if (subtitleEl) subtitleEl.textContent = `${parsedFilter.name} — ● True Card ⏱ Stopwatch Density (kg/min) & Exact Lift Time`;
         } else if (isMixed) {
-          setBadge(`⏱ ${swCount} SW · 📋 ${estCount} SESSION`, 'amber');
-          if (subtitleEl) subtitleEl.textContent = `${parsedFilter.name} — ● Emerald = True ⏱ Stopwatch · ◇ Cyan Dashed = Session-Est. (no stopwatch)`;
+          setBadge(`⏱ ${swCount} SW${linkedSsCount > 0 ? ` (⛓ ${linkedSsCount} SS)` : ''} · 📋 ${estCount} EST`, 'amber');
+          if (subtitleEl) subtitleEl.textContent = `${parsedFilter.name} — ● Solo SW · ${linkedSsCount > 0 ? '▢ Linked SS Timer · ' : ''}◇ Cyan Dashed = Session-Est.`;
         } else {
           setBadge(`📋 SESSION EST (0/${estCount} SW)`, 'cyan');
           if (subtitleEl) subtitleEl.textContent = `${parsedFilter.name} — ◇ Session-Est. Work Rate (no card ⏱ Stopwatch yet) vs. Session Duration`;
+        }
+
+        if (ssCalloutEl) {
+          if (linkedSsCount > 0) {
+            const partnerSummary = Array.from(linkedPartnerSet).join(' · ');
+            ssCalloutEl.innerHTML = `<strong class="text-fuchsia-300">⛓ Linked Superset Timer Detected (${linkedSsCount} session${linkedSsCount === 1 ? '' : 's'}):</strong> Fuchsia square points share one superset timer with <span class="font-mono text-white">${escapeHtml(partnerSummary || 'superset partner')}</span>. Hover any fuchsia point to see both this lift's individual work rate and the <strong>Combined Superset Density</strong> across paired lifts.`;
+            ssCalloutEl.classList.remove('hidden');
+          } else {
+            ssCalloutEl.classList.add('hidden');
+            ssCalloutEl.innerHTML = '';
+          }
         }
 
         chartInstances.density = new Chart(canvas, {
@@ -10138,12 +11274,24 @@
                     const st = ctx.dataset.sourceType;
                     if (!meta) return `${ctx.dataset.label}: ${ctx.parsed.y}`;
                     if (st === 'stopwatch') {
+                      if (meta.isLinkedSs) {
+                        const pTxt = meta.ssPartners.length ? ` w/ ${meta.ssPartners.join(', ')}` : '';
+                        return [
+                          `⛓ LINKED SUPERSET TIMER (SS-${meta.ssGrp}${pTxt})`,
+                          `  Lift Work Rate: ${ctx.parsed.y} kg/min (${meta.liftTon.toLocaleString()} kg ÷ ${formatShortDuration(meta.totSecs)} shared timer)`,
+                          `  Combined SS-${meta.ssGrp} Density: ${meta.combinedSsDens} kg/min (${meta.combinedSsTon.toLocaleString()} kg across ${meta.ssMemberCount} lifts)`
+                        ];
+                      }
                       return `⏱ TRUE STOPWATCH: ${ctx.parsed.y} kg/min (${meta.liftTon.toLocaleString()} kg ÷ ${formatShortDuration(meta.totSecs)} exact lift time)`;
                     }
                     if (st === 'sessionEst') {
                       return `📋 SESSION EST. (no stopwatch): ${ctx.parsed.y} kg/min (${meta.liftTon.toLocaleString()} kg ÷ ${meta.durMin} min session · Full session: ${meta.sessDens} kg/min)`;
                     }
                     if (st === 'swTime') {
+                      if (meta.isLinkedSs) {
+                        const pTxt = meta.ssPartners.length ? ` (shared w/ ${meta.ssPartners.join(', ')})` : ' (shared SS timer)';
+                        return `⛓ Shared SS-${meta.ssGrp} Time: ${formatShortDuration(meta.totSecs)}${pTxt}`;
+                      }
                       return `⏱ Exact Lift Time: ${formatShortDuration(meta.totSecs)}`;
                     }
                     return `📋 Session Duration: ${meta.durMin} min (no card stopwatch)`;
@@ -10168,7 +11316,27 @@
       if (subtitleEl) subtitleEl.textContent = tierFilter
         ? `Session Density (kg/min) vs. Duration — ${tierFilter} Sessions`
         : 'Tonnage per Minute (kg/min) vs. Session Duration';
-      setBadge('KG / MIN', 'cyan');
+
+      // Count sessions with linked superset timers so the user knows they can inspect per-lift linked density
+      const linkedSessionsCount = tierSessions.filter(sess => {
+        const grpCounts = {};
+        (sess.exercises || []).forEach(e => {
+          const g = normalizeSupersetGroup(e.supersetGroup);
+          if (g && toIntOr(e.durationSecs, 0) > 0) grpCounts[g] = (grpCounts[g] || 0) + 1;
+        });
+        return Object.values(grpCounts).some(c => c >= 2) || (sess.exercises || []).some(e => e.supersetSharedTimer);
+      }).length;
+
+      setBadge(linkedSessionsCount > 0 ? `KG / MIN · ⛓ ${linkedSessionsCount} SS` : 'KG / MIN', linkedSessionsCount > 0 ? 'fuchsia' : 'cyan');
+      if (ssCalloutEl) {
+        if (linkedSessionsCount > 0) {
+          ssCalloutEl.innerHTML = `<strong class="text-fuchsia-300">⛓ ${linkedSessionsCount} session${linkedSessionsCount === 1 ? '' : 's'} include linked superset timers:</strong> Select any individual exercise in the filter above to inspect its shared superset timer badge &amp; Combined Superset Density breakdown.`;
+          ssCalloutEl.classList.remove('hidden');
+        } else {
+          ssCalloutEl.classList.add('hidden');
+          ssCalloutEl.innerHTML = '';
+        }
+      }
 
       chartInstances.density = new Chart(canvas, {
         type: 'line',
@@ -10726,7 +11894,7 @@
                   ${s.cycleMeta ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40" title="${escapeHtml(`${s.cycleMeta.macrocycleName || ''} · ${s.cycleMeta.mesoName || ''}`)}">Wk ${toIntOr(s.cycleMeta.week, 1)}</span>` : ''}
                   ${s.diceSession ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/40" title="Dice Gainz Session #${s.diceSession.sessionNumber || ''}">🎲 #${s.diceSession.sessionNumber || ''}</span>` : ''}
                 </div>
-                <div class="text-[11px] text-slate-400">${escapeHtml(s.dayName)}</div>
+                <div class="text-xs font-semibold text-slate-200">${escapeHtml(s.dayName)}</div>
                 ${s.cycleMeta && s.cycleMeta.mesoName ? `<div class="text-[11px] text-indigo-300/80 truncate max-w-[170px]" title="${escapeHtml(`${s.cycleMeta.macrocycleName || ''} — ${s.cycleMeta.mesoName}`)}">${escapeHtml(s.cycleMeta.mesoName)}</div>` : ''}
               </td>
               <td class="py-3 px-3 space-y-1">
@@ -10761,27 +11929,572 @@
                     ? ` <span class="px-1 py-0.5 rounded font-mono text-[11px] ${e.diceMeta.passed === false ? 'bg-rose-500/15 text-rose-300 border border-rose-500/35' : 'bg-fuchsia-500/15 text-fuchsia-300 border border-fuchsia-500/35'}">🎲 Rolled ${e.diceMeta.rolledRm}→${e.diceMeta.actualRm}</span>`
                     : '';
                   const ssGrp = normalizeSupersetGroup(e.supersetGroup);
-                  const ssBadge = ssGrp
+                  const ssPartners = ssGrp
+                    ? ((Array.isArray(e.supersetPartners) && e.supersetPartners.length)
+                        ? e.supersetPartners
+                        : (s.exercises || []).filter(other => other !== e && normalizeSupersetGroup(other.supersetGroup) === ssGrp).map(other => other.exercise))
+                    : [];
+                  const isLinkedSsDur = Boolean(ssGrp && e.durationSecs && e.durationSecs > 0 && (ssPartners.length > 0 || e.supersetSharedTimer));
+                  const ssBadge = ssGrp && !isLinkedSsDur
                     ? ` <span class="px-1 py-0.5 rounded font-mono text-[11px] font-bold border ${getSupersetStyle(ssGrp).badge}">⛓ SS-${ssGrp}</span>`
                     : '';
-                  const durBadge = (e.durationSecs && e.durationSecs > 0)
-                    ? ` <span class="px-1 py-0.5 rounded font-mono text-[11px] font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/35" title="Logged exercise stopwatch duration">⏱ ${formatShortDuration(e.durationSecs)}</span>`
-                    : '';
+                  const durBadge = isLinkedSsDur
+                    ? ` <span class="px-1.5 py-0.5 rounded font-mono text-[11px] font-bold bg-fuchsia-500/15 text-fuchsia-200 border border-fuchsia-500/40" title="${escapeHtml(`Linked SS-${ssGrp} superset timer shared with ${ssPartners.join(', ')}${e.supersetCombinedTonnage ? ` · Combined SS-${ssGrp}: ${e.supersetCombinedTonnage.toLocaleString()} kg` : ''}`)}">⛓ SS-${ssGrp} · Linked ⏱ ${formatShortDuration(e.durationSecs)}</span>`
+                    : ((e.durationSecs && e.durationSecs > 0)
+                        ? ` <span class="px-1 py-0.5 rounded font-mono text-[11px] font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/35" title="Logged exercise stopwatch duration">⏱ ${formatShortDuration(e.durationSecs)}</span>`
+                        : '');
                   const limBadge = (e.limiter && e.limiter !== 'Standard')
                     ? ` <span class="px-1 py-0.5 rounded font-mono text-[11px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/35">${escapeHtml(e.limiter)}</span>`
                     : '';
-                  return `<div class="text-[11px]"><span class="font-mono font-bold text-slate-400">[${e.tier}]</span> <span class="text-slate-200 font-semibold">${escapeHtml(e.exercise)}</span> <span class="font-mono text-slate-400">${summary}</span>${limBadge}${ssBadge}${durBadge}${diceTag}${partial}${e.notes ? ` <span class="text-slate-400 italic">— ${escapeHtml(e.notes)}</span>` : ''}</div>`;
+                  const warmupTxt = formatWarmupSetsSummary(e.warmupSets);
+                  const warmupSubHtml = warmupTxt
+                    ? `<div class="pl-3 text-[11px] font-mono text-orange-300/80">🔥 Warm-up: ${escapeHtml(warmupTxt)} <span class="text-slate-500">(excl. vol/density)</span></div>`
+                    : '';
+                  return `<div class="text-[11px]"><span class="font-mono font-bold text-slate-400">[${e.tier}]</span> <span class="text-slate-200 font-semibold">${escapeHtml(e.exercise)}</span> <span class="font-mono text-slate-400">${summary}</span>${limBadge}${ssBadge}${durBadge}${diceTag}${partial}${e.notes ? ` <span class="text-slate-400 italic">— ${escapeHtml(e.notes)}</span>` : ''}${warmupSubHtml}</div>`;
                 }).join('')}
                 ${s.notes ? `<div class="text-[11px] text-amber-300/90 italic pt-0.5">“${escapeHtml(s.notes)}”</div>` : ''}
               </td>
               <td class="py-3 px-3 whitespace-nowrap font-mono font-bold text-sky-300">${(s.totalTonnage || 0).toLocaleString()} kg</td>
               <td class="py-3 px-3 whitespace-nowrap font-mono text-cyan-300">${(s.density || 0).toFixed(1)} kg/min<div class="text-[11px] text-slate-400">${s.durationMin || 0} min</div></td>
               <td class="py-3 pl-3 text-right whitespace-nowrap">
-                <button type="button" data-id="${escapeHtml(s.id)}" onclick="deleteHistoryEntry(this.dataset.id)" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 text-[11px]">Delete</button>
+                <div class="inline-flex items-center gap-1.5">
+                  <button type="button" data-id="${escapeHtml(s.id)}" onclick="openEditHistoryModal(this.dataset.id)" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-amber-500/20 text-slate-200 hover:text-amber-200 border border-slate-700 hover:border-amber-500/40 text-[11px] font-semibold transition">Edit</button>
+                  <button type="button" data-id="${escapeHtml(s.id)}" onclick="deleteHistoryEntry(this.dataset.id)" class="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 text-[11px] transition">Delete</button>
+                </div>
               </td>
             </tr>
           `).join('')
         : `<tr><td colspan="5" class="py-6 text-center text-xs text-slate-400">No logged sessions found.</td></tr>`;
+    }
+
+    let editingHistoryDraft = null;
+    let lastHistoryEditUndoSnapshot = null;
+
+    function openEditHistoryModal(sessionId) {
+      const target = (appState.history || []).find(h => h.id === sessionId);
+      if (!target) return;
+      editingHistoryDraft = JSON.parse(JSON.stringify(target));
+      if (!Array.isArray(editingHistoryDraft.exercises)) editingHistoryDraft.exercises = [];
+      renderEditHistoryModalBody();
+      document.getElementById('edit-history-modal')?.classList.remove('hidden');
+    }
+
+    function closeEditHistoryModal() {
+      document.getElementById('edit-history-modal')?.classList.add('hidden');
+      editingHistoryDraft = null;
+    }
+
+    function updateHistoryDraftMeta(field, val) {
+      if (!editingHistoryDraft) return;
+      if (field === 'durationMin') {
+        editingHistoryDraft.durationMin = Math.max(1, toIntOr(val, 45));
+      } else {
+        editingHistoryDraft[field] = String(val || '');
+      }
+    }
+
+    function updateHistoryDraftExercise(idx, field, val, shouldRerender = false) {
+      if (!editingHistoryDraft || !editingHistoryDraft.exercises[idx]) return;
+      const ex = editingHistoryDraft.exercises[idx];
+      if (field === 'exercise') {
+        const meta = findExerciseMeta(val);
+        ex.exercise = meta.name || val;
+        ex.category = meta.category || ex.category || 'Custom Exercises';
+      } else if (field === 'tier') {
+        const nextTier = ['T1', 'T2', 'T3'].includes(val) ? val : 'T2';
+        ex.tier = nextTier;
+        if (nextTier === 'T3') {
+          if (!Array.isArray(ex.setReps) || !ex.setReps.length) {
+            const perSet = Math.max(5, Math.round((toIntOr(ex.totalReps, 36)) / 3));
+            ex.setReps = [perSet, perSet, perSet];
+          }
+          ex.rmStyle = null;
+        } else {
+          ex.rmStyle = normalizeRmStyle(ex.rmStyle || 'standard');
+          if (!ex.rmReps) ex.rmReps = nextTier === 'T1' ? 5 : 8;
+          if (ex.fuSets === undefined || ex.fuSets === null) ex.fuSets = 4;
+          if (!ex.fuReps) ex.fuReps = nextTier === 'T1' ? 1 : Math.max(1, Math.floor(ex.rmReps / 2));
+        }
+        shouldRerender = true;
+      } else if (field === 'weight') {
+        ex.weight = Math.max(0, Math.round((parseFloat(val) || 0) * 10) / 10);
+      } else if (field === 'rmStyle') {
+        ex.rmStyle = normalizeRmStyle(val);
+        shouldRerender = true;
+      } else if (field === 'rmReps') {
+        ex.rmReps = Math.max(0, Math.min(30, toIntOr(val, 5)));
+      } else if (field === 'fuSets') {
+        ex.fuSets = Math.max(0, Math.min(15, toIntOr(val, 0)));
+      } else if (field === 'vdsRepsInput') {
+        const nums = String(val || '')
+          .split(/[,\s/]+/)
+          .map(s => parseInt(s.trim(), 10))
+          .filter(n => !Number.isNaN(n) && n > 0);
+        if (nums.length > 1) {
+          ex.vdsSetReps = nums;
+          ex.fuSets = nums.length;
+          ex.fuReps = nums[0];
+          ex.vdsRepsSummary = formatVdsRepsSummary(nums);
+        } else if (nums.length === 1) {
+          ex.vdsSetReps = null;
+          ex.fuReps = nums[0];
+          ex.vdsRepsSummary = String(nums[0]);
+        } else {
+          ex.vdsSetReps = null;
+          ex.fuReps = 0;
+          ex.vdsRepsSummary = null;
+        }
+      } else if (field === 'vdsWeight') {
+        const trimmed = String(val || '').trim();
+        ex.vdsWeight = trimmed === '' ? null : Math.max(0, Math.round((parseFloat(trimmed) || 0) * 10) / 10);
+      } else if (field === 'bookendRmReps') {
+        ex.bookendRmReps = Math.max(1, Math.min(20, toIntOr(val, ex.rmReps || 5)));
+      } else if (field === 'bookendWeight') {
+        const trimmed = String(val || '').trim();
+        ex.bookendWeight = trimmed === '' ? null : Math.max(0, Math.round((parseFloat(trimmed) || 0) * 10) / 10);
+      } else if (field === 't3SetRepsInput') {
+        const nums = String(val || '')
+          .split(/[,\s/]+/)
+          .map(s => parseInt(s.trim(), 10))
+          .filter(n => !Number.isNaN(n) && n >= 0);
+        ex.setReps = nums.length ? nums : [0];
+        ex.totalReps = ex.setReps.reduce((s, r) => s + r, 0);
+        ex.completedSets = ex.setReps.length;
+        ex.plannedSets = ex.setReps.length;
+        ex.sets = ex.setReps.length;
+      } else if (field === 'effort') {
+        ex.effort = normalizeEffort(val);
+      } else if (field === 'limiter') {
+        ex.limiter = val === 'Standard' ? null : normalizeLimiter(val);
+      } else if (field === 'supersetGroup') {
+        ex.supersetGroup = normalizeSupersetGroup(val);
+        shouldRerender = true;
+      } else if (field === 'durationSecs') {
+        const secs = parseDurationToSecs(val);
+        ex.durationSecs = secs > 0 ? secs : null;
+        // Keep linked superset partners' stopwatch durations in sync inside the edited session
+        const grp = normalizeSupersetGroup(ex.supersetGroup);
+        if (grp) {
+          editingHistoryDraft.exercises.forEach(other => {
+            if (other !== ex && normalizeSupersetGroup(other.supersetGroup) === grp) {
+              other.durationSecs = ex.durationSecs;
+            }
+          });
+          shouldRerender = true;
+        }
+      } else if (field === 'notes') {
+        ex.notes = String(val || '');
+      }
+      if (shouldRerender) renderEditHistoryModalBody();
+    }
+
+    function addWarmupToHistoryDraftExercise(exIdx) {
+      if (!editingHistoryDraft || !editingHistoryDraft.exercises[exIdx]) return;
+      const ex = editingHistoryDraft.exercises[exIdx];
+      if (!Array.isArray(ex.warmupSets)) ex.warmupSets = [];
+      const workWt = Math.max(0, parseFloat(ex.weight) || 0);
+      const lastWt = ex.warmupSets.length ? Math.max(0, parseFloat(ex.warmupSets[ex.warmupSets.length - 1].weight) || 0) : 0;
+      const nextWt = ex.warmupSets.length
+        ? Math.min(Math.max(0, workWt - 2.5), roundTo2_5(lastWt + 10))
+        : (workWt > 0 ? roundTo2_5(workWt * 0.5) : 0);
+      ex.warmupSets.push({ weight: Math.max(0, nextWt), reps: 5 });
+      renderEditHistoryModalBody();
+    }
+
+    function updateWarmupInHistoryDraftExercise(exIdx, wIdx, field, val) {
+      if (!editingHistoryDraft || !editingHistoryDraft.exercises[exIdx]) return;
+      const list = editingHistoryDraft.exercises[exIdx].warmupSets;
+      if (!Array.isArray(list) || !list[wIdx]) return;
+      if (field === 'weight') list[wIdx].weight = Math.max(0, Math.round((parseFloat(val) || 0) * 10) / 10);
+      else if (field === 'reps') list[wIdx].reps = Math.max(1, Math.min(50, toIntOr(val, 5)));
+    }
+
+    function removeWarmupFromHistoryDraftExercise(exIdx, wIdx) {
+      if (!editingHistoryDraft || !editingHistoryDraft.exercises[exIdx]) return;
+      const list = editingHistoryDraft.exercises[exIdx].warmupSets;
+      if (!Array.isArray(list)) return;
+      list.splice(wIdx, 1);
+      if (!list.length) editingHistoryDraft.exercises[exIdx].warmupSets = null;
+      renderEditHistoryModalBody();
+    }
+
+    function addExerciseToHistoryDraft() {
+      if (!editingHistoryDraft) return;
+      const defaultMeta = findExerciseMeta('Barbell Back Squat');
+      editingHistoryDraft.exercises.push({
+        tier: 'T2',
+        exercise: defaultMeta.name || 'Barbell Back Squat',
+        category: defaultMeta.category || 'Squat & Quads',
+        weight: 60,
+        rmStyle: 'standard',
+        rmReps: 8,
+        fuSets: 4,
+        fuReps: 4,
+        vdsWeight: null,
+        vdsSetReps: null,
+        vdsRepsSummary: '4',
+        bookendRmReps: null,
+        bookendWeight: null,
+        endEffort: null,
+        fuMode: 'half',
+        sets: 5,
+        completedSets: 5,
+        plannedSets: 5,
+        setReps: null,
+        totalReps: 24,
+        tonnage: 1440,
+        e1rm: 76,
+        formula: 'Brzycki',
+        effort: 'Medium',
+        status: 'Hold',
+        limiter: null,
+        restOffsetSecs: null,
+        supersetGroup: null,
+        durationSecs: null,
+        warmupSets: null,
+        notes: ''
+      });
+      renderEditHistoryModalBody();
+    }
+
+    function removeExerciseFromHistoryDraft(exIdx) {
+      if (!editingHistoryDraft) return;
+      editingHistoryDraft.exercises.splice(exIdx, 1);
+      renderEditHistoryModalBody();
+    }
+
+    function renderEditHistoryModalBody() {
+      const body = document.getElementById('edit-history-modal-body');
+      if (!body || !editingHistoryDraft) return;
+      const d = editingHistoryDraft;
+
+      const exercisesHtml = (d.exercises || []).map((ex, idx) => {
+        const isT3 = ex.tier === 'T3';
+        const style = isT3 ? null : normalizeRmStyle(ex.rmStyle);
+        const vdsRepsDisplay = Array.isArray(ex.vdsSetReps) && ex.vdsSetReps.length
+          ? ex.vdsSetReps.join(', ')
+          : String(toIntOr(ex.fuReps, 0));
+        const t3RepsDisplay = Array.isArray(ex.setReps) && ex.setReps.length
+          ? ex.setReps.join(', ')
+          : String(toIntOr(ex.totalReps, 0));
+        const ssGrp = normalizeSupersetGroup(ex.supersetGroup);
+        const ssPartnerCount = ssGrp
+          ? (d.exercises || []).filter(other => other !== ex && normalizeSupersetGroup(other.supersetGroup) === ssGrp).length
+          : 0;
+        const warmups = Array.isArray(ex.warmupSets) ? ex.warmupSets : [];
+        const durText = ex.durationSecs && ex.durationSecs > 0 ? formatShortDuration(ex.durationSecs) : '';
+
+        return `
+          <div class="p-3.5 rounded-xl bg-slate-950/90 border border-slate-800 space-y-3">
+            <div class="flex flex-wrap items-center gap-2">
+              <select aria-label="Exercise tier" onchange="updateHistoryDraftExercise(${idx}, 'tier', this.value, true)" class="bg-slate-900 border border-slate-700 rounded-lg px-2 min-h-[38px] font-mono text-xs font-bold text-amber-300 focus:outline-none focus:border-amber-500">
+                ${['T1', 'T2', 'T3'].map(t => `<option value="${t}" ${ex.tier === t ? 'selected' : ''}>${t}</option>`).join('')}
+              </select>
+              <select aria-label="Exercise name" onchange="updateHistoryDraftExercise(${idx}, 'exercise', this.value, false)" class="flex-1 min-w-[170px] bg-slate-900 border border-slate-700 rounded-lg px-2.5 min-h-[38px] text-xs font-bold text-white focus:outline-none focus:border-amber-500">
+                ${buildExerciseSelectOptionsHtml(ex.exercise)}
+              </select>
+              <button type="button" onclick="removeExerciseFromHistoryDraft(${idx})" class="px-2.5 min-h-[38px] rounded-lg bg-slate-900 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-slate-800 text-xs font-semibold transition" title="Remove exercise from this logged session">✕ Remove</button>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div>
+                <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Weight (kg)</label>
+                <input type="number" step="0.5" min="0" value="${Math.max(0, parseFloat(ex.weight) || 0)}" oninput="updateHistoryDraftExercise(${idx}, 'weight', this.value)" class="no-spinners w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 min-h-[38px] font-mono text-xs font-bold text-white tabular-nums focus:outline-none focus:border-amber-500" />
+              </div>
+
+              ${isT3 ? `
+                <div class="col-span-2 sm:col-span-3">
+                  <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">T3 Per-Set Reps (comma-separated, e.g. 15, 13, 12)</label>
+                  <input type="text" value="${escapeHtml(t3RepsDisplay)}" oninput="updateHistoryDraftExercise(${idx}, 't3SetRepsInput', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 min-h-[38px] font-mono text-xs font-bold text-emerald-300 focus:outline-none focus:border-emerald-500" />
+                </div>
+              ` : `
+                <div>
+                  <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">RM Style</label>
+                  <select onchange="updateHistoryDraftExercise(${idx}, 'rmStyle', this.value, true)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 min-h-[38px] font-mono text-xs font-bold text-slate-200 focus:outline-none focus:border-amber-500">
+                    ${VALID_RM_STYLES.map(st => `<option value="${st}" ${style === st ? 'selected' : ''}>${getRmStyleLabel(st)}</option>`).join('')}
+                  </select>
+                </div>
+                ${style !== 'skipRm' ? `
+                  <div>
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Top RM Reps</label>
+                    <input type="number" min="1" max="30" value="${toIntOr(ex.rmReps, 5)}" oninput="updateHistoryDraftExercise(${idx}, 'rmReps', this.value)" class="no-spinners w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 min-h-[38px] font-mono text-xs font-bold text-amber-300 tabular-nums focus:outline-none focus:border-amber-500" />
+                  </div>
+                ` : ''}
+                ${style !== 'skipVds' ? `
+                  <div>
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">VDS Sets</label>
+                    <input type="number" min="0" max="15" value="${toIntOr(ex.fuSets, 0)}" oninput="updateHistoryDraftExercise(${idx}, 'fuSets', this.value)" class="no-spinners w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 min-h-[38px] font-mono text-xs font-bold text-sky-300 tabular-nums focus:outline-none focus:border-sky-500" />
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">VDS Reps (or 2,2,1,1)</label>
+                    <input type="text" value="${escapeHtml(vdsRepsDisplay)}" oninput="updateHistoryDraftExercise(${idx}, 'vdsRepsInput', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 min-h-[38px] font-mono text-xs font-bold text-sky-200 focus:outline-none focus:border-sky-500" />
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Split VDS kg (opt)</label>
+                    <input type="number" step="0.5" min="0" value="${ex.vdsWeight !== null && ex.vdsWeight !== undefined ? ex.vdsWeight : ''}" placeholder="Same" oninput="updateHistoryDraftExercise(${idx}, 'vdsWeight', this.value)" class="no-spinners w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 min-h-[38px] font-mono text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-purple-500" />
+                  </div>
+                ` : ''}
+                ${style === 'bookend' ? `
+                  <div>
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Bookend RM2 Reps</label>
+                    <input type="number" min="1" max="20" value="${toIntOr(ex.bookendRmReps, ex.rmReps || 5)}" oninput="updateHistoryDraftExercise(${idx}, 'bookendRmReps', this.value)" class="no-spinners w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 min-h-[38px] font-mono text-xs font-bold text-purple-300 focus:outline-none focus:border-purple-500" />
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Bookend RM2 kg</label>
+                    <input type="number" step="0.5" min="0" value="${ex.bookendWeight !== null && ex.bookendWeight !== undefined ? ex.bookendWeight : ''}" placeholder="Same" oninput="updateHistoryDraftExercise(${idx}, 'bookendWeight', this.value)" class="no-spinners w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 min-h-[38px] font-mono text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-purple-500" />
+                  </div>
+                ` : ''}
+              `}
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div>
+                <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Effort</label>
+                <select onchange="updateHistoryDraftExercise(${idx}, 'effort', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 min-h-[38px] font-mono text-xs font-bold text-slate-200 focus:outline-none focus:border-amber-500">
+                  ${['Easy', 'Medium', 'Hard'].map(ef => `<option value="${ef}" ${normalizeEffort(ex.effort) === ef ? 'selected' : ''}>${formatEffortLabel(ef)}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Superset</label>
+                <select onchange="updateHistoryDraftExercise(${idx}, 'supersetGroup', this.value, true)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 min-h-[38px] font-mono text-xs font-bold text-slate-200 focus:outline-none focus:border-fuchsia-500">
+                  <option value="" ${!ssGrp ? 'selected' : ''}>Off</option>
+                  ${['A', 'B', 'C'].map(g => `<option value="${g}" ${ssGrp === g ? 'selected' : ''}>SS-${g}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Timer (mm:ss)${ssPartnerCount > 0 ? ` ⛓ SS-${ssGrp}` : ''}</label>
+                <input type="text" value="${escapeHtml(durText)}" placeholder="e.g. 8:45" onchange="updateHistoryDraftExercise(${idx}, 'durationSecs', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 min-h-[38px] font-mono text-xs font-bold text-cyan-300 placeholder-slate-500 focus:outline-none focus:border-cyan-500" />
+              </div>
+              ${!isT3 ? `
+                <div>
+                  <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Limiter</label>
+                  <select onchange="updateHistoryDraftExercise(${idx}, 'limiter', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 min-h-[38px] font-mono text-xs text-slate-200 focus:outline-none focus:border-amber-500">
+                    ${LIMITER_OPTIONS.map(lim => `<option value="${escapeHtml(lim)}" ${(ex.limiter || 'Standard') === lim ? 'selected' : ''}>${lim === 'Standard' ? 'None' : escapeHtml(lim)}</option>`).join('')}
+                  </select>
+                </div>
+              ` : `<div></div>`}
+            </div>
+
+            <!-- Warm-Up Sets Sub-Editor (Excluded from Volume & Density) -->
+            <div class="p-2.5 rounded-lg bg-orange-500/5 border border-orange-500/25 space-y-2">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <span class="text-[11px] font-mono font-bold text-orange-300">🔥 Warm-Up Sets (${warmups.length}) <span class="text-slate-400 font-normal">· Excluded from volume &amp; density</span></span>
+                <button type="button" onclick="addWarmupToHistoryDraftExercise(${idx})" class="px-2 py-1 rounded-md text-[11px] font-mono font-bold bg-orange-500/15 hover:bg-orange-500/25 text-orange-200 border border-orange-500/35 transition">+ Add Warm-Up</button>
+              </div>
+              ${warmups.length ? `
+                <div class="flex flex-wrap gap-1.5">
+                  ${warmups.map((w, wIdx) => `
+                    <div class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-900 border border-orange-500/30">
+                      <input type="number" step="0.5" min="0" value="${Math.max(0, parseFloat(w.weight) || 0)}" aria-label="Warm-up ${wIdx + 1} kg" oninput="updateWarmupInHistoryDraftExercise(${idx}, ${wIdx}, 'weight', this.value)" class="no-spinners w-14 bg-slate-950 border border-slate-700 rounded px-1 py-0.5 font-mono text-xs font-bold text-white text-center" />
+                      <span class="text-[11px] text-slate-400">×</span>
+                      <input type="number" min="1" max="50" value="${Math.max(1, toIntOr(w.reps, 5))}" aria-label="Warm-up ${wIdx + 1} reps" oninput="updateWarmupInHistoryDraftExercise(${idx}, ${wIdx}, 'reps', this.value)" class="no-spinners w-11 bg-slate-950 border border-slate-700 rounded px-1 py-0.5 font-mono text-xs font-bold text-orange-200 text-center" />
+                      <button type="button" onclick="removeWarmupFromHistoryDraftExercise(${idx}, ${wIdx})" class="text-slate-400 hover:text-rose-300 px-1 text-xs" aria-label="Remove warm-up ${wIdx + 1}">✕</button>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : ''}
+            </div>
+
+            <input type="text" value="${escapeHtml(ex.notes || '')}" oninput="updateHistoryDraftExercise(${idx}, 'notes', this.value)" placeholder="Exercise note..." class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 min-h-[36px] text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500" />
+          </div>
+        `;
+      }).join('');
+
+      body.innerHTML = `
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-xl bg-slate-950 border border-slate-800">
+          <div>
+            <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Session Date</label>
+            <input type="date" value="${escapeHtml(d.date || '')}" oninput="updateHistoryDraftMeta('date', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 min-h-[40px] font-mono text-xs font-bold text-white focus:outline-none focus:border-amber-500" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Day / Session Name</label>
+            <input type="text" value="${escapeHtml(d.dayName || '')}" oninput="updateHistoryDraftMeta('dayName', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 min-h-[40px] text-xs font-bold text-white focus:outline-none focus:border-amber-500" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Session Duration (min)</label>
+            <input type="number" min="1" max="300" value="${Math.max(1, toIntOr(d.durationMin, 45))}" oninput="updateHistoryDraftMeta('durationMin', this.value)" class="no-spinners w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 min-h-[40px] font-mono text-xs font-bold text-cyan-300 focus:outline-none focus:border-cyan-500" />
+          </div>
+          <div class="sm:col-span-3">
+            <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Session Notes</label>
+            <input type="text" value="${escapeHtml(d.notes || '')}" oninput="updateHistoryDraftMeta('notes', this.value)" placeholder="Overall session notes..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 min-h-[38px] text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500" />
+          </div>
+        </div>
+        <div class="space-y-3">
+          ${exercisesHtml || '<div class="p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-400 text-center">No exercises in this session — click + Add Exercise below.</div>'}
+        </div>
+      `;
+    }
+
+    function recalculateHistoryEntryMetrics(draft) {
+      let t1Vol = 0, t2Vol = 0, t3Vol = 0, totalTonnage = 0, totalReps = 0;
+      const cleaned = [];
+
+      (draft.exercises || []).forEach(rawEx => {
+        const ex = { ...rawEx };
+        const meta = findExerciseMeta(ex.exercise);
+        ex.exercise = meta.name || ex.exercise || 'Custom Lift';
+        ex.category = meta.category || ex.category || 'Custom Exercises';
+        ex.weight = Math.max(0, Math.round((parseFloat(ex.weight) || 0) * 10) / 10);
+        ex.effort = normalizeEffort(ex.effort);
+        ex.supersetGroup = normalizeSupersetGroup(ex.supersetGroup);
+        ex.durationSecs = toIntOr(ex.durationSecs, 0) > 0 ? toIntOr(ex.durationSecs, 0) : null;
+        ex.warmupSets = Array.isArray(ex.warmupSets)
+          ? ex.warmupSets
+              .filter(w => w && toIntOr(w.reps, 0) > 0)
+              .map(w => ({ weight: Math.max(0, Math.round((parseFloat(w.weight) || 0) * 10) / 10), reps: Math.max(1, toIntOr(w.reps, 1)) }))
+          : null;
+        if (ex.warmupSets && ex.warmupSets.length === 0) ex.warmupSets = null;
+
+        // Strictly compute working-set tonnage & reps (warm-up sets intentionally excluded!)
+        if (ex.tier === 'T3') {
+          const repsArr = Array.isArray(ex.setReps) && ex.setReps.length
+            ? ex.setReps.map(r => Math.max(0, toIntOr(r, 0)))
+            : [Math.max(0, toIntOr(ex.totalReps, 0))];
+          ex.setReps = repsArr;
+          ex.sets = repsArr.length;
+          ex.completedSets = repsArr.length;
+          ex.plannedSets = repsArr.length;
+          ex.totalReps = repsArr.reduce((s, r) => s + r, 0);
+          ex.tonnage = Math.round(ex.totalReps * ex.weight);
+          ex.e1rm = 0;
+          ex.formula = 'MRS';
+          ex.rmStyle = null;
+          ex.rmReps = 0;
+          ex.fuSets = 0;
+          ex.fuReps = 0;
+          t3Vol += ex.tonnage;
+        } else {
+          const style = normalizeRmStyle(ex.rmStyle);
+          ex.rmStyle = style;
+          const hasRm = style !== 'skipRm';
+          const hasVds = style !== 'skipVds';
+          const hasBookend = style === 'bookend';
+          const rm = hasRm ? Math.max(1, toIntOr(ex.rmReps, 5)) : 0;
+          ex.rmReps = rm;
+          const vdsW = (ex.vdsWeight !== null && ex.vdsWeight !== undefined && ex.vdsWeight !== '')
+            ? Math.max(0, parseFloat(ex.vdsWeight) || 0)
+            : ex.weight;
+          const vdsArr = hasVds
+            ? (Array.isArray(ex.vdsSetReps) && ex.vdsSetReps.length
+                ? ex.vdsSetReps.map(r => Math.max(1, toIntOr(r, 1)))
+                : Array(Math.max(0, toIntOr(ex.fuSets, 0))).fill(Math.max(1, toIntOr(ex.fuReps, 1))))
+            : [];
+          ex.fuSets = vdsArr.length;
+          ex.fuReps = vdsArr.length ? vdsArr[0] : 0;
+          ex.vdsSetReps = (vdsArr.length > 0 && vdsArr.some(r => r !== vdsArr[0])) ? vdsArr : null;
+          ex.vdsRepsSummary = vdsArr.length > 0 ? formatVdsRepsSummary(vdsArr) : null;
+          ex.vdsWeight = vdsW !== ex.weight ? vdsW : null;
+
+          const beReps = hasBookend ? Math.max(1, toIntOr(ex.bookendRmReps, rm)) : 0;
+          const beW = (hasBookend && ex.bookendWeight !== null && ex.bookendWeight !== undefined && ex.bookendWeight !== '')
+            ? Math.max(0, parseFloat(ex.bookendWeight) || 0)
+            : ex.weight;
+          ex.bookendRmReps = hasBookend ? beReps : null;
+          ex.bookendWeight = (hasBookend && beW !== ex.weight) ? beW : null;
+
+          const vdsRepsTot = vdsArr.reduce((s, r) => s + r, 0);
+          ex.totalReps = rm + vdsRepsTot + beReps;
+          ex.tonnage = Math.round((rm * ex.weight) + (vdsRepsTot * vdsW) + (beReps * beW));
+          ex.completedSets = (hasRm ? 1 : 0) + vdsArr.length + (hasBookend ? 1 : 0);
+          ex.plannedSets = ex.completedSets;
+          ex.sets = ex.completedSets;
+
+          let det = { e1rm: 0, formula: 'VDS' };
+          if (hasRm) {
+            const det1 = getValidated1RMDetails(ex.weight, rm, ex.exercise, ex.category);
+            if (hasBookend) {
+              const det2 = getValidated1RMDetails(beW, beReps, ex.exercise, ex.category);
+              det = det2.e1rm > det1.e1rm ? det2 : det1;
+            } else {
+              det = det1;
+            }
+          }
+          ex.e1rm = det.e1rm;
+          ex.formula = det.formula;
+
+          if (ex.tier === 'T1') t1Vol += ex.tonnage;
+          else t2Vol += ex.tonnage;
+        }
+
+        // Clear stale superset partner fields before re-deriving
+        delete ex.supersetPartners;
+        delete ex.supersetSharedTimer;
+        delete ex.supersetCombinedTonnage;
+
+        totalTonnage += ex.tonnage;
+        totalReps += ex.totalReps;
+        cleaned.push(ex);
+      });
+
+      // Re-derive linked superset group metadata cleanly
+      const ssGroups = {};
+      cleaned.forEach(le => {
+        const g = normalizeSupersetGroup(le.supersetGroup);
+        if (!g) return;
+        if (!ssGroups[g]) ssGroups[g] = [];
+        ssGroups[g].push(le);
+      });
+      Object.values(ssGroups).forEach(members => {
+        if (members.length < 2) return;
+        const combinedTon = Math.round(members.reduce((s, m) => s + (parseFloat(m.tonnage) || 0), 0));
+        const sharedSecs = members.reduce((mx, m) => Math.max(mx, toIntOr(m.durationSecs, 0)), 0);
+        members.forEach(m => {
+          m.supersetPartners = members.filter(o => o !== m).map(o => o.exercise);
+          m.supersetCombinedTonnage = combinedTon;
+          m.supersetSharedTimer = sharedSecs > 0;
+          if (sharedSecs > 0) m.durationSecs = sharedSecs;
+        });
+      });
+
+      const durMin = Math.max(1, toIntOr(draft.durationMin, 45));
+      return {
+        ...draft,
+        date: String(draft.date || new Date().toISOString().slice(0, 10)).slice(0, 10),
+        dayName: String(draft.dayName || 'Logged Session').trim() || 'Logged Session',
+        durationMin: durMin,
+        notes: String(draft.notes || '').trim(),
+        t1Vol: Math.round(t1Vol),
+        t2Vol: Math.round(t2Vol),
+        t3Vol: Math.round(t3Vol),
+        totalTonnage: Math.round(totalTonnage),
+        totalReps,
+        density: Math.round((totalTonnage / durMin) * 10) / 10,
+        exercises: cleaned
+      };
+    }
+
+    function undoLastHistoryEdit() {
+      if (!lastHistoryEditUndoSnapshot) return;
+      appState.history = JSON.parse(JSON.stringify(lastHistoryEditUndoSnapshot));
+      lastHistoryEditUndoSnapshot = null;
+      syncRoadmapBaseLoadsFromTrainingData(false);
+      saveState();
+      renderAnalytics();
+      renderLogger();
+      showToast('Reverted session log edit.', 'info');
+    }
+
+    function saveEditedHistoryEntry() {
+      if (!editingHistoryDraft) return;
+      const idx = (appState.history || []).findIndex(h => h.id === editingHistoryDraft.id);
+      if (idx === -1) {
+        closeEditHistoryModal();
+        return;
+      }
+      lastHistoryEditUndoSnapshot = JSON.parse(JSON.stringify(appState.history));
+      const updated = recalculateHistoryEntryMetrics(editingHistoryDraft);
+      appState.history[idx] = updated;
+      appState.history.sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+      syncRoadmapBaseLoadsFromTrainingData(false);
+      saveState();
+      closeEditHistoryModal();
+      renderAnalytics();
+      renderLogger();
+      showToast(`Updated ${updated.dayName} (${updated.totalTonnage.toLocaleString()} kg · ${updated.density.toFixed(1)} kg/min).`, 'success', {
+        actionLabel: 'Undo',
+        durationMs: 7000,
+        onAction: undoLastHistoryEdit
+      });
     }
 
     function deleteHistoryEntry(id) {
@@ -14620,6 +16333,7 @@
       'custom-exercise-modal',
       'import-json-modal',
       'session-preview-modal',
+      'edit-history-modal',
       'cloud-sync-modal',
       'custom-confirm-modal',
       'apply-roadmap-modal',
@@ -14750,6 +16464,7 @@
           closeCloudSyncModal();
           closeImportModal();
           closeSessionPreviewModal();
+          closeEditHistoryModal();
           closeConfirmModal();
           closeCustomModal();
           closeApplyRoadmapModal();
@@ -14779,9 +16494,20 @@
       loadState();
       updateAudioUI();
       updateAutoRestUI();
+      updateBgAlertUI();
       updatePhaseBadgesUI();
+      restoreActiveTimersState();
       updateLiveMetrics();
       switchTab(appState.activeTab || 'logger');
+      document.addEventListener('visibilitychange', () => {
+        reconcileAllTimersNow();
+      });
+      window.addEventListener('focus', () => {
+        reconcileAllTimersNow();
+      });
+      window.addEventListener('pageshow', () => {
+        reconcileAllTimersNow();
+      });
       initPWAAndOfflineSupport();
       initCloudSyncIfConfigured(true);
     });
