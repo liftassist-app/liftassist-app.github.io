@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gg-powerlifting-pwa-v2';
+const CACHE_NAME = 'gg-powerlifting-pwa-v3';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -13,6 +13,8 @@ const BYPASS_HOSTS = [
   'identitytoolkit.googleapis.com',
   'securetoken.googleapis.com',
   'firebaseinstallations.googleapis.com',
+  'firebaseapp.com',
+  'firebaseio.com',
   'apis.google.com'
 ];
 
@@ -48,20 +50,37 @@ self.addEventListener('fetch', (event) => {
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
   if (BYPASS_HOSTS.some((h) => url.hostname.includes(h))) return;
 
-  // Network-First for HTML / navigation so GitHub Pages updates appear immediately when online,
-  // while falling back smoothly to cache when offline in the gym.
+  const isSameOrigin = url.origin === self.location.origin;
+  const isAppEntryHtml = isSameOrigin && (
+    url.pathname === '/' ||
+    url.pathname.endsWith('/') ||
+    url.pathname.endsWith('/index.html')
+  );
+
+  // Network-First strictly for same-origin main app HTML so GitHub Pages updates appear immediately when online,
+  // while never poisoning ./index.html with unrelated HTML pages (e.g., local preview files).
   const isNav = req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html');
-  if (isNav) {
+  if (isNav && isAppEntryHtml) {
     event.respondWith(
       fetch(req)
         .then((res) => {
           if (res && res.ok) {
             const copy = res.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', copy)).catch(() => {});
+            event.waitUntil(
+              caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', copy)).catch(() => {})
+            );
           }
           return res;
         })
-        .catch(() => caches.match('./index.html').then((cached) => cached || caches.match('./')))
+        .catch(() =>
+          caches.match('./index.html')
+            .then((cached) => cached || caches.match('./'))
+            .then((fallback) => fallback || new Response('Offline — reload once connected.', {
+              status: 503,
+              statusText: 'Offline',
+              headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+            }))
+        )
     );
     return;
   }
@@ -73,12 +92,18 @@ self.addEventListener('fetch', (event) => {
         .then((res) => {
           if (res && (res.ok || res.type === 'opaque')) {
             const copy = res.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(req, copy)).catch(() => {});
+            event.waitUntil(
+              caches.open(CACHE_NAME).then((cache) => cache.put(req, copy)).catch(() => {})
+            );
           }
           return res;
         })
-        .catch(() => cached);
-      return cached || networkFetch;
+        .catch(() => cached || new Response('Offline', { status: 503, statusText: 'Offline' }));
+      if (cached) {
+        event.waitUntil(networkFetch.catch(() => {}));
+        return cached;
+      }
+      return networkFetch;
     })
   );
 });
