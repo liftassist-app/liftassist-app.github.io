@@ -86,6 +86,15 @@
       margin: 0;
     }
     .no-spinners { -moz-appearance: textfield; appearance: textfield; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @keyframes partnerFocusRing {
+      0% { box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.85); }
+      100% { box-shadow: 0 0 0 0px rgba(245, 158, 11, 0); }
+    }
+    .partner-focus-flash {
+      animation: partnerFocusRing 0.7s ease-out;
+    }
     .safe-top { padding-top: env(safe-area-inset-top, 0px); }
     .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
     :focus-visible {
@@ -122,7 +131,7 @@
   <!-- =====================================================================
        TOP NAVIGATION & CONTEXT-AWARE SESSION / REST TIMER BAR
        ===================================================================== -->
-  <header id="app-header" class="sticky top-0 z-40 bg-slate-950/95 border-b border-slate-800 shadow-md safe-top">
+  <header id="app-header" class="sticky top-0 z-40 bg-slate-950 border-b border-slate-800 shadow-md safe-top">
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
       <!-- Single-Row Brand, Desktop Tabs & Status Utilities -->
       <div class="flex items-center justify-between gap-2 sm:gap-3 py-2">
@@ -260,18 +269,24 @@
          =================================================================== -->
     <section id="view-logger" class="space-y-4 sm:space-y-6">
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-lg space-y-2.5">
-        <div class="flex items-center justify-between gap-2">
+        <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex flex-wrap items-center gap-2 min-w-0">
-            <h2 id="logger-split-heading" class="text-base sm:text-lg font-extrabold tracking-tight text-white">4-Day Powerlifting Split</h2>
+            <h2 id="logger-split-heading" class="text-sm sm:text-lg font-extrabold tracking-tight text-white whitespace-nowrap">4-Day Powerlifting Split</h2>
             <span id="logger-phase-badge" class="hidden sm:inline-flex px-2.5 py-0.5 text-xs font-mono font-bold rounded-md bg-sky-500/15 text-sky-300 border border-sky-500/30">
               Accumulation Mode (T1: 4–6RM | T2: 6–10RM)
             </span>
           </div>
 
-          <button type="button" id="logger-manage-btn" onclick="toggleLoggerManageDrawer()" aria-expanded="false" aria-controls="logger-manage-drawer" class="px-3 min-h-[44px] sm:min-h-[36px] rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition inline-flex items-center gap-1.5 whitespace-nowrap shrink-0" title="Dice Gainz, Custom Exercises, Export/Import JSON, and Reset Split">
-            <span>Manage</span>
-            <span id="logger-manage-chevron" class="text-slate-400 text-[11px]">▾</span>
-          </button>
+          <div class="flex items-center gap-2 shrink-0">
+            <div class="inline-flex rounded-xl overflow-hidden border border-slate-700 bg-slate-950 p-0.5" role="group" aria-label="Active workout card view mode">
+              <button type="button" id="logger-view-single-btn" onclick="setLoggerViewMode('single')" aria-pressed="true" class="px-2.5 min-h-[40px] sm:min-h-[32px] rounded-lg text-xs font-mono font-bold transition whitespace-nowrap bg-amber-500 text-slate-950" title="Focus Mode: view one exercise card at a time">Single</button>
+              <button type="button" id="logger-view-all-btn" onclick="setLoggerViewMode('all')" aria-pressed="false" class="px-2.5 min-h-[40px] sm:min-h-[32px] rounded-lg text-xs font-mono font-bold transition whitespace-nowrap text-slate-300 hover:text-white" title="List Mode: scroll through all exercises for today">All</button>
+            </div>
+            <button type="button" id="logger-manage-btn" onclick="toggleLoggerManageDrawer()" aria-expanded="false" aria-controls="logger-manage-drawer" class="px-3 min-h-[44px] sm:min-h-[36px] rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition inline-flex items-center gap-1.5 whitespace-nowrap shrink-0" title="Dice Gainz, Custom Exercises, Export/Import JSON, and Reset Split">
+              <span>Manage</span>
+              <span id="logger-manage-chevron" class="text-slate-400 text-[11px]">▾</span>
+            </button>
+          </div>
         </div>
 
         <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2" id="day-selector-container"></div>
@@ -302,8 +317,14 @@
       <div id="dice-active-banner" class="hidden"></div>
       <div id="dice-levelup-banner" class="hidden"></div>
 
+      <!-- Focus-Mode Exercise Switcher Rail (Shown in Single-Card Mode) -->
+      <div id="logger-exercise-nav" class="hidden"></div>
+
       <!-- Tiered Lift Cards -->
       <div id="workout-cards-container" class="space-y-4"></div>
+
+      <!-- Focus-Mode Bottom Prev / Next Thumb Bar (Shown in Single-Card Mode) -->
+      <div id="logger-exercise-footer-nav" class="hidden"></div>
 
       <!-- Add Exercise Bar -->
       <div class="bg-slate-900/70 border border-dashed border-slate-700 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -319,7 +340,7 @@
       </div>
 
       <!-- Session Summary & Roll-Forward Footer -->
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-md">
+      <div id="session-summary-footer" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-md">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
           <div class="space-y-3 flex-1">
             <div class="flex flex-wrap items-center justify-between gap-2">
@@ -1297,6 +1318,68 @@
           <button type="button" id="session-preview-tickall-btn" onclick="commitSessionFromPreview(true)" class="hidden px-4 min-h-[44px] sm:min-h-[38px] rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 transition">Tick All &amp; Log Full Session</button>
           <button type="button" id="session-preview-confirm-btn" onclick="commitSessionFromPreview(false)" class="px-4 min-h-[44px] sm:min-h-[38px] rounded-xl text-xs font-extrabold bg-amber-500 hover:bg-amber-400 text-slate-950 transition">Confirm &amp; Log Session</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Per-Exercise Previous History Modal (Opened from Active Workout "Last:" Pill) -->
+  <div id="exercise-history-modal" role="dialog" aria-modal="true" aria-labelledby="ex-hist-modal-title" onclick="if (event.target === this) closeExerciseHistoryModal()" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div tabindex="-1" class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+      <div class="px-4 sm:px-5 py-3.5 border-b border-slate-800 flex items-start justify-between gap-3 bg-slate-900 shrink-0">
+        <div class="min-w-0 space-y-1">
+          <div class="flex flex-wrap items-center gap-2">
+            <span id="ex-hist-modal-tier-badge" class="px-2 py-0.5 rounded-md text-xs font-mono font-bold border bg-amber-500/15 text-amber-300 border-amber-500/40 shrink-0">T1</span>
+            <h3 id="ex-hist-modal-title" class="text-base sm:text-lg font-extrabold text-white truncate">Exercise History</h3>
+          </div>
+          <p id="ex-hist-modal-subtitle" class="text-xs text-slate-400">Previous loads, reps, and sets logged</p>
+        </div>
+        <button type="button" onclick="closeExerciseHistoryModal()" class="text-slate-400 hover:text-white text-lg px-2 min-h-[40px] min-w-[40px] rounded-lg shrink-0 inline-flex items-center justify-center" aria-label="Close Exercise History">✕</button>
+      </div>
+      <div class="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1">
+        <div id="ex-hist-scope-bar" class="hidden flex flex-wrap items-center justify-between gap-2">
+          <span class="text-xs font-semibold text-slate-400">Show history from:</span>
+          <div class="inline-flex rounded-xl overflow-hidden border border-slate-700 bg-slate-950 p-0.5" role="group" aria-label="Exercise history tier filter">
+            <button type="button" id="ex-hist-scope-tier-btn" onclick="setExerciseHistoryScope('tier')" class="px-3 min-h-[36px] rounded-lg text-xs font-mono font-bold transition bg-amber-500 text-slate-950">This Tier</button>
+            <button type="button" id="ex-hist-scope-all-btn" onclick="setExerciseHistoryScope('all')" class="px-3 min-h-[36px] rounded-lg text-xs font-mono font-bold transition text-slate-300 hover:text-white">All Tiers</button>
+          </div>
+        </div>
+        <div id="ex-hist-summary-grid" class="grid grid-cols-3 gap-2.5"></div>
+        <div id="ex-hist-entries-list" class="space-y-2.5"></div>
+      </div>
+      <div class="px-4 sm:px-5 py-3 border-t border-slate-800 bg-slate-900 flex items-center justify-end shrink-0">
+        <button type="button" onclick="closeExerciseHistoryModal()" class="px-4 min-h-[44px] sm:min-h-[38px] rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Completed Session Detail Inspector Modal (Opened from Completed Session Log) -->
+  <div id="session-detail-modal" role="dialog" aria-modal="true" aria-labelledby="sess-detail-title" onclick="if (event.target === this) closeSessionDetailModal()" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div tabindex="-1" class="bg-slate-900 border border-slate-700 rounded-2xl max-w-3xl w-full max-h-[92vh] flex flex-col overflow-hidden shadow-2xl">
+      <div class="px-4 sm:px-5 py-3.5 border-b border-slate-800 space-y-2 bg-slate-900 shrink-0">
+        <div class="flex items-start justify-between gap-2">
+          <h3 id="sess-detail-title" class="text-base sm:text-lg font-extrabold text-white leading-snug min-w-0">Session Detail</h3>
+          <button type="button" onclick="closeSessionDetailModal()" class="text-slate-400 hover:text-white text-lg px-2 min-h-[38px] min-w-[38px] rounded-lg inline-flex items-center justify-center shrink-0" aria-label="Close Session Detail">✕</button>
+        </div>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div id="sess-detail-meta-pills" class="flex flex-wrap items-center gap-1.5 text-xs"></div>
+          <div class="inline-flex rounded-xl overflow-hidden border border-slate-700 bg-slate-950 shrink-0" role="group" aria-label="Step between logged sessions">
+            <button type="button" id="sess-detail-older-btn" onclick="stepSessionDetailModal(1)" class="px-2.5 min-h-[36px] text-xs font-mono font-bold text-slate-300 hover:text-white hover:bg-slate-800 transition disabled:opacity-35 disabled:cursor-not-allowed" title="View older session">← Older</button>
+            <button type="button" id="sess-detail-newer-btn" onclick="stepSessionDetailModal(-1)" class="px-2.5 min-h-[36px] text-xs font-mono font-bold text-slate-300 hover:text-white hover:bg-slate-800 border-l border-slate-800 transition disabled:opacity-35 disabled:cursor-not-allowed" title="View newer session">Newer →</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="sess-detail-body" class="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1"></div>
+
+      <div class="px-4 sm:px-5 py-3 border-t border-slate-800 bg-slate-900 flex flex-wrap items-center justify-between gap-2 shrink-0">
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" onclick="copySessionDetailRecap()" class="px-3.5 min-h-[44px] sm:min-h-[38px] rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition inline-flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span>Copy Recap</span>
+          </button>
+          <button type="button" onclick="editSessionFromDetail()" class="px-3.5 min-h-[44px] sm:min-h-[38px] rounded-xl text-xs font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-200 border border-amber-500/40 transition">Edit Session</button>
+        </div>
+        <button type="button" onclick="closeSessionDetailModal()" class="px-4 min-h-[44px] sm:min-h-[38px] rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">Close</button>
       </div>
     </div>
   </div>
@@ -4344,6 +4427,7 @@
     function resetAppStateToCleanDefaults() {
       appState.activeTab = 'logger';
       appState.activeDayIndex = 0;
+      appState.loggerViewMode = 'single';
       appState.roadmapDayIndex = 0;
       appState.phase = 'accumulation';
       appState.audioEnabled = true;
@@ -4387,6 +4471,7 @@
 
       if (parsed && typeof parsed === 'object') {
         appState.activeTab = ['logger', 'roadmap', 'analytics', 'guide'].includes(parsed.activeTab) ? parsed.activeTab : 'logger';
+        appState.loggerViewMode = parsed.loggerViewMode === 'all' ? 'all' : 'single';
         appState.phase = parsed.phase === 'intensification' ? 'intensification' : 'accumulation';
         appState.audioEnabled = parsed.audioEnabled !== undefined ? Boolean(parsed.audioEnabled) : true;
         appState.autoRestEnabled = parsed.autoRestEnabled !== undefined ? Boolean(parsed.autoRestEnabled) : true;
@@ -4977,6 +5062,349 @@
       } catch (err) {
         console.warn('Web Audio beep skipped:', err);
       }
+    }
+
+    function playPrAwardSound() {
+      if (!appState.audioEnabled) return;
+      try {
+        if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+          navigator.vibrate([60, 45, 90, 45, 180]);
+        }
+      } catch (_) {}
+      try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return;
+        if (audioReleaseTimerId) {
+          clearTimeout(audioReleaseTimerId);
+          audioReleaseTimerId = null;
+        }
+        // Transient session type keeps phone music safe & restores it immediately after the fanfare
+        setMobileAudioSessionType('transient');
+        if (!audioCtx || audioCtx.state === 'closed') audioCtx = new Ctx();
+        const scheduleFanfare = () => {
+          if (!audioCtx || audioCtx.state === 'closed') return;
+          const now = audioCtx.currentTime;
+          // Crisp 4-note ascending C-major celebration fanfare (C5 -> E5 -> G5 -> C6)
+          const notes = [
+            { t: 0.00, f: 523.25, dur: 0.16, vol: 0.18, type: 'triangle' },
+            { t: 0.11, f: 659.25, dur: 0.16, vol: 0.20, type: 'triangle' },
+            { t: 0.22, f: 783.99, dur: 0.18, vol: 0.22, type: 'triangle' },
+            { t: 0.35, f: 1046.50, dur: 0.52, vol: 0.24, type: 'sine' },
+            { t: 0.35, f: 1567.98, dur: 0.44, vol: 0.09, type: 'sine' }
+          ];
+          notes.forEach(n => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = n.type;
+            osc.frequency.setValueAtTime(n.f, now + n.t);
+            gain.gain.setValueAtTime(0.001, now + n.t);
+            gain.gain.exponentialRampToValueAtTime(n.vol, now + n.t + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + n.t + n.dur);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now + n.t);
+            osc.stop(now + n.t + n.dur + 0.03);
+          });
+          audioReleaseTimerId = setTimeout(releaseMobileAudioFocus, 1020);
+        };
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume().then(scheduleFanfare).catch(scheduleFanfare);
+        } else {
+          scheduleFanfare();
+        }
+      } catch (err) {
+        console.warn('PR award audio skipped:', err);
+      }
+    }
+
+    let activePrConfettiRaf = null;
+
+    function launchPrConfetti() {
+      try {
+        const reducedMotion = Boolean(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        const existing = document.getElementById('pr-confetti-canvas');
+        if (existing) existing.remove();
+        if (activePrConfettiRaf) {
+          cancelAnimationFrame(activePrConfettiRaf);
+          activePrConfettiRaf = null;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.id = 'pr-confetti-canvas';
+        canvas.setAttribute('aria-hidden', 'true');
+        canvas.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:75;';
+        const dpr = Math.min(2, window.devicePixelRatio || 1);
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        document.body.appendChild(canvas);
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { canvas.remove(); return; }
+        ctx.scale(dpr, dpr);
+
+        const colors = ['#f59e0b', '#fbbf24', '#38bdf8', '#34d399', '#a78bfa', '#f8fafc'];
+        const particles = [];
+        const count = reducedMotion ? 42 : 88;
+        for (let i = 0; i < count; i++) {
+          const fromLeft = i % 2 === 0;
+          const originX = fromLeft ? w * 0.14 : w * 0.86;
+          const originY = h * 0.28;
+          const angle = fromLeft
+            ? (-Math.PI / 3.2) + (Math.random() - 0.5) * 0.95
+            : (-Math.PI + Math.PI / 3.2) + (Math.random() - 0.5) * 0.95;
+          const speed = (reducedMotion ? 3.5 : 6) + Math.random() * (reducedMotion ? 5.5 : 11);
+          particles.push({
+            x: originX + (Math.random() - 0.5) * 32,
+            y: originY + (Math.random() - 0.5) * 24,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - (reducedMotion ? 1.2 : 2.5),
+            sizeW: 6 + Math.random() * 6,
+            sizeH: 4 + Math.random() * 5,
+            rot: Math.random() * Math.PI * 2,
+            vRot: reducedMotion ? 0.04 : (Math.random() - 0.5) * 0.24,
+            tiltPhase: Math.random() * Math.PI * 2,
+            color: colors[i % colors.length]
+          });
+        }
+
+        const startMs = performance.now();
+        const durationMs = reducedMotion ? 1600 : 2150;
+        const fadeStartMs = reducedMotion ? 950 : 1450;
+        const tick = (nowMs) => {
+          const elapsed = nowMs - startMs;
+          if (elapsed >= durationMs || !document.body.contains(canvas)) {
+            canvas.remove();
+            activePrConfettiRaf = null;
+            return;
+          }
+          ctx.clearRect(0, 0, w, h);
+          const alpha = elapsed > fadeStartMs ? Math.max(0, 1 - (elapsed - fadeStartMs) / (durationMs - fadeStartMs)) : 1;
+          ctx.globalAlpha = alpha;
+          for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vx *= 0.985;
+            p.vy = p.vy * 0.99 + (reducedMotion ? 0.16 : 0.32);
+            p.rot += p.vRot;
+            p.tiltPhase += reducedMotion ? 0.04 : 0.18;
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rot);
+            ctx.scale(1, 0.35 + 0.65 * Math.abs(Math.cos(p.tiltPhase)));
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.sizeW / 2, -p.sizeH / 2, p.sizeW, p.sizeH);
+            ctx.restore();
+          }
+          activePrConfettiRaf = requestAnimationFrame(tick);
+        };
+        activePrConfettiRaf = requestAnimationFrame(tick);
+      } catch (err) {
+        console.warn('PR confetti skipped:', err);
+      }
+    }
+
+    const prCelebratedKeysByExId = {};
+
+    function computeHistoryPrTimeline(history = appState.history) {
+      const sorted = [...(history || [])].sort((a, b) =>
+        `${a.date || ''} ${a.startedAt || ''}`.localeCompare(`${b.date || ''} ${b.startedAt || ''}`)
+      );
+      const running = {};
+      const prsBySessionId = {};
+
+      sorted.forEach(sess => {
+        if (!sess || !sess.id) return;
+        const liftsByIdx = {};
+        let totalPrs = 0;
+        (sess.exercises || []).forEach((e, eIdx) => {
+          if (!e || !e.exercise) return;
+          const canon = canonicalizeExerciseName(e.exercise).toLowerCase();
+          if (!canon) return;
+          if (!running[canon]) {
+            running[canon] = {
+              seenCount: 0,
+              rmSeenCount: 0,
+              t3SeenCount: 0,
+              bestE1rm: 0,
+              bestWeight: 0,
+              bestT3Weight: 0,
+              t3LoggedRecords: [],
+              lastEntry: null,
+              lastDate: ''
+            };
+          }
+          const st = running[canon];
+          const w = parseFloat(e.weight) || 0;
+          const style = normalizeRmStyle(e.rmStyle);
+          const prs = [];
+          const delta = {};
+
+          if (st.lastEntry) {
+            const prev = st.lastEntry;
+            const prevW = parseFloat(prev.weight) || 0;
+            if (w > 0 && prevW > 0 && Math.abs(w - prevW) >= 0.05) {
+              delta.weightKg = Math.round((w - prevW) * 10) / 10;
+            }
+            if (e.tier !== 'T3' && prev.tier !== 'T3') {
+              const currE1 = getBestRecord1RMDetails(e).e1rm || (parseFloat(e.e1rm) || 0);
+              const prevE1 = getBestRecord1RMDetails(prev).e1rm || (parseFloat(prev.e1rm) || 0);
+              if (currE1 > 0 && prevE1 > 0 && Math.abs(currE1 - prevE1) >= 0.1) {
+                delta.e1rmKg = Math.round((currE1 - prevE1) * 10) / 10;
+              }
+              if (toIntOr(e.rmReps, 0) > 0 && toIntOr(prev.rmReps, 0) > 0 && e.rmReps !== prev.rmReps) {
+                delta.rmReps = e.rmReps - prev.rmReps;
+              }
+            }
+            if (e.tier === 'T3' && prev.tier === 'T3') {
+              const cTot = toIntOr(e.totalReps, 0);
+              const pTot = toIntOr(prev.totalReps, 0);
+              if (cTot > 0 && pTot > 0 && cTot !== pTot) {
+                delta.totalReps = cTot - pTot;
+              }
+            }
+            if (toIntOr(e.durationSecs, 0) > 0 && toIntOr(prev.durationSecs, 0) > 0 && Math.abs(e.durationSecs - prev.durationSecs) >= 5) {
+              delta.durationSecs = e.durationSecs - prev.durationSecs;
+            }
+          }
+
+          if (e.tier === 'T3') {
+            const totReps = toIntOr(e.totalReps, 0);
+            if (st.t3SeenCount >= 1 && totReps > 0) {
+              if (w > 0 && st.bestT3Weight > 0 && w > st.bestT3Weight + 0.05) {
+                prs.push({ kind: 'Load PR', delta: `+${Math.round((w - st.bestT3Weight) * 10) / 10} kg`, value: `${w} kg` });
+              }
+              const priorAtOrAbove = st.t3LoggedRecords.filter(r => r.weight >= w - 0.05);
+              if (priorAtOrAbove.length > 0) {
+                const maxPriorReps = priorAtOrAbove.reduce((mx, r) => Math.max(mx, r.reps), 0);
+                if (totReps > maxPriorReps) {
+                  prs.push({ kind: 'Rep PR', delta: `+${totReps - maxPriorReps} reps`, value: `${totReps}r` });
+                }
+              }
+            }
+            if (totReps > 0) {
+              st.t3SeenCount += 1;
+              if (w > st.bestT3Weight) st.bestT3Weight = w;
+              st.t3LoggedRecords.push({ weight: w, reps: totReps });
+            }
+          } else {
+            const currE1 = getBestRecord1RMDetails(e).e1rm || (parseFloat(e.e1rm) || 0);
+            const hasRm1 = style !== 'skipRm' && toIntOr(e.rmReps, 0) > 0 && w > 0;
+            const beW = (e.bookendWeight !== null && e.bookendWeight !== undefined && e.bookendWeight !== '') ? (parseFloat(e.bookendWeight) || 0) : w;
+            const hasRm2 = style === 'bookend' && toIntOr(e.bookendRmReps, 0) > 0 && beW > 0;
+            const topRmWeight = Math.max(hasRm1 ? w : 0, hasRm2 ? beW : 0);
+
+            if (st.rmSeenCount >= 1) {
+              if (currE1 > 0 && st.bestE1rm > 0 && currE1 > st.bestE1rm + 0.05) {
+                prs.push({ kind: 'e1RM PR', delta: `+${Math.round((currE1 - st.bestE1rm) * 10) / 10} kg`, value: `${currE1} kg` });
+              }
+              if (topRmWeight > 0 && st.bestWeight > 0 && topRmWeight > st.bestWeight + 0.05) {
+                prs.push({ kind: 'Load PR', delta: `+${Math.round((topRmWeight - st.bestWeight) * 10) / 10} kg`, value: `${topRmWeight} kg` });
+              }
+            }
+            if (currE1 > 0 || topRmWeight > 0) {
+              st.rmSeenCount += 1;
+              if (currE1 > st.bestE1rm) st.bestE1rm = currE1;
+              if (topRmWeight > st.bestWeight) st.bestWeight = topRmWeight;
+            }
+          }
+
+          if (prs.length > 0) totalPrs += 1;
+          liftsByIdx[eIdx] = {
+            prs,
+            delta,
+            prevDate: st.lastDate || '',
+            prevEntry: st.lastEntry || null
+          };
+          st.seenCount += 1;
+          st.lastEntry = e;
+          st.lastDate = sess.date || '';
+        });
+        prsBySessionId[sess.id] = { totalPrs, liftsByIdx };
+      });
+
+      return { prsBySessionId, allTimeBestByKey: running };
+    }
+
+    function evaluateLiveExercisePr(ex, triggerKind = 'rm') {
+      if (!ex || !ex.exercise) return null;
+      const canon = canonicalizeExerciseName(ex.exercise).toLowerCase();
+      const { allTimeBestByKey } = computeHistoryPrTimeline();
+      const st = allTimeBestByKey[canon];
+      if (!st) return null;
+
+      if (ex.tier === 'T3') {
+        if (st.t3SeenCount < 1) return null;
+        const w = parseFloat(ex.weight) || 0;
+        const repsArr = Array.isArray(ex.setReps) ? ex.setReps : [];
+        const doneArr = Array.isArray(ex.setsDone) ? ex.setsDone : [];
+        let tickedReps = 0;
+        for (let i = 0; i < Math.max(1, toIntOr(ex.sets, 3)); i++) {
+          if (doneArr[i]) tickedReps += Math.max(0, toIntOr(repsArr[i], 0));
+        }
+        if (tickedReps <= 0) return null;
+        const tags = [];
+        if (w > 0 && st.bestT3Weight > 0 && w > st.bestT3Weight + 0.05) {
+          tags.push(`Load PR ${w} kg (+${Math.round((w - st.bestT3Weight) * 10) / 10} kg)`);
+        }
+        const priorAtOrAbove = st.t3LoggedRecords.filter(r => r.weight >= w - 0.05);
+        if (priorAtOrAbove.length > 0) {
+          const maxPriorReps = priorAtOrAbove.reduce((mx, r) => Math.max(mx, r.reps), 0);
+          if (tickedReps > maxPriorReps) {
+            tags.push(`Rep PR ${tickedReps} reps (+${tickedReps - maxPriorReps}r)`);
+          }
+        }
+        if (!tags.length) return null;
+        return {
+          dedupeKey: `T3|${w}|${tickedReps}|${tags.join('|')}`,
+          summary: tags.join(' & ')
+        };
+      }
+
+      if (st.rmSeenCount < 1) return null;
+      const style = normalizeRmStyle(ex.rmStyle);
+      const w = parseFloat(ex.weight) || 0;
+      const beW = getEffectiveBookendWeight(ex);
+      const beR = Math.max(1, toIntOr(ex.bookendRmReps, ex.rmReps));
+
+      let liveE1 = 0;
+      let liveLoad = 0;
+      if ((triggerKind === 'rm' || triggerKind === 'all') && ex.rmDone && style !== 'skipRm' && w > 0 && toIntOr(ex.rmReps, 0) > 0) {
+        const d1 = getValidated1RMDetails(w, ex.rmReps, ex.exercise, ex.category);
+        if (d1.e1rm > liveE1) liveE1 = d1.e1rm;
+        if (w > liveLoad) liveLoad = w;
+      }
+      if ((triggerKind === 'bookend' || triggerKind === 'all') && ex.bookendDone && style === 'bookend' && beW > 0 && beR > 0) {
+        const d2 = getValidated1RMDetails(beW, beR, ex.exercise, ex.category);
+        if (d2.e1rm > liveE1) liveE1 = d2.e1rm;
+        if (beW > liveLoad) liveLoad = beW;
+      }
+      if (liveE1 <= 0 && liveLoad <= 0) return null;
+
+      const tags = [];
+      if (liveE1 > 0 && st.bestE1rm > 0 && liveE1 > st.bestE1rm + 0.05) {
+        tags.push(`${liveE1} kg e1RM (+${Math.round((liveE1 - st.bestE1rm) * 10) / 10} kg)`);
+      }
+      if (liveLoad > 0 && st.bestWeight > 0 && liveLoad > st.bestWeight + 0.05) {
+        tags.push(`${liveLoad} kg Load PR (+${Math.round((liveLoad - st.bestWeight) * 10) / 10} kg)`);
+      }
+      if (!tags.length) return null;
+      return {
+        dedupeKey: `RM|${liveLoad}|${liveE1}|${tags.join('|')}`,
+        summary: tags.join(' · ')
+      };
+    }
+
+    function checkAndCelebrateLivePr(ex, triggerKind = 'rm') {
+      const hit = evaluateLiveExercisePr(ex, triggerKind);
+      if (!hit) return false;
+      const exKey = ex.id || canonicalizeExerciseName(ex.exercise);
+      if (prCelebratedKeysByExId[exKey] === hit.dedupeKey) return false;
+      prCelebratedKeysByExId[exKey] = hit.dedupeKey;
+      playPrAwardSound();
+      launchPrConfetti();
+      showToast(`🏆 NEW PR! ${ex.exercise} — ${hit.summary}`, 'success', { durationMs: 5200 });
+      return true;
     }
 
     function playTimerBeep() {
@@ -5982,6 +6410,233 @@
       if (customCnt) customCnt.textContent = String((appState.customExercises || []).length);
     }
 
+    let activeExerciseIndexByDay = {};
+
+    function getActiveExerciseIndex(day) {
+      if (!day || !Array.isArray(day.exercises) || !day.exercises.length) return 0;
+      const key = day.id || String(appState.activeDayIndex);
+      const raw = toIntOr(activeExerciseIndexByDay[key], 0);
+      const clamped = Math.max(0, Math.min(raw, day.exercises.length - 1));
+      activeExerciseIndexByDay[key] = clamped;
+      return clamped;
+    }
+
+    function setActiveExerciseIndex(day, idx) {
+      if (!day || !Array.isArray(day.exercises) || !day.exercises.length) return 0;
+      const key = day.id || String(appState.activeDayIndex);
+      const clamped = Math.max(0, Math.min(toIntOr(idx, 0), day.exercises.length - 1));
+      activeExerciseIndexByDay[key] = clamped;
+      return clamped;
+    }
+
+    function updateLoggerViewModeUI() {
+      const isSingle = (appState.loggerViewMode || 'single') !== 'all';
+      const singleBtn = document.getElementById('logger-view-single-btn');
+      const allBtn = document.getElementById('logger-view-all-btn');
+      const activeCls = 'px-2.5 min-h-[40px] sm:min-h-[32px] rounded-lg text-xs font-mono font-bold transition whitespace-nowrap bg-amber-500 text-slate-950';
+      const idleCls = 'px-2.5 min-h-[40px] sm:min-h-[32px] rounded-lg text-xs font-mono font-bold transition whitespace-nowrap text-slate-300 hover:text-white';
+      if (singleBtn) {
+        singleBtn.className = isSingle ? activeCls : idleCls;
+        singleBtn.setAttribute('aria-pressed', isSingle ? 'true' : 'false');
+      }
+      if (allBtn) {
+        allBtn.className = !isSingle ? activeCls : idleCls;
+        allBtn.setAttribute('aria-pressed', !isSingle ? 'true' : 'false');
+      }
+    }
+
+    function setLoggerViewMode(mode) {
+      const next = mode === 'all' ? 'all' : 'single';
+      if (appState.loggerViewMode === next) return;
+      appState.loggerViewMode = next;
+      saveState({ preserveTimestamp: true, skipCloudPush: true, keepSampleFlag: true });
+      renderLogger();
+    }
+
+    function scrollActiveExercisePillIntoView(idx) {
+      requestAnimationFrame(() => {
+        const pill = document.getElementById(`logger-ex-pill-${idx}`);
+        if (pill && typeof pill.scrollIntoView === 'function') {
+          pill.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+        }
+      });
+    }
+
+    function selectExerciseInDay(idx, opts = {}) {
+      const day = appState.split && appState.split[appState.activeDayIndex];
+      if (!day || !Array.isArray(day.exercises) || !day.exercises.length) return;
+      const clamped = setActiveExerciseIndex(day, idx);
+      renderLogger();
+      scrollActiveExercisePillIntoView(clamped);
+      if (opts && opts.scrollToCard) {
+        requestAnimationFrame(() => {
+          const nav = document.getElementById('logger-exercise-nav') || document.getElementById('workout-cards-container');
+          if (nav && typeof nav.scrollIntoView === 'function') {
+            nav.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        });
+      }
+    }
+
+    function stepExerciseInDay(delta, fromBottom = false) {
+      const day = appState.split && appState.split[appState.activeDayIndex];
+      if (!day || !Array.isArray(day.exercises) || !day.exercises.length) return;
+      const curr = getActiveExerciseIndex(day);
+      const next = Math.max(0, Math.min(curr + toIntOr(delta, 0), day.exercises.length - 1));
+      if (next === curr) return;
+      selectExerciseInDay(next, { scrollToCard: Boolean(fromBottom) });
+    }
+
+    function scrollToSessionSummary() {
+      const el = document.getElementById('session-summary-footer');
+      if (el && typeof el.scrollIntoView === 'function') {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function getSupersetJumpTarget(day, exIdx) {
+      if (!day || !Array.isArray(day.exercises)) return null;
+      const ex = day.exercises[exIdx];
+      const grp = normalizeSupersetGroup(ex && ex.supersetGroup);
+      if (!grp) return null;
+      const n = day.exercises.length;
+      let firstPartner = null;
+      for (let step = 1; step < n; step++) {
+        const idx = (exIdx + step) % n;
+        const cand = day.exercises[idx];
+        if (!cand || normalizeSupersetGroup(cand.supersetGroup) !== grp) continue;
+        const st = getExerciseCompletedStats(cand);
+        const done = st.plannedSets > 0 && st.completedSets >= st.plannedSets;
+        const info = { partner: cand, partnerIdx: idx, grp, ssStyle: getSupersetStyle(grp), stats: st, allDone: done };
+        if (!firstPartner) firstPartner = info;
+        if (!done) return info;
+      }
+      return firstPartner;
+    }
+
+    function renderCardSupersetPartnerJumpHtml(ex, exIdx) {
+      const day = appState.split && appState.split[appState.activeDayIndex];
+      const target = getSupersetJumpTarget(day, exIdx);
+      if (!target || !target.ssStyle) return '';
+      const progressTxt = target.allDone ? '✓' : `${target.stats.completedSets}/${target.stats.plannedSets}`;
+      return `
+        <button type="button" onclick="jumpToSupersetPartner(${exIdx}, ${target.partnerIdx})" class="w-full sm:w-auto px-3 min-h-[44px] sm:min-h-[36px] rounded-xl text-xs font-mono font-bold border transition inline-flex items-center justify-between sm:justify-center gap-1.5 whitespace-nowrap ${target.ssStyle.badge} hover:brightness-110" title="Jump to SS-${target.grp} superset partner: ${escapeHtml(target.partner.exercise)} (${target.partner.tier}, ${progressTxt})">
+          <span class="inline-flex items-center gap-1.5 min-w-0">
+            <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 16V4m0 0L3 8m4-4 4 4M17 8v12m0 0 4-4m-4 4-4-4"/></svg>
+            <span>SS-${target.grp}:</span>
+            <span class="truncate sm:max-w-[155px]">${escapeHtml(target.partner.exercise)}</span>
+          </span>
+          <span class="opacity-85 tabular-nums shrink-0">(${progressTxt})</span>
+        </button>
+      `;
+    }
+
+    function jumpToSupersetPartner(fromIdx, partnerIdx) {
+      const day = appState.split && appState.split[appState.activeDayIndex];
+      if (!day || !Array.isArray(day.exercises) || !day.exercises[partnerIdx]) return;
+      const isSingle = (appState.loggerViewMode || 'single') !== 'all';
+      if (isSingle) {
+        selectExerciseInDay(partnerIdx, { scrollToCard: false });
+        return;
+      }
+      const partner = day.exercises[partnerIdx];
+      setActiveExerciseIndex(day, partnerIdx);
+      const cardEl = document.getElementById(`exercise-card-${partner.id}`);
+      if (cardEl) {
+        cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        cardEl.classList.remove('partner-focus-flash');
+        void cardEl.offsetWidth;
+        cardEl.classList.add('partner-focus-flash');
+        setTimeout(() => cardEl.classList.remove('partner-focus-flash'), 750);
+      }
+    }
+
+    function renderLoggerExerciseNavHtml(day, activeIdx) {
+      const total = day.exercises.length;
+      const canPrev = activeIdx > 0;
+      const canNext = activeIdx < total - 1;
+      const tierMeta = {
+        T1: { pillActive: 'bg-slate-800 border-amber-400 text-white shadow-sm', tag: 'bg-amber-500/20 text-amber-300 border-amber-500/40' },
+        T2: { pillActive: 'bg-slate-800 border-sky-400 text-white shadow-sm', tag: 'bg-sky-500/20 text-sky-300 border-sky-500/40' },
+        T3: { pillActive: 'bg-slate-800 border-emerald-400 text-white shadow-sm', tag: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' }
+      };
+
+      const pillsHtml = day.exercises.map((ex, idx) => {
+        const isSel = idx === activeIdx;
+        const st = getExerciseCompletedStats(ex);
+        const allDone = st.plannedSets > 0 && st.completedSets >= st.plannedSets;
+        const inProg = st.completedSets > 0 && !allDone;
+        const running = isExerciseStopwatchRunning(ex, day);
+        const grp = normalizeSupersetGroup(ex.supersetGroup);
+        const ssStyle = getSupersetStyle(grp);
+        const tm = tierMeta[ex.tier] || tierMeta.T2;
+        const statusCls = allDone
+          ? 'text-emerald-300'
+          : (inProg ? 'text-amber-300' : 'text-slate-400');
+
+        return `
+          <button type="button" id="logger-ex-pill-${idx}" onclick="selectExerciseInDay(${idx})" aria-current="${isSel ? 'true' : 'false'}" class="snap-start shrink-0 px-2.5 min-h-[44px] sm:min-h-[38px] rounded-xl border text-xs transition inline-flex items-center gap-1.5 ${
+            isSel
+              ? tm.pillActive
+              : (allDone ? 'bg-slate-900/90 border-emerald-500/35 text-slate-200 hover:border-emerald-400/60' : 'bg-slate-900/90 border-slate-800 text-slate-300 hover:border-slate-600 hover:text-white')
+          }" title="${escapeHtml(`${idx + 1}. ${ex.tier} ${ex.exercise} (${st.completedSets}/${st.plannedSets} sets)`)}">
+            <span class="px-1.5 py-0.5 rounded font-mono text-[10px] font-bold border leading-none ${tm.tag}">${ex.tier}</span>
+            <span class="font-semibold max-w-[125px] sm:max-w-[165px] truncate">${escapeHtml(ex.exercise)}</span>
+            ${grp && ssStyle ? `<span class="px-1 py-0.5 rounded font-mono text-[10px] font-bold border leading-none ${ssStyle.badge}">SS-${grp}</span>` : ''}
+            ${running ? `<span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shrink-0" title="Stopwatch running"></span>` : ''}
+            <span class="font-mono text-[11px] font-bold tabular-nums ${statusCls}">${allDone ? '✓' : `${st.completedSets}/${st.plannedSets}`}</span>
+          </button>
+        `;
+      }).join('');
+
+      return `
+        <div class="flex items-center gap-1.5 sm:gap-2" role="navigation" aria-label="Exercise switcher">
+          <button type="button" onclick="stepExerciseInDay(-1, false)" ${canPrev ? '' : 'disabled'} aria-label="Previous exercise" class="min-h-[44px] min-w-[44px] sm:min-h-[38px] sm:min-w-[38px] rounded-xl border text-xs font-bold transition inline-flex items-center justify-center shrink-0 ${
+            canPrev ? 'bg-slate-900 border-slate-700 text-slate-200 hover:text-white hover:border-slate-500' : 'bg-slate-950 border-slate-800/80 text-slate-600 cursor-not-allowed'
+          }" title="Previous exercise (Alt + Left)">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div class="flex-1 min-w-0 flex items-center gap-1.5 overflow-x-auto no-scrollbar snap-x py-0.5">
+            ${pillsHtml}
+          </div>
+          <span class="inline-flex px-1.5 sm:px-2 py-1 rounded-lg bg-slate-900 border border-slate-800 font-mono text-[11px] font-bold text-slate-400 tabular-nums shrink-0" title="Active exercise position">${activeIdx + 1}/${total}</span>
+          <button type="button" onclick="stepExerciseInDay(1, false)" ${canNext ? '' : 'disabled'} aria-label="Next exercise" class="min-h-[44px] min-w-[44px] sm:min-h-[38px] sm:min-w-[38px] rounded-xl border text-xs font-bold transition inline-flex items-center justify-center shrink-0 ${
+            canNext ? 'bg-slate-900 border-slate-700 text-slate-200 hover:text-white hover:border-slate-500' : 'bg-slate-950 border-slate-800/80 text-slate-600 cursor-not-allowed'
+          }" title="Next exercise (Alt + Right)">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+      `;
+    }
+
+    function renderLoggerExerciseFooterNavHtml(day, activeIdx) {
+      const total = day.exercises.length;
+      if (total <= 1) return '';
+      const prevEx = activeIdx > 0 ? day.exercises[activeIdx - 1] : null;
+      const nextEx = activeIdx < total - 1 ? day.exercises[activeIdx + 1] : null;
+      return `
+        <div class="grid grid-cols-2 gap-2.5">
+          <button type="button" onclick="stepExerciseInDay(-1, true)" ${prevEx ? '' : 'disabled'} class="px-3 min-h-[44px] sm:min-h-[40px] rounded-xl border text-xs transition flex items-center justify-start gap-2 min-w-0 ${
+            prevEx ? 'bg-slate-900 border-slate-700 text-slate-200 hover:text-white hover:border-slate-500' : 'bg-slate-950/70 border-slate-800/80 text-slate-600 cursor-not-allowed'
+          }">
+            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+            <span class="truncate text-left">${prevEx ? `<span class="font-mono text-slate-400 mr-1">${prevEx.tier}</span><span class="font-semibold">${escapeHtml(prevEx.exercise)}</span>` : 'First Lift'}</span>
+          </button>
+          ${nextEx ? `
+            <button type="button" onclick="stepExerciseInDay(1, true)" class="px-3 min-h-[44px] sm:min-h-[40px] rounded-xl border bg-slate-900 border-slate-700 text-slate-200 hover:text-white hover:border-amber-500/50 text-xs transition flex items-center justify-end gap-2 min-w-0">
+              <span class="truncate text-right"><span class="font-mono text-slate-400 mr-1">${nextEx.tier}</span><span class="font-semibold">${escapeHtml(nextEx.exercise)}</span></span>
+              <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+          ` : `
+            <button type="button" onclick="scrollToSessionSummary()" class="px-3 min-h-[44px] sm:min-h-[40px] rounded-xl border bg-amber-500/15 border-amber-500/40 text-amber-200 hover:bg-amber-500/25 text-xs font-bold transition flex items-center justify-end gap-2 min-w-0">
+              <span class="truncate">Session Summary &amp; Log</span>
+              <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+          `}
+        </div>
+      `;
+    }
+
     function selectDay(idx) {
       appState.activeDayIndex = Math.max(0, Math.min(idx, appState.split.length - 1));
       saveState({ preserveTimestamp: true, skipCloudPush: true, keepSampleFlag: true });
@@ -5990,8 +6645,11 @@
 
     function renderLogger() {
       updatePhaseBadgesUI();
+      updateLoggerViewModeUI();
       const dayContainer = document.getElementById('day-selector-container');
       const cardsContainer = document.getElementById('workout-cards-container');
+      const exNavEl = document.getElementById('logger-exercise-nav');
+      const exFooterEl = document.getElementById('logger-exercise-footer-nav');
       if (!dayContainer || !cardsContainer) return;
 
       if (!appState.split.length) appState.split = createDefaultSplit();
@@ -6007,14 +6665,36 @@
       `).join('');
 
       if (!activeDay.exercises.length) {
+        if (exNavEl) { exNavEl.innerHTML = ''; exNavEl.classList.add('hidden'); }
+        if (exFooterEl) { exFooterEl.innerHTML = ''; exFooterEl.classList.add('hidden'); }
         cardsContainer.innerHTML = `<div class="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center text-xs text-slate-400">No lifts scheduled for ${escapeHtml(activeDay.name)}. Use the buttons below to add T1, T2, or T3 lifts.</div>`;
+        renderDiceActiveBanners();
         updateLiveMetrics();
         return;
       }
 
       const feedback = analyzeLiftFeedbackTrends();
       const totalCount = activeDay.exercises.length;
-      cardsContainer.innerHTML = activeDay.exercises.map((ex, exIdx) => renderExerciseCard(ex, exIdx, feedback, totalCount)).join('');
+      const isSingleMode = (appState.loggerViewMode || 'single') !== 'all';
+
+      if (isSingleMode) {
+        const activeExIdx = getActiveExerciseIndex(activeDay);
+        if (exNavEl) {
+          exNavEl.innerHTML = renderLoggerExerciseNavHtml(activeDay, activeExIdx);
+          exNavEl.classList.remove('hidden');
+        }
+        cardsContainer.innerHTML = renderExerciseCard(activeDay.exercises[activeExIdx], activeExIdx, feedback, totalCount);
+        if (exFooterEl) {
+          const footerHtml = renderLoggerExerciseFooterNavHtml(activeDay, activeExIdx);
+          exFooterEl.innerHTML = footerHtml;
+          exFooterEl.classList.toggle('hidden', !footerHtml);
+        }
+      } else {
+        if (exNavEl) { exNavEl.innerHTML = ''; exNavEl.classList.add('hidden'); }
+        if (exFooterEl) { exFooterEl.innerHTML = ''; exFooterEl.classList.add('hidden'); }
+        cardsContainer.innerHTML = activeDay.exercises.map((ex, exIdx) => renderExerciseCard(ex, exIdx, feedback, totalCount)).join('');
+      }
+
       renderDiceActiveBanners();
       updateLiveMetrics();
     }
@@ -6076,8 +6756,262 @@
       `;
     }
 
-    function renderLastSessionBenchmarkHtml(lastEntry, tier) {
-      if (!lastEntry) return '';
+    let exerciseHistoryModalState = { exerciseName: '', tier: 'T1', scope: 'tier' };
+
+    function getExerciseHistoryRecords(exerciseName, tierFilter = null) {
+      const targetCanon = canonicalizeExerciseName(exerciseName || '').toLowerCase();
+      if (!targetCanon) return [];
+      const out = [];
+      (appState.history || []).forEach(sess => {
+        if (!sess || !Array.isArray(sess.exercises)) return;
+        sess.exercises.forEach(e => {
+          if (!e || !e.exercise) return;
+          if (canonicalizeExerciseName(e.exercise).toLowerCase() !== targetCanon) return;
+          const eTier = e.tier || 'T2';
+          if (tierFilter && eTier !== tierFilter) return;
+          out.push({
+            date: sess.date || '',
+            startedAt: sess.startedAt || '',
+            dayName: sess.dayName || '',
+            sessionId: sess.id || '',
+            entry: e
+          });
+        });
+      });
+      out.sort((a, b) => `${b.date} ${b.startedAt || ''}`.localeCompare(`${a.date} ${a.startedAt || ''}`));
+      return out;
+    }
+
+    function openExerciseHistoryByName(exerciseName, tier = 'T2') {
+      if (!exerciseName) return;
+      const canonName = canonicalizeExerciseName(exerciseName);
+      const normTier = ['T1', 'T2', 'T3'].includes(tier) ? tier : 'T2';
+      const tierRecords = getExerciseHistoryRecords(canonName, normTier);
+      const allRecords = getExerciseHistoryRecords(canonName, null);
+      exerciseHistoryModalState = {
+        exerciseName: canonName,
+        tier: normTier,
+        scope: tierRecords.length > 0 ? 'tier' : (allRecords.length > 0 ? 'all' : 'tier')
+      };
+      renderExerciseHistoryModal();
+      document.getElementById('exercise-history-modal')?.classList.remove('hidden');
+    }
+
+    function openExerciseHistoryModal(exIdx) {
+      const day = appState.split && appState.split[appState.activeDayIndex];
+      const ex = day && day.exercises && day.exercises[exIdx];
+      if (!ex) return;
+      openExerciseHistoryByName(ex.exercise, ex.tier || 'T2');
+    }
+
+    function closeExerciseHistoryModal() {
+      document.getElementById('exercise-history-modal')?.classList.add('hidden');
+    }
+
+    function setExerciseHistoryScope(scope) {
+      exerciseHistoryModalState.scope = scope === 'all' ? 'all' : 'tier';
+      renderExerciseHistoryModal();
+    }
+
+    function renderExerciseHistoryModal() {
+      const { exerciseName, tier, scope } = exerciseHistoryModalState;
+      const titleEl = document.getElementById('ex-hist-modal-title');
+      const subEl = document.getElementById('ex-hist-modal-subtitle');
+      const badgeEl = document.getElementById('ex-hist-modal-tier-badge');
+      const scopeBar = document.getElementById('ex-hist-scope-bar');
+      const tierBtn = document.getElementById('ex-hist-scope-tier-btn');
+      const allBtn = document.getElementById('ex-hist-scope-all-btn');
+      const summaryGrid = document.getElementById('ex-hist-summary-grid');
+      const listEl = document.getElementById('ex-hist-entries-list');
+      if (!titleEl || !summaryGrid || !listEl) return;
+
+      const tierBadgeMap = {
+        T1: 'bg-amber-500/15 text-amber-300 border-amber-500/40',
+        T2: 'bg-sky-500/15 text-sky-300 border-sky-500/40',
+        T3: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
+      };
+      if (badgeEl) {
+        badgeEl.textContent = tier;
+        badgeEl.className = `px-2 py-0.5 rounded-md text-xs font-mono font-bold border shrink-0 ${tierBadgeMap[tier] || tierBadgeMap.T2}`;
+      }
+      titleEl.textContent = exerciseName || 'Exercise History';
+
+      const tierRecords = getExerciseHistoryRecords(exerciseName, tier);
+      const allRecords = getExerciseHistoryRecords(exerciseName, null);
+      const records = scope === 'all' ? allRecords : tierRecords;
+      const hasOtherTierHistory = allRecords.length > tierRecords.length;
+
+      if (scopeBar) {
+        scopeBar.classList.toggle('hidden', !hasOtherTierHistory);
+      }
+      const activeScopeCls = 'px-3 min-h-[36px] rounded-lg text-xs font-mono font-bold transition bg-amber-500 text-slate-950';
+      const idleScopeCls = 'px-3 min-h-[36px] rounded-lg text-xs font-mono font-bold transition text-slate-300 hover:text-white';
+      if (tierBtn) {
+        tierBtn.textContent = `${tier} Only (${tierRecords.length})`;
+        tierBtn.className = scope === 'tier' ? activeScopeCls : idleScopeCls;
+      }
+      if (allBtn) {
+        allBtn.textContent = `All Tiers (${allRecords.length})`;
+        allBtn.className = scope === 'all' ? activeScopeCls : idleScopeCls;
+      }
+
+      if (subEl) {
+        subEl.textContent = records.length
+          ? `${records.length} logged session${records.length === 1 ? '' : 's'} · Newest first`
+          : 'No logged sessions yet for this filter';
+      }
+
+      if (!records.length) {
+        summaryGrid.innerHTML = '';
+        listEl.innerHTML = `<div class="p-6 rounded-xl bg-slate-950/70 border border-slate-800 text-center text-xs text-slate-400">No previous sets logged for ${escapeHtml(exerciseName)} in ${scope === 'all' ? 'any tier' : tier}.</div>`;
+        return;
+      }
+
+      // Compute PR summary across displayed records
+      let bestWeight = 0;
+      let bestWeightSub = '';
+      let bestE1rm = 0;
+      let bestE1rmDate = '';
+      let bestTotalReps = 0;
+      let bestRepsSub = '';
+      records.forEach(r => {
+        const e = r.entry;
+        const w = parseFloat(e.weight) || 0;
+        const vdsW = (e.vdsWeight !== null && e.vdsWeight !== undefined && e.vdsWeight !== '') ? (parseFloat(e.vdsWeight) || 0) : 0;
+        const beW = (e.bookendWeight !== null && e.bookendWeight !== undefined && e.bookendWeight !== '') ? (parseFloat(e.bookendWeight) || 0) : 0;
+        const topW = Math.max(w, vdsW, beW);
+        if (topW > bestWeight) {
+          bestWeight = topW;
+          bestWeightSub = e.tier === 'T3'
+            ? `${toIntOr(e.totalReps, 0)}r · ${r.date}`
+            : `${toIntOr(e.rmReps, 0) > 0 ? `${e.rmReps}RM` : 'VDS'} · ${r.date}`;
+        }
+        const e1 = getBestRecord1RMDetails(e).e1rm || (parseFloat(e.e1rm) || 0);
+        if (e.tier !== 'T3' && e1 > bestE1rm) {
+          bestE1rm = e1;
+          bestE1rmDate = r.date;
+        }
+        const totR = toIntOr(e.totalReps, 0);
+        if (totR > bestTotalReps) {
+          bestTotalReps = totR;
+          bestRepsSub = `${w > 0 ? `${w} kg` : 'BW'} · ${r.date}`;
+        }
+      });
+
+      const showE1rmTile = tier !== 'T3' && bestE1rm > 0;
+      summaryGrid.innerHTML = `
+        <div class="p-3 rounded-xl bg-slate-950/90 border border-slate-800">
+          <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Heaviest Load</div>
+          <div class="font-mono text-sm sm:text-base font-extrabold text-white tabular-nums mt-0.5">${bestWeight > 0 ? `${bestWeight} kg` : 'BW'}</div>
+          <div class="font-mono text-[11px] text-slate-400 truncate mt-0.5">${escapeHtml(bestWeightSub || records[0].date)}</div>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-950/90 border border-slate-800">
+          <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">${showE1rmTile ? 'Best e1RM' : 'Best Total Reps'}</div>
+          <div class="font-mono text-sm sm:text-base font-extrabold ${showE1rmTile ? 'text-amber-300' : 'text-emerald-300'} tabular-nums mt-0.5">${showE1rmTile ? `${bestE1rm} kg` : `${bestTotalReps} reps`}</div>
+          <div class="font-mono text-[11px] text-slate-400 truncate mt-0.5">${escapeHtml(showE1rmTile ? bestE1rmDate : bestRepsSub)}</div>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-950/90 border border-slate-800">
+          <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Logged</div>
+          <div class="font-mono text-sm sm:text-base font-extrabold text-sky-300 tabular-nums mt-0.5">${records.length} ${records.length === 1 ? 'session' : 'sessions'}</div>
+          <div class="font-mono text-[11px] text-slate-400 truncate mt-0.5">Latest ${escapeHtml(records[0].date)}</div>
+        </div>
+      `;
+
+      const effStyleMap = {
+        Easy: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/35',
+        Medium: 'bg-amber-500/15 text-amber-300 border-amber-500/35',
+        Hard: 'bg-rose-500/15 text-rose-300 border-rose-500/35'
+      };
+
+      listEl.innerHTML = records.map(r => {
+        const e = r.entry;
+        const eTier = e.tier || 'T2';
+        const eff = normalizeEffort(e.effort);
+        const effCls = effStyleMap[eff] || effStyleMap.Medium;
+        const w = parseFloat(e.weight) || 0;
+        const wTxt = w > 0 ? `${w} kg` : 'BW';
+        const style = normalizeRmStyle(e.rmStyle);
+
+        let mainLine = '';
+        if (eTier === 'T3') {
+          const repsArr = Array.isArray(e.setReps) && e.setReps.length > 0 ? e.setReps.map(v => toIntOr(v, 0)) : null;
+          const tot = toIntOr(e.totalReps, repsArr ? repsArr.reduce((s, v) => s + v, 0) : 0);
+          const setCount = repsArr ? repsArr.length : Math.max(1, toIntOr(e.completedSets || e.sets, 0));
+          mainLine = repsArr
+            ? `${wTxt} · ${setCount} MRS: ${repsArr.join(' + ')} = ${tot} reps`
+            : `${wTxt} · ${setCount} MRS · ${tot} total reps`;
+        } else {
+          const rm = toIntOr(e.rmReps, 0);
+          const fuSets = toIntOr(e.fuSets, 0);
+          const fuReps = toIntOr(e.fuReps, 0);
+          const hasSplitVds = e.vdsWeight !== null && e.vdsWeight !== undefined && e.vdsWeight !== '' && parseFloat(e.vdsWeight) !== w;
+          const vdsWtTxt = hasSplitVds ? ` @ ${parseFloat(e.vdsWeight)} kg` : '';
+          let vdsPart = '';
+          if (style === 'skipVds') {
+            vdsPart = ' · Skip VDS';
+          } else if (Array.isArray(e.vdsSetReps) && e.vdsSetReps.length > 0) {
+            vdsPart = ` + ${e.vdsSetReps.length} VDS (${e.vdsSetReps.join(', ')})${vdsWtTxt}`;
+          } else if (fuSets > 0) {
+            const perSetRep = fuReps > 0 ? fuReps : (e.fuMode === 'singles' ? 1 : getFollowUpModeLabel(e.fuMode));
+            vdsPart = ` + ${fuSets}×${perSetRep}${vdsWtTxt}`;
+          } else {
+            vdsPart = ' · 0 VDS';
+          }
+
+          if (style === 'skipRm') {
+            const endEffTxt = e.endEffort ? ` → ${formatEffortLabel(e.endEffort, true)}` : '';
+            mainLine = `${wTxt} · Skip RM${vdsPart.replace(/^ \+ /, ' · ')}${endEffTxt}`;
+          } else if (style === 'lastSetRm') {
+            mainLine = `${wTxt} · ${fuSets > 0 ? `${fuSets}×${fuReps || 1}${vdsWtTxt} → ` : ''}Last Set ${rm}RM`;
+          } else if (style === 'bookend') {
+            const beW = (e.bookendWeight !== null && e.bookendWeight !== undefined && e.bookendWeight !== '') ? parseFloat(e.bookendWeight) : w;
+            const beR = toIntOr(e.bookendRmReps, rm);
+            mainLine = `${wTxt} × ${rm}RM${vdsPart} → RM2 ${beR}RM${beW !== w ? ` @ ${beW} kg` : ''}`;
+          } else {
+            mainLine = rm > 0
+              ? `${wTxt} × ${rm}RM${vdsPart}`
+              : `${wTxt} · No RM${vdsPart}`;
+          }
+        }
+
+        const chips = [];
+        const e1 = eTier !== 'T3' ? (getBestRecord1RMDetails(e).e1rm || (parseFloat(e.e1rm) || 0)) : 0;
+        if (e1 > 0) chips.push(`<span class="px-2 py-0.5 rounded-md font-mono text-[11px] bg-slate-900 text-amber-300 border border-slate-800">e1RM ${e1} kg</span>`);
+        if ((parseFloat(e.tonnage) || 0) > 0) chips.push(`<span class="px-2 py-0.5 rounded-md font-mono text-[11px] bg-slate-900 text-slate-300 border border-slate-800">Vol ${Math.round(e.tonnage).toLocaleString()} kg</span>`);
+        if (toIntOr(e.totalReps, 0) > 0 && eTier !== 'T3') chips.push(`<span class="px-2 py-0.5 rounded-md font-mono text-[11px] bg-slate-900 text-sky-300 border border-slate-800">${toIntOr(e.totalReps, 0)} total reps</span>`);
+        if (toIntOr(e.durationSecs, 0) > 0) chips.push(`<span class="px-2 py-0.5 rounded-md font-mono text-[11px] bg-slate-900 text-cyan-300 border border-slate-800">⏱ ${formatShortDuration(e.durationSecs)}</span>`);
+        if (e.limiter && e.limiter !== 'Standard') chips.push(`<span class="px-2 py-0.5 rounded-md font-mono text-[11px] bg-amber-500/10 text-amber-200 border border-amber-500/30">${escapeHtml(e.limiter)}</span>`);
+        if (e.status) chips.push(`<span class="px-2 py-0.5 rounded-md font-mono text-[11px] bg-slate-900 text-slate-400 border border-slate-800">${escapeHtml(e.status)}</span>`);
+
+        const warmupSummary = formatWarmupSetsSummary(e.warmupSets);
+        const timeTag = r.startedAt ? ` · ${r.startedAt}` : '';
+
+        return `
+          <div class="p-3.5 rounded-xl bg-slate-950/90 border border-slate-800 space-y-2">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex flex-wrap items-center gap-1.5 text-xs">
+                <span class="font-mono font-bold text-white tabular-nums">${escapeHtml(r.date)}${escapeHtml(timeTag)}</span>
+                <span class="px-1.5 py-0.5 rounded font-mono text-[10px] font-bold border ${tierBadgeMap[eTier] || tierBadgeMap.T2}">${eTier}</span>
+                ${r.dayName ? `<span class="text-slate-400 truncate max-w-[180px] sm:max-w-xs">${escapeHtml(r.dayName)}</span>` : ''}
+              </div>
+              <span class="px-2 py-0.5 rounded-md font-mono text-[11px] font-bold border ${effCls}">${formatEffortLabel(eff)}</span>
+            </div>
+            <div class="font-mono text-xs sm:text-sm font-bold text-slate-100 tabular-nums leading-snug">${escapeHtml(mainLine)}</div>
+            ${chips.length ? `<div class="flex flex-wrap items-center gap-1.5">${chips.join('')}</div>` : ''}
+            ${warmupSummary ? `<div class="text-[11px] font-mono text-orange-300/85">Warm-up: ${escapeHtml(warmupSummary)}</div>` : ''}
+            ${e.notes ? `<div class="text-xs text-slate-400 italic border-t border-slate-800/80 pt-1.5">${escapeHtml(e.notes)}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderLastSessionBenchmarkHtml(lastEntry, tier, exIdx = null, exerciseName = '') {
+      if (!lastEntry) {
+        if (exIdx === null || !exerciseName) return '';
+        const otherCount = getExerciseHistoryRecords(exerciseName, null).length;
+        if (!otherCount) return '';
+        return `<button type="button" onclick="openExerciseHistoryModal(${exIdx})" class="px-2 py-1 sm:py-0.5 rounded-md text-xs font-mono font-semibold bg-slate-950/70 text-slate-300 border border-slate-700/80 hover:border-amber-500/50 hover:text-white whitespace-nowrap transition inline-flex items-center gap-1" title="View all ${otherCount} logged sessions for ${escapeHtml(exerciseName)}"><svg class="w-3 h-3 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>History (${otherCount})</span><span class="text-slate-400">›</span></button>`;
+      }
       const effShort = formatEffortLabel(lastEntry.effort, true);
       const wTxt = lastEntry.weight > 0 ? `${lastEntry.weight} kg` : 'BW';
       let summary = '';
@@ -6090,8 +7024,13 @@
           ? `${wTxt} · ${lastEntry.fuSets}×${modeTxt} (${effShort})`
           : `${wTxt} × ${lastEntry.rmReps}RM${vdsPart} (${effShort})`;
       }
-      const dateTip = lastEntry.date ? `Last logged session on ${lastEntry.date}` : 'Last logged session';
-      return `<button type="button" onclick="toggleInfoPopover(this, event)" data-info="${escapeHtml(dateTip)}" class="px-2 py-0.5 rounded-md text-xs font-mono font-semibold bg-slate-950/70 text-slate-200 border border-slate-700/80 hover:border-slate-500 whitespace-nowrap transition" title="${escapeHtml(dateTip)}">Last: ${escapeHtml(summary)}</button>`;
+      const dateTip = lastEntry.date
+        ? `Last logged on ${lastEntry.date} — click to view full lift history`
+        : 'Click to view full lift history';
+      const clickAttr = exIdx !== null
+        ? `onclick="openExerciseHistoryModal(${exIdx})"`
+        : `onclick="toggleInfoPopover(this, event)" data-info="${escapeHtml(dateTip)}"`;
+      return `<button type="button" ${clickAttr} class="px-2 py-1 sm:py-0.5 rounded-md text-xs font-mono font-semibold bg-slate-950/70 text-slate-200 border border-slate-700/80 hover:border-amber-500/55 hover:text-white whitespace-nowrap transition inline-flex items-center gap-1" title="${escapeHtml(dateTip)}"><svg class="w-3 h-3 text-amber-400/90 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Last: ${escapeHtml(summary)}</span><span class="text-slate-400">›</span></button>`;
     }
 
     function renderCardRestStepperHtml(ex, exIdx) {
@@ -6210,7 +7149,7 @@
         const hasT3CustomCfg = Boolean(grp || isPerSet);
 
         return `
-          <div class="bg-slate-900 border ${tierColors.border} ${ssBorderCls} rounded-2xl p-3.5 sm:p-5 shadow-md space-y-3.5">
+          <div id="exercise-card-${escapeHtml(ex.id)}" class="bg-slate-900 border ${tierColors.border} ${ssBorderCls} rounded-2xl p-3.5 sm:p-5 shadow-md space-y-3.5">
             <!-- Zone 1: Clean Card Header (Execution-First + Active Modifier Chips + Last Benchmark) -->
             <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2.5">
               <div class="space-y-2 flex-1 min-w-0">
@@ -6221,7 +7160,7 @@
                   </select>
                 </div>
                 <div class="flex flex-wrap items-center gap-1.5">
-                  ${renderLastSessionBenchmarkHtml(lastEntry, 'T3')}
+                  ${renderLastSessionBenchmarkHtml(lastEntry, 'T3', exIdx, ex.exercise)}
                   <span class="px-2 py-0.5 rounded-md text-xs font-mono font-bold border ${intentColors[todayIntent] || intentColors.Hold}">Today: ${escapeHtml(todayIntent.toUpperCase())}</span>
                   ${isPerSet ? `<button type="button" data-id="${escapeHtml(ex.id)}" onclick="toggleCardConfigDrawer(this.dataset.id)" class="px-2 py-0.5 rounded-md text-xs font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/35">Per-Set ${tMin}–${tMax}</button>` : ''}
                   ${grp ? `<button type="button" data-id="${escapeHtml(ex.id)}" onclick="toggleCardConfigDrawer(this.dataset.id)" class="px-2 py-0.5 rounded-md text-xs font-mono font-bold border ${ssStyle.badge}">SS-${grp}</button>` : ''}
@@ -6231,6 +7170,7 @@
                 </div>
               </div>
               <div class="flex flex-wrap items-center gap-1.5 sm:shrink-0">
+                ${renderCardSupersetPartnerJumpHtml(ex, exIdx)}
                 <button type="button" data-id="${escapeHtml(ex.id)}" onclick="toggleWarmupDrawer(this.dataset.id)" class="px-2.5 min-h-[44px] sm:min-h-[36px] rounded-xl text-xs font-mono font-bold border transition whitespace-nowrap ${
                   warmupOpenT3 ? 'bg-orange-500/20 text-orange-200 border-orange-500/50' : (t3WarmupDoneCount > 0 ? 'bg-orange-500/15 text-orange-300 border-orange-500/40' : 'bg-slate-800 text-orange-300/90 border-slate-700 hover:border-orange-500/40')
                 }" title="Toggle Editable Warm-Up Sets (logged in history, excluded from volume & density)">Warm-Up${t3WarmupDoneCount > 0 ? ` (${t3WarmupDoneCount})` : ''}</button>
@@ -6551,7 +7491,7 @@
       const hasCustomModifiers = Boolean(style !== 'standard' || activeLimiter !== 'Standard' || grp || hasSplitVdsWeight || isMixedVds);
 
       return `
-        <div class="bg-slate-900 border ${tierColors.border} ${ssBorderCls} rounded-2xl p-3.5 sm:p-5 shadow-md space-y-3.5">
+        <div id="exercise-card-${escapeHtml(ex.id)}" class="bg-slate-900 border ${tierColors.border} ${ssBorderCls} rounded-2xl p-3.5 sm:p-5 shadow-md space-y-3.5">
           <!-- Zone 1: Clean Card Header (Execution-First + Last Benchmark + Active Modifiers + ⋯ Configure) -->
           <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2.5">
             <div class="space-y-2 flex-1 min-w-0">
@@ -6562,7 +7502,7 @@
                 </select>
               </div>
               <div class="flex flex-wrap items-center gap-1.5">
-                ${renderLastSessionBenchmarkHtml(lastEntry, ex.tier)}
+                ${renderLastSessionBenchmarkHtml(lastEntry, ex.tier, exIdx, ex.exercise)}
                 <span class="px-2 py-0.5 rounded-md text-xs font-mono font-bold border ${intentColors[todayIntent] || intentColors.Hold}">Today: ${escapeHtml(todayIntent.toUpperCase())}</span>
                 ${hasRm ? (isBW ? `<button type="button" onclick="toggleInfoPopover(this, event)" data-info="Bodyweight ${ex.tier} (Book p. 34)" class="px-2 py-0.5 rounded-md text-xs font-mono font-bold bg-purple-500/15 text-purple-300 border border-purple-500/35 transition" title="Bodyweight ${ex.tier} (Book p. 34)">Bodyweight</button>` : `<button type="button" onclick="toggleInfoPopover(this, event)" data-info="${escapeHtml(e1rmTooltip)}" class="px-2 py-0.5 rounded-md text-xs font-mono font-semibold bg-slate-950/70 text-amber-300 border border-slate-700/80 hover:border-amber-500/40 transition" title="${escapeHtml(e1rmTooltip)}">e1RM ${displayDet.e1rm} kg</button>`) : `<span class="px-2 py-0.5 rounded-md text-xs font-mono font-semibold bg-sky-500/10 text-sky-300 border border-sky-500/30">VDS Only</span>`}
                 ${vdsRatingHtml}
@@ -6577,6 +7517,7 @@
               </div>
             </div>
             <div class="flex flex-wrap items-center gap-1.5 sm:shrink-0">
+              ${renderCardSupersetPartnerJumpHtml(ex, exIdx)}
               <button type="button" data-id="${escapeHtml(ex.id)}" onclick="toggleWarmupDrawer(this.dataset.id)" class="px-2.5 min-h-[44px] sm:min-h-[36px] rounded-xl text-xs font-mono font-bold border transition whitespace-nowrap ${
                 warmupOpen ? 'bg-orange-500/20 text-orange-200 border-orange-500/50' : (warmupDoneCount > 0 ? 'bg-orange-500/15 text-orange-300 border-orange-500/40' : 'bg-slate-800 text-orange-300/90 border-slate-700 hover:border-orange-500/40')
               }" title="Toggle Editable Warm-Up Ramp (logged in history, excluded from volume & density)">Warm-Up${warmupDoneCount > 0 ? ` (${warmupDoneCount})` : ''}</button>
@@ -7060,6 +8001,7 @@
         handleWorkingSetTimerAutoLogic(exIdx, true);
         const rm2Eff = ex.endEffort || ex.effort;
         triggerSmartAutoRest(exIdx, true, `${ex.tier} RM2 (${formatEffortLabel(rm2Eff)})`, rm2Eff);
+        checkAndCelebrateLivePr(ex, 'bookend');
       }
       saveState();
       renderLogger();
@@ -7456,6 +8398,7 @@
         autoStartSessionTimerIfNeeded();
         handleWorkingSetTimerAutoLogic(exIdx, true);
         triggerSmartAutoRest(exIdx, true);
+        checkAndCelebrateLivePr(ex, 'rm');
       }
       saveState();
       renderLogger();
@@ -7470,6 +8413,7 @@
         autoStartSessionTimerIfNeeded();
         handleWorkingSetTimerAutoLogic(exIdx, true);
         triggerSmartAutoRest(exIdx, false);
+        if (ex.tier === 'T3') checkAndCelebrateLivePr(ex, 't3');
       }
       saveState();
       renderLogger();
@@ -7520,6 +8464,7 @@
       if (target) {
         autoStartSessionTimerIfNeeded();
         autoPauseCompletedStopwatches(day);
+        checkAndCelebrateLivePr(ex, 'all');
       }
       saveState();
       renderLogger();
@@ -7751,8 +8696,10 @@
         newEx = makeT3Exercise('Cable Lateral Raise', 12.5, 3, 45, '');
       }
       day.exercises.push(newEx);
+      const addedIdx = setActiveExerciseIndex(day, day.exercises.length - 1);
       saveState();
       renderLogger();
+      scrollActiveExercisePillIntoView(addedIdx);
       showToast(`Added ${tier} lift to ${day.shortName}.`, 'info');
     }
 
@@ -7763,8 +8710,10 @@
       if (targetIdx < 0 || targetIdx >= day.exercises.length) return;
       const [moved] = day.exercises.splice(exIdx, 1);
       day.exercises.splice(targetIdx, 0, moved);
+      setActiveExerciseIndex(day, targetIdx);
       saveState();
       renderLogger();
+      scrollActiveExercisePillIntoView(targetIdx);
     }
 
     function removeExerciseFromDay(exIdx) {
@@ -7822,10 +8771,16 @@
           }
           openConfigCardIds.delete(snapshot.id);
           openWarmupCardIds.delete(snapshot.id);
+          if (liveDay.exercises.length) {
+            setActiveExerciseIndex(liveDay, Math.min(exIdx, liveDay.exercises.length - 1));
+          }
           ensureExerciseStopwatchInterval();
           saveActiveTimersState();
           saveState();
           renderLogger();
+          if (liveDay.exercises.length) {
+            scrollActiveExercisePillIntoView(getActiveExerciseIndex(liveDay));
+          }
           showToast(`Removed ${snapshot.exercise} from ${liveDay.shortName || liveDay.name}.`, 'info', {
             actionLabel: 'Undo',
             durationMs: 7000,
@@ -7834,8 +8789,10 @@
               if (!targetDay) return;
               const insertAt = Math.min(exIdx, targetDay.exercises.length);
               targetDay.exercises.splice(insertAt, 0, snapshot);
+              setActiveExerciseIndex(targetDay, insertAt);
               saveState();
               renderLogger();
+              scrollActiveExercisePillIntoView(insertAt);
               showToast(`Restored ${snapshot.exercise}.`, 'success');
             }
           });
@@ -7908,6 +8865,7 @@
     function rollForwardExercise(ex) {
       const stats = getExerciseCompletedStats(ex);
       if (stats.completedSets === 0) return;
+      if (ex && ex.id) delete prCelebratedKeysByExId[ex.id];
 
       if (ex.tier === 'T3') {
         const totalReps = stats.completedReps;
@@ -13666,6 +14624,7 @@
       if (!tbody) return;
       const q = (document.getElementById('history-search-input')?.value || '').trim().toLowerCase();
       const srcHist = scopedSessions || getActiveAnalyticsScopedHistory();
+      const { prsBySessionId } = computeHistoryPrTimeline(appState.history);
       const rows = [...srcHist]
         .sort((a, b) => {
           const ka = `${a.date || ''} ${a.startedAt || ''}`;
@@ -13674,21 +14633,31 @@
         })
         .filter(s => {
         if (!q) return true;
+        const sessPr = prsBySessionId[s.id];
+        if (q === 'pr' || q === 'prs' || q === '🏆') {
+          return Boolean(sessPr && sessPr.totalPrs > 0);
+        }
+        const prTxt = (sessPr && sessPr.totalPrs > 0) ? 'pr prs 🏆 personal record' : '';
         const cmTxt = s.cycleMeta ? `${s.cycleMeta.macrocycleName || ''} ${s.cycleMeta.mesoName || ''} wk ${s.cycleMeta.week || ''}` : '';
         const timeTxt = s.startedAt ? `${s.startedAt} ${formatStartTimeDisplay(s.startedAt)}` : '';
-        const blob = `${s.date} ${timeTxt} ${s.dayName} ${cmTxt} ${s.notes || ''} ${(s.exercises || []).map(e => `${e.exercise} ${e.limiter || ''} ${e.supersetGroup ? 'ss-' + e.supersetGroup : ''} ${e.notes || ''}`).join(' ')}`.toLowerCase();
+        const blob = `${s.date} ${timeTxt} ${s.dayName} ${cmTxt} ${prTxt} ${s.notes || ''} ${(s.exercises || []).map(e => `${e.exercise} ${e.limiter || ''} ${e.supersetGroup ? 'ss-' + e.supersetGroup : ''} ${e.notes || ''}`).join(' ')}`.toLowerCase();
         return blob.includes(q);
       });
 
       tbody.innerHTML = rows.length
         ? rows.map(s => {
             const startTimeLabel = formatStartTimeDisplay(s.startedAt);
+            const sessPr = prsBySessionId[s.id] || { totalPrs: 0, liftsByIdx: {} };
+            const prChipHtml = sessPr.totalPrs > 0
+              ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-extrabold bg-amber-500/20 text-amber-300 border border-amber-400/50 whitespace-nowrap" title="${sessPr.totalPrs} Personal Record${sessPr.totalPrs === 1 ? '' : 's'} set in this session">🏆 ${sessPr.totalPrs > 1 ? `${sessPr.totalPrs} PRs` : 'PR'}</span>`
+              : '';
             return `
-            <tr class="hover:bg-slate-800/30 align-top">
+            <tr data-id="${escapeHtml(s.id)}" onclick="openSessionDetailModal(this.dataset.id)" class="hover:bg-slate-800/45 align-top cursor-pointer transition">
               <td class="py-3 pr-3 whitespace-nowrap">
                 <div class="font-mono font-bold text-white flex items-center gap-1.5 flex-wrap">
                   <span>${escapeHtml(s.date)}</span>
                   ${startTimeLabel ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-slate-800/90 text-cyan-300 border border-slate-700 tabular-nums" title="Workout start time (${escapeHtml(s.startedAt)})">🕒 ${escapeHtml(startTimeLabel)}</span>` : ''}
+                  ${prChipHtml}
                   ${s.cycleMeta ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40" title="${escapeHtml(`${s.cycleMeta.macrocycleName || ''} · ${s.cycleMeta.mesoName || ''}`)}">Wk ${toIntOr(s.cycleMeta.week, 1)}</span>` : ''}
                   ${s.diceSession ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/40" title="Dice Gainz Session #${s.diceSession.sessionNumber || ''}">🎲 #${s.diceSession.sessionNumber || ''}</span>` : ''}
                 </div>
@@ -13696,7 +14665,12 @@
                 ${s.cycleMeta && s.cycleMeta.mesoName ? `<div class="text-[11px] text-indigo-300/80 truncate max-w-[170px]" title="${escapeHtml(`${s.cycleMeta.macrocycleName || ''} — ${s.cycleMeta.mesoName}`)}">${escapeHtml(s.cycleMeta.mesoName)}</div>` : ''}
               </td>
               <td class="py-3 px-3 space-y-1">
-                ${(s.exercises || []).map(e => {
+                ${(s.exercises || []).map((e, eIdx) => {
+                  const liftInfo = sessPr.liftsByIdx && sessPr.liftsByIdx[eIdx];
+                  const liftPrs = (liftInfo && Array.isArray(liftInfo.prs)) ? liftInfo.prs : [];
+                  const liftPrBadge = liftPrs.length
+                    ? ` <span class="px-1 py-0.5 rounded font-mono text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-400/50" title="${escapeHtml(liftPrs.map(p => `${p.kind} (${p.delta})`).join(' · '))}">PR</span>`
+                    : '';
                   const partial = (e.completedSets !== undefined && e.plannedSets !== undefined && e.completedSets < e.plannedSets)
                     ? ` <span class="text-amber-400">(${e.completedSets}/${e.plannedSets} sets)</span>`
                     : '';
@@ -13748,7 +14722,7 @@
                   const warmupSubHtml = warmupTxt
                     ? `<div class="pl-3 text-[11px] font-mono text-orange-300/80">🔥 Warm-up: ${escapeHtml(warmupTxt)} <span class="text-slate-500">(excl. vol/density)</span></div>`
                     : '';
-                  return `<div class="text-[11px]"><span class="font-mono font-bold text-slate-400">[${e.tier}]</span> <span class="text-slate-200 font-semibold">${escapeHtml(e.exercise)}</span> <span class="font-mono text-slate-400">${summary}</span>${limBadge}${ssBadge}${durBadge}${diceTag}${partial}${e.notes ? ` <span class="text-slate-400 italic">— ${escapeHtml(e.notes)}</span>` : ''}${warmupSubHtml}</div>`;
+                  return `<div class="text-[11px]"><span class="font-mono font-bold text-slate-400">[${e.tier}]</span> <span class="text-slate-200 font-semibold">${escapeHtml(e.exercise)}</span>${liftPrBadge} <span class="font-mono text-slate-400">${summary}</span>${limBadge}${ssBadge}${durBadge}${diceTag}${partial}${e.notes ? ` <span class="text-slate-400 italic">— ${escapeHtml(e.notes)}</span>` : ''}${warmupSubHtml}</div>`;
                 }).join('')}
                 ${s.notes ? `<div class="text-[11px] text-amber-300/90 italic pt-0.5">“${escapeHtml(s.notes)}”</div>` : ''}
               </td>
@@ -13756,14 +14730,435 @@
               <td class="py-3 px-3 whitespace-nowrap font-mono text-cyan-300">${(s.density || 0).toFixed(1)} kg/min<div class="text-[11px] text-slate-400">${s.durationMin || 0} min</div></td>
               <td class="py-3 pl-3 text-right whitespace-nowrap">
                 <div class="inline-flex items-center gap-1.5">
-                  <button type="button" data-id="${escapeHtml(s.id)}" onclick="openEditHistoryModal(this.dataset.id)" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-amber-500/20 text-slate-200 hover:text-amber-200 border border-slate-700 hover:border-amber-500/40 text-[11px] font-semibold transition">Edit</button>
-                  <button type="button" data-id="${escapeHtml(s.id)}" onclick="deleteHistoryEntry(this.dataset.id)" class="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 text-[11px] transition">Delete</button>
+                  <button type="button" data-id="${escapeHtml(s.id)}" onclick="event.stopPropagation(); openSessionDetailModal(this.dataset.id)" class="px-2.5 py-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-200 border border-sky-500/35 text-[11px] font-bold transition">View</button> <button type="button" data-id="${escapeHtml(s.id)}" onclick="event.stopPropagation(); openEditHistoryModal(this.dataset.id)" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-amber-500/20 text-slate-200 hover:text-amber-200 border border-slate-700 hover:border-amber-500/40 text-[11px] font-semibold transition">Edit</button>
+                  <button type="button" data-id="${escapeHtml(s.id)}" onclick="event.stopPropagation(); deleteHistoryEntry(this.dataset.id)" class="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 text-[11px] transition">Delete</button>
                 </div>
               </td>
             </tr>
           `;
           }).join('')
         : `<tr><td colspan="5" class="py-6 text-center text-xs text-slate-400">No logged sessions found.</td></tr>`;
+    }
+
+    let activeSessionDetailId = null;
+
+    function getSortedSessionsNewestFirst() {
+      return [...(appState.history || [])].sort((a, b) =>
+        `${b.date || ''} ${b.startedAt || ''}`.localeCompare(`${a.date || ''} ${a.startedAt || ''}`)
+      );
+    }
+
+    function computeSessionSingleMuscleBreakdown(sess) {
+      const setsByMuscle = {};
+      const weighted = appState.muscleSinglesMode !== 'raw';
+      (sess && Array.isArray(sess.exercises) ? sess.exercises : []).forEach(e => {
+        if (!e || !e.exercise) return;
+        const setCount = getEffectiveHypertrophySetCount(e, true, weighted);
+        if (!(setCount > 0)) return;
+        const meta = findExerciseMeta(e.exercise);
+        const primaries = normalizeMuscleList(meta && meta.primaryMuscles);
+        const primarySet = new Set(primaries);
+        const secondaries = normalizeMuscleList(meta && meta.secondaryMuscles).filter(m => !primarySet.has(m));
+        primaries.forEach(m => { setsByMuscle[m] = (setsByMuscle[m] || 0) + setCount; });
+        secondaries.forEach(m => { setsByMuscle[m] = (setsByMuscle[m] || 0) + setCount * 0.5; });
+      });
+      return Object.entries(setsByMuscle)
+        .map(([muscle, sets]) => ({ muscle, sets: Math.round(sets * 10) / 10 }))
+        .filter(item => item.sets > 0)
+        .sort((a, b) => b.sets - a.sets);
+    }
+
+    function openSessionDetailModal(sessionId) {
+      const target = (appState.history || []).find(h => h.id === sessionId);
+      if (!target) return;
+      activeSessionDetailId = sessionId;
+      renderSessionDetailModal();
+      document.getElementById('session-detail-modal')?.classList.remove('hidden');
+    }
+
+    function closeSessionDetailModal() {
+      activeSessionDetailId = null;
+      document.getElementById('session-detail-modal')?.classList.add('hidden');
+    }
+
+    function stepSessionDetailModal(delta) {
+      if (!activeSessionDetailId) return;
+      const sorted = getSortedSessionsNewestFirst();
+      const idx = sorted.findIndex(s => s.id === activeSessionDetailId);
+      if (idx < 0) return;
+      const nextIdx = idx + toIntOr(delta, 0);
+      if (nextIdx < 0 || nextIdx >= sorted.length) return;
+      activeSessionDetailId = sorted[nextIdx].id;
+      renderSessionDetailModal();
+    }
+
+    function editSessionFromDetail() {
+      const id = activeSessionDetailId;
+      if (!id) return;
+      closeSessionDetailModal();
+      openEditHistoryModal(id);
+    }
+
+    function buildSessionPlainTextRecap(sess, sessPr) {
+      const startDisp = formatStartTimeDisplay(sess.startedAt);
+      const lines = [];
+      lines.push(`${sess.dayName || 'Workout Session'} — ${sess.date || ''}${startDisp ? ` (${startDisp})` : ''}`);
+      if (sess.cycleMeta && sess.cycleMeta.mesoName) {
+        lines.push(`Cycle: ${sess.cycleMeta.macrocycleName || ''} · ${sess.cycleMeta.mesoName} (Wk ${toIntOr(sess.cycleMeta.week, 1)})`);
+      }
+      lines.push(`Summary: ${(sess.totalTonnage || 0).toLocaleString()} kg · ${sess.totalReps || 0} reps · ${sess.durationMin || 0} min (${(sess.density || 0).toFixed(1)} kg/min)`);
+      if (sessPr && sessPr.totalPrs > 0) {
+        lines.push(`PRs Set: ${sessPr.totalPrs}`);
+      }
+      lines.push('');
+      (sess.exercises || []).forEach((e, eIdx) => {
+        const liftInfo = sessPr && sessPr.liftsByIdx ? sessPr.liftsByIdx[eIdx] : null;
+        const prTag = (liftInfo && liftInfo.prs && liftInfo.prs.length)
+          ? ` [PR: ${liftInfo.prs.map(p => `${p.kind} ${p.delta}`).join(', ')}]`
+          : '';
+        if (e.tier === 'T3') {
+          const repsStr = (Array.isArray(e.setReps) && e.setReps.length)
+            ? `${e.setReps.join(' + ')} = ${e.totalReps}r`
+            : `${e.totalReps}r`;
+          lines.push(`[T3] ${e.exercise}: ${e.weight > 0 ? `${e.weight} kg` : 'BW'} · ${repsStr} (${formatEffortLabel(e.effort)})${prTag}`);
+        } else {
+          const style = normalizeRmStyle(e.rmStyle);
+          const vdsDisp = Array.isArray(e.vdsSetReps) && e.vdsSetReps.length
+            ? `Mix(${e.vdsSetReps.join(',')})`
+            : `${e.fuSets}×${e.fuReps || 1}`;
+          const e1 = getBestRecord1RMDetails(e).e1rm || (parseFloat(e.e1rm) || 0);
+          const main = style === 'skipRm'
+            ? `Skip RM · ${vdsDisp}`
+            : (style === 'skipVds' ? `${e.rmReps}RM (Skip VDS)` : `${e.rmReps}RM + ${vdsDisp}`);
+          lines.push(`[${e.tier}] ${e.exercise}: ${e.weight > 0 ? `${e.weight} kg` : 'BW'} × ${main} (${formatEffortLabel(e.effort)})${e1 > 0 ? ` · e1RM ${e1} kg` : ''}${prTag}`);
+        }
+        if (e.notes) lines.push(`    Note: ${e.notes}`);
+      });
+      if (sess.notes) {
+        lines.push('');
+        lines.push(`Session Notes: ${sess.notes}`);
+      }
+      return lines.join('\n');
+    }
+
+    function copySessionDetailRecap() {
+      const sess = (appState.history || []).find(h => h.id === activeSessionDetailId);
+      if (!sess) return;
+      const { prsBySessionId } = computeHistoryPrTimeline(appState.history);
+      const text = buildSessionPlainTextRecap(sess, prsBySessionId[sess.id]);
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        navigator.clipboard.writeText(text)
+          .then(() => showToast('Copied session recap to clipboard.', 'success'))
+          .catch(() => showToast('Clipboard write blocked by browser.', 'warn'));
+      } else {
+        showToast('Clipboard API unavailable in this browser.', 'warn');
+      }
+    }
+
+    function renderSessionDetailModal() {
+      const sorted = getSortedSessionsNewestFirst();
+      const idx = sorted.findIndex(s => s.id === activeSessionDetailId);
+      if (idx < 0) return;
+      const sess = sorted[idx];
+
+      const titleEl = document.getElementById('sess-detail-title');
+      const metaEl = document.getElementById('sess-detail-meta-pills');
+      const bodyEl = document.getElementById('sess-detail-body');
+      const olderBtn = document.getElementById('sess-detail-older-btn');
+      const newerBtn = document.getElementById('sess-detail-newer-btn');
+      if (!titleEl || !metaEl || !bodyEl) return;
+
+      if (olderBtn) olderBtn.disabled = idx >= sorted.length - 1;
+      if (newerBtn) newerBtn.disabled = idx <= 0;
+
+      const { prsBySessionId } = computeHistoryPrTimeline(appState.history);
+      const sessPr = prsBySessionId[sess.id] || { totalPrs: 0, liftsByIdx: {} };
+      const startDisp = formatStartTimeDisplay(sess.startedAt);
+
+      titleEl.textContent = sess.dayName || 'Completed Session';
+      const metaPills = [
+        `<span class="px-2 py-0.5 rounded-md font-mono font-bold bg-slate-950 text-white border border-slate-700 tabular-nums">${escapeHtml(sess.date || '')}</span>`
+      ];
+      if (startDisp) {
+        metaPills.push(`<span class="px-2 py-0.5 rounded-md font-mono font-semibold bg-slate-950 text-cyan-300 border border-slate-700 tabular-nums">🕒 ${escapeHtml(startDisp)}</span>`);
+      }
+      if (sessPr.totalPrs > 0) {
+        metaPills.push(`<span class="px-2 py-0.5 rounded-md font-mono font-extrabold bg-amber-500/20 text-amber-300 border border-amber-400/50">🏆 ${sessPr.totalPrs} ${sessPr.totalPrs === 1 ? 'PR' : 'PRs'}</span>`);
+      }
+      if (sess.cycleMeta) {
+        const mesoLbl = `${sess.cycleMeta.mesoName || 'Mesocycle'} · Wk ${toIntOr(sess.cycleMeta.week, 1)}`;
+        metaPills.push(`<span class="px-2 py-0.5 rounded-md font-mono font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/35">${escapeHtml(mesoLbl)}</span>`);
+      }
+      if (sess.diceSession) {
+        metaPills.push(`<span class="px-2 py-0.5 rounded-md font-mono font-bold bg-fuchsia-500/15 text-fuchsia-300 border border-fuchsia-500/35">🎲 Dice #${sess.diceSession.sessionNumber || ''}</span>`);
+      }
+      metaEl.innerHTML = metaPills.join('');
+
+      const exercises = Array.isArray(sess.exercises) ? sess.exercises : [];
+      let t1Vol = parseFloat(sess.t1Vol) || 0;
+      let t2Vol = parseFloat(sess.t2Vol) || 0;
+      let t3Vol = parseFloat(sess.t3Vol) || 0;
+      let totalVol = parseFloat(sess.totalTonnage) || 0;
+      if (totalVol <= 0 && exercises.length) {
+        t1Vol = 0; t2Vol = 0; t3Vol = 0;
+        exercises.forEach(e => {
+          const ton = parseFloat(e.tonnage) || 0;
+          if (e.tier === 'T1') t1Vol += ton;
+          else if (e.tier === 'T2') t2Vol += ton;
+          else t3Vol += ton;
+        });
+        totalVol = t1Vol + t2Vol + t3Vol;
+      }
+      const volDenom = Math.max(1, t1Vol + t2Vol + t3Vol);
+      const t1Pct = Math.round((t1Vol / volDenom) * 100);
+      const t2Pct = Math.round((t2Vol / volDenom) * 100);
+      const t3Pct = Math.max(0, 100 - t1Pct - t2Pct);
+
+      let easyCnt = 0, modCnt = 0, hardCnt = 0;
+      let topE1 = 0, topE1Lift = '';
+      const vdsBandCounts = { Extended: 0, Goal: 0, Good: 0, Subpar: 0 };
+      let swTon = 0, swSecs = 0;
+      const seenSwGroups = new Set();
+
+      exercises.forEach(e => {
+        const eff = normalizeEffort(e.effort);
+        if (eff === 'Easy') easyCnt++;
+        else if (eff === 'Hard') hardCnt++;
+        else modCnt++;
+        if (e.tier !== 'T3') {
+          const e1 = getBestRecord1RMDetails(e).e1rm || (parseFloat(e.e1rm) || 0);
+          if (e1 > topE1) { topE1 = e1; topE1Lift = e.exercise; }
+          const vdsR = getVdsPerformanceRating(e, toIntOr(e.fuSets, 0));
+          if (vdsR && vdsR.band) {
+            if (vdsR.band.startsWith('Extended')) vdsBandCounts.Extended++;
+            else if (vdsR.band.startsWith('Goal')) vdsBandCounts.Goal++;
+            else if (vdsR.band.startsWith('Good')) vdsBandCounts.Good++;
+            else if (vdsR.band.startsWith('Subpar')) vdsBandCounts.Subpar++;
+          }
+        }
+        const dur = toIntOr(e.durationSecs, 0);
+        if (dur > 0) {
+          const grp = normalizeSupersetGroup(e.supersetGroup);
+          swTon += parseFloat(e.tonnage) || 0;
+          if (grp) {
+            if (!seenSwGroups.has(grp)) { seenSwGroups.add(grp); swSecs += dur; }
+          } else {
+            swSecs += dur;
+          }
+        }
+      });
+
+      const swDensity = (swTon > 0 && swSecs > 0) ? Math.round((swTon / (swSecs / 60)) * 10) / 10 : null;
+      const vdsSummaryParts = [];
+      if (vdsBandCounts.Extended) vdsSummaryParts.push(`${vdsBandCounts.Extended} Ext`);
+      if (vdsBandCounts.Goal) vdsSummaryParts.push(`${vdsBandCounts.Goal} Goal`);
+      if (vdsBandCounts.Good) vdsSummaryParts.push(`${vdsBandCounts.Good} Good`);
+      if (vdsBandCounts.Subpar) vdsSummaryParts.push(`${vdsBandCounts.Subpar} Sub`);
+
+      const muscleStim = computeSessionSingleMuscleBreakdown(sess);
+      const tierBadgeMap = {
+        T1: 'bg-amber-500/15 text-amber-300 border-amber-500/40',
+        T2: 'bg-sky-500/15 text-sky-300 border-sky-500/40',
+        T3: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
+      };
+      const effBadgeMap = {
+        Easy: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/35',
+        Medium: 'bg-amber-500/15 text-amber-300 border-amber-500/35',
+        Hard: 'bg-rose-500/15 text-rose-300 border-rose-500/35'
+      };
+
+      const liftCardsHtml = exercises.map((e, eIdx) => {
+        const eTier = e.tier || 'T2';
+        const eff = normalizeEffort(e.effort);
+        const w = parseFloat(e.weight) || 0;
+        const wTxt = w > 0 ? `${w} kg` : 'BW';
+        const style = normalizeRmStyle(e.rmStyle);
+        const liftInfo = sessPr.liftsByIdx && sessPr.liftsByIdx[eIdx];
+        const prs = (liftInfo && Array.isArray(liftInfo.prs)) ? liftInfo.prs : [];
+        const delta = (liftInfo && liftInfo.delta) ? liftInfo.delta : {};
+
+        let prescription = '';
+        if (eTier === 'T3') {
+          const repsArr = Array.isArray(e.setReps) && e.setReps.length ? e.setReps.map(v => toIntOr(v, 0)) : null;
+          const tot = toIntOr(e.totalReps, repsArr ? repsArr.reduce((a, b) => a + b, 0) : 0);
+          const sc = repsArr ? repsArr.length : Math.max(1, toIntOr(e.completedSets || e.sets, 1));
+          prescription = repsArr
+            ? `${wTxt} · ${sc} MRS: ${repsArr.join(' + ')} = ${tot} reps`
+            : `${wTxt} · ${sc} MRS · ${tot} total reps`;
+        } else {
+          const rm = toIntOr(e.rmReps, 0);
+          const fuSets = toIntOr(e.fuSets, 0);
+          const fuReps = toIntOr(e.fuReps, 0);
+          const hasSplitW = e.vdsWeight !== null && e.vdsWeight !== undefined && e.vdsWeight !== '' && parseFloat(e.vdsWeight) !== w;
+          const vdsWtTxt = hasSplitW ? ` @ ${parseFloat(e.vdsWeight)} kg` : '';
+          let vdsTxt = '';
+          if (style === 'skipVds') vdsTxt = ' · Skip VDS';
+          else if (Array.isArray(e.vdsSetReps) && e.vdsSetReps.length) vdsTxt = ` + ${e.vdsSetReps.length} VDS (${e.vdsSetReps.join(', ')})${vdsWtTxt}`;
+          else if (fuSets > 0) vdsTxt = ` + ${fuSets}×${fuReps || 1}${vdsWtTxt}`;
+          else vdsTxt = ' · 0 VDS';
+
+          if (style === 'skipRm') {
+            prescription = `${wTxt} · Skip RM${vdsTxt.replace(/^ \+ /, ' · ')}${e.endEffort ? ` (${formatEffortLabel(eff, true)}→${formatEffortLabel(e.endEffort, true)})` : ''}`;
+          } else if (style === 'lastSetRm') {
+            prescription = `${wTxt} · ${fuSets > 0 ? `${fuSets}×${fuReps || 1}${vdsWtTxt} → ` : ''}Last Set ${rm}RM`;
+          } else if (style === 'bookend') {
+            const beW = (e.bookendWeight !== null && e.bookendWeight !== undefined && e.bookendWeight !== '') ? parseFloat(e.bookendWeight) : w;
+            const beR = toIntOr(e.bookendRmReps, rm);
+            prescription = `${wTxt} × ${rm}RM${vdsTxt} → RM2 ${beR}RM${beW !== w ? ` @ ${beW} kg` : ''}`;
+          } else {
+            prescription = rm > 0 ? `${wTxt} × ${rm}RM${vdsTxt}` : `${wTxt} · No RM${vdsTxt}`;
+          }
+        }
+
+        const prBadgesHtml = prs.map(p =>
+          `<span class="px-2 py-0.5 rounded-md font-mono text-[11px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-400/50">🏆 ${escapeHtml(p.kind)} (${escapeHtml(p.delta)})</span>`
+        ).join('');
+
+        const deltaChips = [];
+        if (delta.weightKg) {
+          deltaChips.push(`<span class="px-1.5 py-0.5 rounded font-mono text-[11px] font-semibold ${delta.weightKg > 0 ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300'}">${delta.weightKg > 0 ? '+' : ''}${delta.weightKg} kg</span>`);
+        }
+        if (delta.e1rmKg) {
+          deltaChips.push(`<span class="px-1.5 py-0.5 rounded font-mono text-[11px] font-semibold ${delta.e1rmKg > 0 ? 'bg-amber-500/15 text-amber-300' : 'bg-slate-800 text-slate-400'}">${delta.e1rmKg > 0 ? '+' : ''}${delta.e1rmKg} e1RM</span>`);
+        }
+        if (delta.rmReps) {
+          deltaChips.push(`<span class="px-1.5 py-0.5 rounded font-mono text-[11px] font-semibold ${delta.rmReps > 0 ? 'bg-sky-500/15 text-sky-300' : 'bg-slate-800 text-slate-400'}">${delta.rmReps > 0 ? '+' : ''}${delta.rmReps} RM</span>`);
+        }
+        if (delta.totalReps) {
+          deltaChips.push(`<span class="px-1.5 py-0.5 rounded font-mono text-[11px] font-semibold ${delta.totalReps > 0 ? 'bg-emerald-500/15 text-emerald-300' : 'bg-slate-800 text-slate-400'}">${delta.totalReps > 0 ? '+' : ''}${delta.totalReps}r</span>`);
+        }
+        if (delta.durationSecs) {
+          const faster = delta.durationSecs < 0;
+          const absD = Math.abs(delta.durationSecs);
+          deltaChips.push(`<span class="px-1.5 py-0.5 rounded font-mono text-[11px] font-semibold ${faster ? 'bg-cyan-500/15 text-cyan-300' : 'bg-slate-800 text-slate-400'}">${faster ? '−' : '+'}${formatShortDuration(absD)}</span>`);
+        }
+
+        const chips = [];
+        const e1 = eTier !== 'T3' ? (getBestRecord1RMDetails(e).e1rm || (parseFloat(e.e1rm) || 0)) : 0;
+        if (e1 > 0) chips.push(`<span class="px-2 py-0.5 rounded-md font-mono text-[11px] bg-slate-900 text-amber-300 border border-slate-800">e1RM ${e1} kg</span>`);
+        if ((parseFloat(e.tonnage) || 0) > 0) chips.push(`<span class="px-2 py-0.5 rounded-md font-mono text-[11px] bg-slate-900 text-slate-300 border border-slate-800">Vol ${Math.round(e.tonnage).toLocaleString()} kg</span>`);
+        if (e.completedSets !== undefined && e.plannedSets !== undefined && e.completedSets < e.plannedSets) {
+          chips.push(`<span class="px-2 py-0.5 rounded-md font-mono text-[11px] bg-amber-500/10 text-amber-300 border border-amber-500/30">${e.completedSets}/${e.plannedSets} sets</span>`);
+        }
+        if (eTier !== 'T3') {
+          const vdsR = getVdsPerformanceRating(e, toIntOr(e.fuSets, 0));
+          if (vdsR && vdsR.band) chips.push(`<span class="px-2 py-0.5 rounded-md font-mono text-[11px] bg-slate-900 text-sky-300 border border-slate-800">VDS: ${escapeHtml(vdsR.band)}</span>`);
+          const gap = getExerciseEffortGap(e);
+          if (gap) chips.push(`<span class="px-2 py-0.5 rounded-md font-mono text-[11px] bg-slate-900 text-slate-300 border border-slate-800">Gap ${gap.gap}r</span>`);
+        }
+        const ssGrp = normalizeSupersetGroup(e.supersetGroup);
+        if (ssGrp) {
+          chips.push(`<span class="px-2 py-0.5 rounded-md font-mono text-[11px] font-bold border ${getSupersetStyle(ssGrp).badge}">⛓ SS-${ssGrp}</span>`);
+        }
+        if (toIntOr(e.durationSecs, 0) > 0) {
+          chips.push(`<span class="px-2 py-0.5 rounded-md font-mono text-[11px] bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">⏱ ${formatShortDuration(e.durationSecs)}</span>`);
+        }
+        if (e.limiter && e.limiter !== 'Standard') {
+          chips.push(`<span class="px-2 py-0.5 rounded-md font-mono text-[11px] bg-amber-500/10 text-amber-200 border border-amber-500/30">${escapeHtml(e.limiter)}</span>`);
+        }
+
+        const warmupSummary = formatWarmupSetsSummary(e.warmupSets);
+
+        return `
+          <div class="p-3.5 rounded-xl bg-slate-950/90 border ${prs.length ? 'border-amber-500/45' : 'border-slate-800'} space-y-2">
+            <div class="flex flex-wrap items-start justify-between gap-2">
+              <div class="flex flex-wrap items-center gap-1.5 min-w-0">
+                <span class="px-1.5 py-0.5 rounded font-mono text-[11px] font-bold border shrink-0 ${tierBadgeMap[eTier] || tierBadgeMap.T2}">${eTier}</span>
+                <button type="button" data-exercise="${escapeHtml(e.exercise)}" data-tier="${eTier}" onclick="openExerciseHistoryByName(this.dataset.exercise, this.dataset.tier)" class="text-sm font-bold text-white hover:text-amber-300 hover:underline text-left transition inline-flex items-center gap-1" title="View all logged sessions for ${escapeHtml(e.exercise)}">
+                  <span>${escapeHtml(e.exercise)}</span>
+                  <span class="text-slate-500 text-xs">›</span>
+                </button>
+                ${prBadgesHtml}
+              </div>
+              <span class="px-2 py-0.5 rounded-md font-mono text-[11px] font-bold border shrink-0 ${effBadgeMap[eff] || effBadgeMap.Medium}">${formatEffortLabel(eff)}</span>
+            </div>
+
+            <div class="font-mono text-xs sm:text-sm font-bold text-slate-100 tabular-nums">${escapeHtml(prescription)}</div>
+
+            ${deltaChips.length ? `<div class="flex flex-wrap items-center gap-1.5"><span class="text-[11px] text-slate-400">vs prev${liftInfo && liftInfo.prevDate ? ` (${escapeHtml(liftInfo.prevDate)})` : ''}:</span>${deltaChips.join('')}</div>` : ''}
+            ${chips.length ? `<div class="flex flex-wrap items-center gap-1.5">${chips.join('')}</div>` : ''}
+            ${warmupSummary ? `<div class="text-[11px] font-mono text-orange-300/85">Warm-up: ${escapeHtml(warmupSummary)}</div>` : ''}
+            ${e.notes ? `<div class="text-xs text-slate-400 italic border-t border-slate-800/80 pt-1.5">${escapeHtml(e.notes)}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+
+      bodyEl.innerHTML = `
+        ${sess.notes ? `
+          <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-100 leading-relaxed">
+            <span class="font-mono font-bold text-amber-300 mr-1.5">Session Note:</span>${escapeHtml(sess.notes)}
+          </div>
+        ` : ''}
+
+        <!-- 4-Vector Session KPI Strip -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+          <div class="p-3 rounded-xl bg-slate-950/90 border border-slate-800 space-y-1.5">
+            <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Volume</div>
+            <div class="font-mono text-base font-extrabold text-sky-300 tabular-nums">${Math.round(totalVol).toLocaleString()} kg</div>
+            <div class="font-mono text-[11px] text-slate-400 tabular-nums">${toIntOr(sess.totalReps, 0)} reps · ${exercises.length} lifts</div>
+            <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden flex" title="T1 ${t1Pct}% / T2 ${t2Pct}% / T3 ${t3Pct}%">
+              <div class="bg-amber-400 h-full" style="width:${t1Pct}%"></div>
+              <div class="bg-sky-400 h-full" style="width:${t2Pct}%"></div>
+              <div class="bg-emerald-400 h-full" style="width:${t3Pct}%"></div>
+            </div>
+            <div class="flex items-center justify-between font-mono text-[10px] text-slate-400 tabular-nums">
+              <span class="text-amber-300">T1 ${t1Pct}%</span>
+              <span class="text-sky-300">T2 ${t2Pct}%</span>
+              <span class="text-emerald-300">T3 ${t3Pct}%</span>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-slate-950/90 border border-slate-800 space-y-1">
+            <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Density</div>
+            <div class="font-mono text-base font-extrabold text-cyan-300 tabular-nums">${(parseFloat(sess.density) || 0).toFixed(1)} kg/min</div>
+            <div class="font-mono text-[11px] text-slate-400 tabular-nums">${toIntOr(sess.durationMin, 0)} min session</div>
+            ${swDensity ? `<div class="font-mono text-[11px] text-cyan-200/90 tabular-nums">⏱ ${swDensity} kg/min measured</div>` : ''}
+          </div>
+
+          <div class="p-3 rounded-xl bg-slate-950/90 border border-slate-800 space-y-1">
+            <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Quality Mix</div>
+            <div class="flex flex-wrap items-center gap-1.5 font-mono text-xs font-bold tabular-nums pt-0.5">
+              <span class="text-emerald-300">${easyCnt}E</span>
+              <span class="text-slate-600">/</span>
+              <span class="text-amber-300">${modCnt}M</span>
+              <span class="text-slate-600">/</span>
+              <span class="text-rose-300">${hardCnt}H</span>
+            </div>
+            <div class="font-mono text-[11px] text-slate-400 truncate">${vdsSummaryParts.length ? vdsSummaryParts.join(' · ') : 'T3 / Non-VDS'}</div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-slate-950/90 border border-slate-800 space-y-1">
+            <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Peak Intensity</div>
+            <div class="font-mono text-base font-extrabold text-amber-300 tabular-nums">${topE1 > 0 ? `${topE1} kg` : '—'}</div>
+            <div class="text-[11px] text-slate-400 truncate" title="${escapeHtml(topE1Lift)}">${topE1Lift ? escapeHtml(topE1Lift) : 'No T1/T2 e1RM'}</div>
+          </div>
+        </div>
+
+        ${muscleStim.length ? `
+          <div class="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Session Muscle Stimulus (${appState.muscleSinglesMode !== 'raw' ? 'GG Weighted Sets' : 'Raw Sets'})</span>
+              <span class="text-[11px] font-mono text-slate-400">${muscleStim.length} groups hit</span>
+            </div>
+            <div class="flex flex-wrap gap-1.5">
+              ${muscleStim.map(m => `
+                <span class="px-2 py-0.5 rounded-lg bg-slate-900 border border-slate-800 text-[11px] font-mono text-slate-200 tabular-nums">
+                  ${escapeHtml(m.muscle)} <strong class="text-purple-300">${m.sets}</strong>
+                </span>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Per-Exercise Breakdown -->
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Exercises Logged (${exercises.length})</span>
+            <span class="text-[11px] text-slate-400">Tap any exercise name to view its full history</span>
+          </div>
+          ${liftCardsHtml || `<div class="p-6 rounded-xl bg-slate-950/70 border border-slate-800 text-center text-xs text-slate-400">No exercises recorded in this session.</div>`}
+        </div>
+      `;
     }
 
     let editingHistoryDraft = null;
@@ -18238,6 +19633,7 @@
       updateAutoRestUI();
       updateBgAlertUI();
       updatePhaseBadgesUI();
+      updateLoggerViewModeUI();
       if (!isBgAudioKeepAliveEnabled()) stopBackgroundKeepAlive();
     }
 
@@ -18542,6 +19938,8 @@
       'custom-exercise-modal',
       'import-json-modal',
       'session-preview-modal',
+      'session-detail-modal',
+      'exercise-history-modal',
       'edit-history-modal',
       'cloud-sync-modal',
       'custom-confirm-modal',
@@ -18665,6 +20063,16 @@
         }
       });
       document.addEventListener('keydown', (evt) => {
+        if (evt.altKey && (evt.key === 'ArrowLeft' || evt.key === 'ArrowRight')) {
+          if ((appState.activeTab || 'logger') === 'logger' && (appState.loggerViewMode || 'single') !== 'all' && !getOpenModalEl()) {
+            const tag = (document.activeElement && document.activeElement.tagName) || '';
+            if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) {
+              evt.preventDefault();
+              stepExerciseInDay(evt.key === 'ArrowRight' ? 1 : -1, false);
+              return;
+            }
+          }
+        }
         if (evt.key === 'Escape') {
           const pop = document.getElementById('info-popover');
           if (pop && !pop.classList.contains('hidden')) {
@@ -18682,6 +20090,8 @@
             'custom-exercise-modal': closeCustomModal,
             'import-json-modal': closeImportModal,
             'session-preview-modal': closeSessionPreviewModal,
+            'session-detail-modal': closeSessionDetailModal,
+            'exercise-history-modal': closeExerciseHistoryModal,
             'edit-history-modal': closeEditHistoryModal,
             'cloud-sync-modal': closeCloudSyncModal,
             'custom-confirm-modal': closeConfirmModal,
