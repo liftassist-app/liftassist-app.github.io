@@ -1220,6 +1220,10 @@
             <option value="last24">Last 24 Sessions</option>
             <option value="last12">Last 12 Sessions</option>
           </select>
+
+          <button type="button" id="analytics-collapse-all-btn" onclick="toggleAllAnalyticsSections()" class="px-3 min-h-[40px] rounded-xl text-xs font-mono font-bold bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition whitespace-nowrap" title="Collapse or expand all Analytics sections">
+            Expand All ▾
+          </button>
         </div>
       </div>
 
@@ -1233,17 +1237,21 @@
       <div id="analytics-sbd-total-bar"></div>
 
       <!-- Bodyweight Tracking, Goal Projection & Official DOTS / IPF GL -->
-      <div id="bodyweight-tracker-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-2.5">
-          <div>
-            <h3 class="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
-              <span>⚖️</span> Bodyweight Tracking &amp; Goal Projection
-            </h3>
-            <p class="text-[11px] text-slate-400 mt-0.5">
-              7-day smoothed trend, projected gain/loss pace, daily energy balance (7,716 kcal/kg), and official DOTS &amp; IPF GL scores.
-            </p>
+      <div id="bodyweight-tracker-section" class="bg-slate-900 border border-slate-800 rounded-2xl shadow-lg overflow-hidden">
+        <button type="button" id="analytics-sec-btn-bodyweight" onclick="toggleAnalyticsSection('bodyweight')" aria-expanded="false" aria-controls="analytics-sec-body-bodyweight" class="w-full px-4 sm:px-5 py-4 flex flex-wrap items-center justify-between gap-2.5 text-left hover:bg-slate-800/40 transition">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <span class="text-base shrink-0">⚖️</span>
+            <div class="min-w-0">
+              <h3 class="text-sm sm:text-base font-extrabold text-white">Bodyweight Tracking &amp; Goal Projection</h3>
+              <p class="text-[11px] text-slate-400 mt-0.5">
+                7-day smoothed trend, projected gain/loss pace, daily energy balance (7,716 kcal/kg), and official DOTS &amp; IPF GL scores.
+              </p>
+            </div>
           </div>
-          <div class="flex flex-wrap items-center gap-2">
+          <span id="analytics-sec-chev-bodyweight" class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-slate-300 border border-slate-700 shrink-0">Show ▾</span>
+        </button>
+        <div id="analytics-sec-body-bodyweight" class="hidden px-4 sm:px-5 pb-4 sm:pb-5 pt-2 border-t border-slate-800/80 space-y-4">
+          <div class="flex flex-wrap items-center justify-end gap-2">
             <div class="inline-flex rounded-xl overflow-hidden border border-slate-700 bg-slate-950" role="group" aria-label="Coefficient sex for DOTS and IPF GL">
               <button type="button" id="bw-sex-male-btn" onclick="setBodyweightSex('male')" class="px-3 min-h-[36px] text-xs font-mono font-bold bg-amber-500 text-slate-950 transition">Male</button>
               <button type="button" id="bw-sex-female-btn" onclick="setBodyweightSex('female')" class="px-3 min-h-[36px] text-xs font-mono font-bold text-slate-400 hover:text-white transition">Female</button>
@@ -1256,7 +1264,6 @@
               <option value="24">Project 24 wks</option>
             </select>
           </div>
-        </div>
 
         <!-- Log Weigh-In + Goal Projection Inputs -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
@@ -1337,11 +1344,24 @@
           </summary>
           <div id="bw-history-list" class="px-3.5 pb-3 pt-1 max-h-56 overflow-y-auto divide-y divide-slate-800/70 text-xs"></div>
         </details>
+        </div>
       </div>
 
-      <!-- 4-Vector Charts Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg">
+      <!-- 4-Vector Charts Grid (Collapsible Drawer) -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-lg overflow-hidden">
+        <button type="button" id="analytics-sec-btn-vectors" onclick="toggleAnalyticsSection('vectors')" aria-expanded="false" aria-controls="analytics-sec-body-vectors" class="w-full px-4 sm:px-5 py-4 flex flex-wrap items-center justify-between gap-2.5 text-left hover:bg-slate-800/40 transition">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <span class="text-base shrink-0">📊</span>
+            <div class="min-w-0">
+              <h3 class="text-sm sm:text-base font-extrabold text-white">4-Vector Progression Charts</h3>
+              <p class="text-[11px] text-slate-400 mt-0.5">Intensity (e1RM / Load) · Volume (Tonnage) · Density (kg/min) · Quality &amp; VDS Adherence</p>
+            </div>
+          </div>
+          <span id="analytics-sec-chev-vectors" class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-slate-300 border border-slate-700 shrink-0">Show ▾</span>
+        </button>
+        <div id="analytics-sec-body-vectors" class="hidden px-4 sm:px-5 pb-4 sm:pb-5 pt-3 border-t border-slate-800/80">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="bg-slate-950/75 border border-slate-800 rounded-xl p-4">
           <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
             <div>
               <h3 class="text-sm font-bold text-amber-400">1. Intensity Progression (KG)</h3>
@@ -1358,7 +1378,7 @@
           <div class="h-64"><canvas id="chart-intensity"></canvas></div>
         </div>
 
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg">
+        <div class="bg-slate-950/75 border border-slate-800 rounded-xl p-4">
           <div class="flex items-center justify-between mb-3">
             <div>
               <h3 class="text-sm font-bold text-sky-400">2. Volume Progression (Tonnage)</h3>
@@ -1369,7 +1389,7 @@
           <div class="h-64"><canvas id="chart-volume"></canvas></div>
         </div>
 
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg">
+        <div class="bg-slate-950/75 border border-slate-800 rounded-xl p-4">
           <div class="flex items-center justify-between mb-3">
             <div>
               <h3 class="text-sm font-bold text-cyan-400">3. Density Progression (Work Rate)</h3>
@@ -1381,7 +1401,7 @@
           <div id="density-superset-callout" class="hidden mt-3 px-3 py-2 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/35 text-[11px] text-fuchsia-200 leading-relaxed"></div>
         </div>
 
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg flex flex-col justify-between gap-3">
+        <div class="bg-slate-950/75 border border-slate-800 rounded-xl p-4 flex flex-col justify-between gap-3">
           <div class="flex items-center justify-between">
             <div>
               <h3 class="text-sm font-bold text-emerald-400">4. Quality Progression &amp; Effort Mix</h3>
@@ -1396,33 +1416,52 @@
           <div id="vds-adherence-strip" class="pt-2.5 border-t border-slate-800/80"></div>
         </div>
       </div>
+        </div>
+      </div>
 
       <!-- Training Feedback Loop & Readiness Digest (Book pp. 11–12, 66–68) -->
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-3">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <h3 class="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
-              <span>🧭</span> Training Feedback Loop &amp; Readiness Digest
-            </h3>
-            <p class="text-xs text-slate-400 mt-0.5">Multi-session fatigue, Subpar VDS streaks, Quality dips, and Easy readiness signals (Book pp. 11–12, 66–68).</p>
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-lg overflow-hidden">
+        <div class="px-4 sm:px-5 py-4 flex flex-wrap items-center justify-between gap-2.5">
+          <button type="button" id="analytics-sec-btn-readiness" onclick="toggleAnalyticsSection('readiness')" aria-expanded="false" aria-controls="analytics-sec-body-readiness" class="flex-1 min-w-[200px] text-left flex items-center gap-2.5 group">
+            <span class="text-base shrink-0">🧭</span>
+            <div class="min-w-0">
+              <h3 class="text-sm sm:text-base font-extrabold text-white group-hover:opacity-85 transition">Training Feedback Loop &amp; Readiness Digest</h3>
+              <p class="text-xs text-slate-400 mt-0.5">Multi-session fatigue, Subpar VDS streaks, Quality dips, and Easy readiness signals (Book pp. 11–12, 66–68).</p>
+            </div>
+          </button>
+          <div class="flex flex-wrap items-center gap-2 shrink-0">
+            <button type="button" id="feedback-digest-ignored-btn" onclick="toggleIgnoredFeedbackDigest()" aria-expanded="false" aria-controls="analytics-feedback-ignored-panel" class="hidden text-[11px] font-mono font-bold px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition inline-flex items-center gap-1.5" title="View or restore ignored Readiness Digest alerts">
+              <span>Ignored (<span id="feedback-digest-ignored-count">0</span>)</span>
+              <span id="feedback-digest-ignored-chevron" aria-hidden="true">▾</span>
+            </button>
+            <span id="feedback-digest-badge" class="text-[11px] font-mono px-2.5 py-1 rounded-lg bg-slate-950 text-slate-300 border border-slate-800">Scanning history...</span>
+            <button type="button" onclick="toggleAnalyticsSection('readiness')" aria-label="Toggle Readiness Digest section" class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition">
+              <span id="analytics-sec-chev-readiness">Show ▾</span>
+            </button>
           </div>
-          <span id="feedback-digest-badge" class="text-[11px] font-mono px-2.5 py-1 rounded-lg bg-slate-950 text-slate-300 border border-slate-800">Scanning history...</span>
         </div>
-        <div id="analytics-feedback-digest" class="grid grid-cols-1 md:grid-cols-2 gap-2.5"></div>
+        <div id="analytics-sec-body-readiness" class="hidden px-4 sm:px-5 pb-4 sm:pb-5 pt-2 border-t border-slate-800/80 space-y-3">
+          <div id="analytics-feedback-digest" class="grid grid-cols-1 md:grid-cols-2 gap-2.5"></div>
+          <div id="analytics-feedback-ignored-panel" class="hidden pt-3 border-t border-slate-800/80 space-y-2.5"></div>
+        </div>
       </div>
 
       <!-- Complete 16-Muscle Weekly Hypertrophy Volume Dashboard -->
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-5">
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-          <div>
-            <h3 class="text-base font-extrabold text-white flex items-center gap-2">
-              <span>💪</span> Weekly Muscle Volume &amp; Optimal Hypertrophy Landmarks (16 Muscles)
-            </h3>
-            <p id="muscle-weighting-note" class="text-xs text-slate-400 mt-0.5">
-              Fractional set accounting: <span class="text-emerald-400 font-mono">Primary = 1.0×</span>, <span class="text-sky-400 font-mono">Secondary = 0.5×</span>, <span class="text-amber-300 font-mono">Singles = 0.5×</span> hypertrophy credit vs. weekly <span class="font-mono text-white">MEV–MAV</span> targets.
-            </p>
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-lg overflow-hidden">
+        <button type="button" id="analytics-sec-btn-muscles" onclick="toggleAnalyticsSection('muscles')" aria-expanded="false" aria-controls="analytics-sec-body-muscles" class="w-full px-4 sm:px-5 py-4 flex flex-wrap items-center justify-between gap-2.5 text-left hover:bg-slate-800/40 transition">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <span class="text-base shrink-0">💪</span>
+            <div class="min-w-0">
+              <h3 class="text-sm sm:text-base font-extrabold text-white">Weekly Muscle Volume &amp; Optimal Hypertrophy Landmarks (16 Muscles)</h3>
+              <p id="muscle-weighting-note" class="text-xs text-slate-400 mt-0.5">
+                Fractional set accounting: <span class="text-emerald-400 font-mono">Primary = 1.0×</span>, <span class="text-sky-400 font-mono">Secondary = 0.5×</span>, <span class="text-amber-300 font-mono">Singles = 0.5×</span> hypertrophy credit vs. weekly <span class="font-mono text-white">MEV–MAV</span> targets.
+              </p>
+            </div>
           </div>
-          <div class="flex flex-wrap items-center gap-2">
+          <span id="analytics-sec-chev-muscles" class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-slate-300 border border-slate-700 shrink-0">Show ▾</span>
+        </button>
+        <div id="analytics-sec-body-muscles" class="hidden px-4 sm:px-5 pb-4 sm:pb-5 pt-2 border-t border-slate-800/80 space-y-5">
+          <div class="flex flex-wrap items-center justify-end gap-2">
             <div class="inline-flex p-1 rounded-xl bg-slate-950 border border-slate-800" title="GG Weighted (Robinson 2024 RIR-aligned): Top RM & T3 = 1.0×, ¾ RM VDS = 0.75×, ½ RM & heavy 1–3RM singles = 0.5×, high-RIR 4RM+ singles & ¼ RM = 0.33× vs. Raw sets">
               <button type="button" onclick="setMuscleSinglesMode('weighted')" id="muscle-singles-weighted" class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-amber-500 text-slate-950 transition">GG Weighted</button>
               <button type="button" onclick="setMuscleSinglesMode('raw')" id="muscle-singles-raw" class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-slate-400 hover:text-white transition">Raw Sets</button>
@@ -1433,10 +1472,10 @@
             </div>
             <select id="muscle-week-selector" onchange="renderMuscleHypertrophySection()" class="hidden bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs font-mono text-slate-200 focus:outline-none focus:border-purple-500"></select>
           </div>
-        </div>
 
-        <div class="h-80"><canvas id="chart-muscle-volume"></canvas></div>
-        <div id="muscle-cards-grid" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3"></div>
+          <div class="h-80"><canvas id="chart-muscle-volume"></canvas></div>
+          <div id="muscle-cards-grid" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3"></div>
+        </div>
       </div>
 
       <!-- Collapsible Powerlifting-Specific Metrics Drawer (Collapsed by default) -->
@@ -1554,58 +1593,91 @@
       </div>
 
       <!-- All-Time Lift PR Board & Notes Feed -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
         <!-- PR Board & Rep-Max PR Ladder -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-bold text-white flex items-center gap-2"><span>🏆</span> All-Time Validated Lift PR Board</h3>
-            <span class="text-[11px] font-mono text-slate-400">Click any lift for 1RM–10RM Ladder</span>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-lg overflow-hidden">
+          <button type="button" id="analytics-sec-btn-prBoard" onclick="toggleAnalyticsSection('prBoard')" aria-expanded="false" aria-controls="analytics-sec-body-prBoard" class="w-full px-4 sm:px-5 py-4 flex flex-wrap items-center justify-between gap-2 text-left hover:bg-slate-800/40 transition">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="text-base shrink-0">🏆</span>
+              <div class="min-w-0">
+                <h3 class="text-sm font-bold text-white">All-Time Validated Lift PR Board</h3>
+                <p class="text-[11px] text-slate-400">Click any lift for 1RM–10RM Ladder</p>
+              </div>
+            </div>
+            <span id="analytics-sec-chev-prBoard" class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-slate-300 border border-slate-700 shrink-0">Show ▾</span>
+          </button>
+          <div id="analytics-sec-body-prBoard" class="hidden px-4 sm:px-5 pb-4 sm:pb-5 pt-2 border-t border-slate-800/80 space-y-3">
+            <div id="pr-ladder-panel" class="hidden"></div>
+            <div id="pr-board-list" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
           </div>
-          <div id="pr-ladder-panel" class="hidden"></div>
-          <div id="pr-board-list" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
         </div>
 
         <!-- Session & Lift Notes Feed -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
-          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-            <h3 class="text-sm font-bold text-white flex items-center gap-2"><span>📝</span> Session &amp; Lift Notes Log</h3>
-            <div class="inline-flex p-0.5 rounded-lg bg-slate-950 border border-slate-800 text-[11px]">
-              <button onclick="setNotesFilter('all')" id="notes-filter-all" class="px-2.5 py-1 rounded-md font-semibold bg-amber-500 text-slate-950">All</button>
-              <button onclick="setNotesFilter('lift')" id="notes-filter-lift" class="px-2.5 py-1 rounded-md font-semibold text-slate-400 hover:text-white">Lift Notes</button>
-              <button onclick="setNotesFilter('session')" id="notes-filter-session" class="px-2.5 py-1 rounded-md font-semibold text-slate-400 hover:text-white">Session</button>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-lg overflow-hidden">
+          <button type="button" id="analytics-sec-btn-notes" onclick="toggleAnalyticsSection('notes')" aria-expanded="false" aria-controls="analytics-sec-body-notes" class="w-full px-4 sm:px-5 py-4 flex flex-wrap items-center justify-between gap-2 text-left hover:bg-slate-800/40 transition">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="text-base shrink-0">📝</span>
+              <div class="min-w-0">
+                <h3 class="text-sm font-bold text-white">Session &amp; Lift Notes Log</h3>
+                <p class="text-[11px] text-slate-400">Filter by all notes, lift cues, or session notes</p>
+              </div>
             </div>
+            <span id="analytics-sec-chev-notes" class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-slate-300 border border-slate-700 shrink-0">Show ▾</span>
+          </button>
+          <div id="analytics-sec-body-notes" class="hidden px-4 sm:px-5 pb-4 sm:pb-5 pt-2 border-t border-slate-800/80 space-y-3">
+            <div class="flex justify-end">
+              <div class="inline-flex p-0.5 rounded-lg bg-slate-950 border border-slate-800 text-[11px]">
+                <button onclick="setNotesFilter('all')" id="notes-filter-all" class="px-2.5 py-1 rounded-md font-semibold bg-amber-500 text-slate-950">All</button>
+                <button onclick="setNotesFilter('lift')" id="notes-filter-lift" class="px-2.5 py-1 rounded-md font-semibold text-slate-400 hover:text-white">Lift Notes</button>
+                <button onclick="setNotesFilter('session')" id="notes-filter-session" class="px-2.5 py-1 rounded-md font-semibold text-slate-400 hover:text-white">Session</button>
+              </div>
+            </div>
+            <div id="analytics-notes-feed" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
           </div>
-          <div id="analytics-notes-feed" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
         </div>
       </div>
 
-      <!-- Completed Session History Table -->
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-          <div>
-            <h3 class="text-sm sm:text-base font-bold text-white">Completed Session Log</h3>
-            <p class="text-[11px] text-slate-400">Full multi-tier history with inline per-lift &amp; overall session notes.</p>
+      <!-- Completed Session History Table (Desktop Table + Mobile Stacked Cards) -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-lg overflow-hidden">
+        <button type="button" id="analytics-sec-btn-history" onclick="toggleAnalyticsSection('history')" aria-expanded="false" aria-controls="analytics-sec-body-history" class="w-full px-4 sm:px-5 py-4 flex flex-wrap items-center justify-between gap-2.5 text-left hover:bg-slate-800/40 transition">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <span class="text-base shrink-0">📋</span>
+            <div class="min-w-0">
+              <h3 class="text-sm sm:text-base font-extrabold text-white">Completed Session Log</h3>
+              <p class="text-[11px] text-slate-400 mt-0.5">Full multi-tier history with inline per-lift &amp; overall session notes.</p>
+            </div>
           </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <input type="text" id="history-search-input" oninput="renderHistoryTable()" placeholder="Search lift, day, or notes..." class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-amber-500 w-52" />
-            <button onclick="restoreSampleHistory()" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+          <div class="flex items-center gap-2 shrink-0">
+            <span id="history-session-count-badge" class="px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold bg-slate-950 text-slate-300 border border-slate-800">0 sessions</span>
+            <span id="analytics-sec-chev-history" class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-slate-300 border border-slate-700">Show ▾</span>
+          </div>
+        </button>
+        <div id="analytics-sec-body-history" class="hidden px-4 sm:px-5 pb-4 sm:pb-5 pt-3 border-t border-slate-800/80 space-y-3.5">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+            <input type="text" id="history-search-input" oninput="renderHistoryTable()" placeholder="Search lift, day, PR, or notes..." class="bg-slate-950 border border-slate-700 rounded-xl px-3 min-h-[38px] text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-amber-500 w-full sm:w-64" />
+            <button type="button" onclick="restoreSampleHistory()" class="px-3 min-h-[38px] rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition self-start sm:self-auto">
               ↻ Load Sample Data
             </button>
           </div>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr class="border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400">
-                <th class="py-2.5 pr-3">Date &amp; Day</th>
-                <th class="py-2.5 px-3">Lifts &amp; Notes</th>
-                <th class="py-2.5 px-3">Tonnage</th>
-                <th class="py-2.5 px-3">Density</th>
-                <th class="py-2.5 pl-3 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody id="history-table-body" class="divide-y divide-slate-800/70"></tbody>
-          </table>
+
+          <!-- Mobile Stacked Cards (< md) -->
+          <div id="history-mobile-list" class="md:hidden space-y-2.5"></div>
+
+          <!-- Desktop 5-Column Table (>= md) -->
+          <div class="hidden md:block overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400">
+                  <th class="py-2.5 pr-3">Date &amp; Day</th>
+                  <th class="py-2.5 px-3">Lifts &amp; Notes</th>
+                  <th class="py-2.5 px-3">Tonnage</th>
+                  <th class="py-2.5 px-3">Density</th>
+                  <th class="py-2.5 pl-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="history-table-body" class="divide-y divide-slate-800/70"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </section>
@@ -2748,6 +2820,18 @@
       history: [],
       muscleSource: 'programmed',
       muscleSinglesMode: 'weighted',
+      ignoredReadinessFlags: {},
+      analyticsSections: {
+        bodyweight: false,
+        vectors: false,
+        readiness: false,
+        muscles: false,
+        pl: false,
+        bb: false,
+        prBoard: false,
+        notes: false,
+        history: false
+      },
       notesFilter: 'all',
       analyticsTimeframe: 'all',
       analyticsLiftFilter: 'ALL_T1',
@@ -3932,6 +4016,57 @@
       return { gap, repBasis, category, isAlreadySingles, isHeavyHalfT2, tip };
     }
 
+    function normalizeIgnoredReadinessFlags(raw) {
+      const out = {};
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
+      Object.entries(raw).forEach(([k, v]) => {
+        if (typeof k !== 'string' || !k.trim() || !v || typeof v !== 'object') return;
+        out[k.trim()] = {
+          code: typeof v.code === 'string' ? v.code : '',
+          count: Math.max(0, toIntOr(v.count, 0)),
+          entryCount: Math.max(0, toIntOr(v.entryCount, 0)),
+          date: typeof v.date === 'string' ? v.date : '',
+          ignoredAt: typeof v.ignoredAt === 'string' ? v.ignoredAt : ''
+        };
+      });
+      return out;
+    }
+
+    function isReadinessFlagIgnored(flag, ignoredMap = appState.ignoredReadinessFlags) {
+      if (!flag || !flag.key || !ignoredMap || typeof ignoredMap !== 'object') return false;
+      const ig = ignoredMap[flag.key];
+      if (!ig || typeof ig !== 'object') return false;
+      // Auto-unignore if another flagged session increments the counter, logs a newer entry/date, or shifts alert code
+      const curCount = Math.max(1, toIntOr(flag.count, 1));
+      const curEntries = Math.max(0, toIntOr(flag.entryCount, 0));
+      const curDate = String(flag.date || '');
+      if (ig.code && flag.code && flag.code !== ig.code) return false;
+      if (curCount > (toIntOr(ig.count, 0))) return false;
+      if (ig.entryCount > 0 && curEntries > ig.entryCount) return false;
+      if (ig.date && curDate && curDate > ig.date) return false;
+      return true;
+    }
+
+    function reconcileIgnoredReadinessFlags(history = appState.history) {
+      if (!appState.ignoredReadinessFlags || typeof appState.ignoredReadinessFlags !== 'object') {
+        appState.ignoredReadinessFlags = {};
+        return false;
+      }
+      const keys = Object.keys(appState.ignoredReadinessFlags);
+      if (!keys.length) return false;
+      const { rawFlagsByKey } = analyzeLiftFeedbackTrends(history);
+      let changed = false;
+      keys.forEach(k => {
+        const flag = rawFlagsByKey[k];
+        if (!flag) return;
+        if (!isReadinessFlagIgnored(flag, appState.ignoredReadinessFlags)) {
+          delete appState.ignoredReadinessFlags[k];
+          changed = true;
+        }
+      });
+      return changed;
+    }
+
     function analyzeLiftFeedbackTrends(history = appState.history) {
       const sorted = [...(history || [])].sort((a, b) =>
         `${a.date || ''} ${a.startedAt || ''}`.localeCompare(`${b.date || ''} ${b.startedAt || ''}`)
@@ -3971,6 +4106,7 @@
       });
 
       const flagsByKey = {};
+      const rawFlagsByKey = {};
       const lastEntryByKey = {};
       const digest = [];
 
@@ -3990,6 +4126,8 @@
               exercise: latest.exercise,
               code: 'calibration_alert',
               tone: 'amber',
+              count: 1,
+              entryCount: entries.length,
               short: '⚠️ Effort Calibration (p. 55)',
               advice: `Logged Hard ${latest.rmReps}RM + ${latest.fuSets} VDS (> Hard cap ${lim.effortCap}) on ${latest.exercise} — Book p. 55: Extended VDS after a "Hard" RM suggests the RM was actually Moderate.`,
               date: latest.date
@@ -3999,7 +4137,8 @@
 
         if (entries.length < 2) {
           if (calibrationFlag) {
-            flagsByKey[key] = calibrationFlag;
+            rawFlagsByKey[key] = calibrationFlag;
+            if (!isReadinessFlagIgnored(calibrationFlag)) flagsByKey[key] = calibrationFlag;
             digest.push(calibrationFlag);
           }
           return;
@@ -4050,6 +4189,8 @@
             exercise: latest.exercise,
             code: 'subpar_streak',
             tone: 'rose',
+            count: subparStreak,
+            entryCount: entries.length,
             short: `⚠️ ${subparStreak}× Subpar VDS`,
             advice: `${subparStreak} consecutive Subpar VDS sessions on ${latest.exercise} — ${latest.tier === 'T2' ? 'drop weight −kg (Book p. 28)' : 'hold load & rebuild capacity (Book p. 24)'} or run a Skip RM deload (p. 52) & review Recovery Pillars (pp. 66–68).`,
             date: latest.date
@@ -4063,6 +4204,8 @@
               exercise: latest.exercise,
               code: 'peaking_watch',
               tone: 'amber',
+              count: hardStreak,
+              entryCount: entries.length,
               short: `🔥 ${hardStreak}× Heavy Peak`,
               advice: `${hardStreak} consecutive Hard sessions on ${latest.exercise} while adding load (${prev.weight}→${latest.weight} kg) — intentional peaking zone. Monitor bar speed & pivot or run Skip RM (p. 52) if reps dip.`,
               date: latest.date
@@ -4074,6 +4217,8 @@
               exercise: latest.exercise,
               code: 'hard_streak',
               tone: 'rose',
+              count: hardStreak,
+              entryCount: entries.length,
               short: `⚠️ ${hardStreak}× Hard Stall`,
               advice: `${hardStreak} consecutive Hard sessions on ${latest.exercise} at same/lower load — stall signal. Hold load, use a Skip RM deload (p. 52), or audit Recovery Pillars (Sleep/Food/Stress, pp. 11–12, 66–68).`,
               date: latest.date
@@ -4086,6 +4231,8 @@
             exercise: latest.exercise,
             code: 'regression',
             tone: 'amber',
+            count: 1,
+            entryCount: entries.length,
             short: '⚠️ Performance / Quality Dip',
             advice: `${latest.exercise} regressed (${prev.weight} kg×${prev.rmReps} ${formatEffortLabel(prev.effort)} → ${latest.weight} kg×${latest.rmReps} ${formatEffortLabel(latest.effort)}) — check sleep, hydration, and accumulated fatigue before pushing (Book pp. 11–12, 66).`,
             date: latest.date
@@ -4099,6 +4246,8 @@
             exercise: latest.exercise,
             code: 'easy_streak',
             tone: 'emerald',
+            count: easyStreak,
+            entryCount: entries.length,
             short: `📈 ${easyStreak}× Easy streak`,
             advice: `${easyStreak} consecutive Easy sessions on ${latest.exercise} — high readiness! Primed to Push RM, Find +kg, or tighten rest density.`,
             date: latest.date
@@ -4106,14 +4255,15 @@
         }
 
         if (flag) {
-          flagsByKey[key] = flag;
+          rawFlagsByKey[key] = flag;
+          if (!isReadinessFlagIgnored(flag)) flagsByKey[key] = flag;
           digest.push(flag);
         }
       });
 
       const order = { subpar_streak: 0, hard_streak: 1, regression: 2, peaking_watch: 3, calibration_alert: 4, easy_streak: 5 };
       digest.sort((a, b) => (order[a.code] - order[b.code]) || String(b.date).localeCompare(String(a.date)));
-      return { flagsByKey, lastEntryByKey, digest };
+      return { flagsByKey, rawFlagsByKey, lastEntryByKey, digest };
     }
 
     function detectMultiLeverPush(ex, lastEntry) {
@@ -5372,6 +5522,8 @@
       appState.history = [];
       appState.muscleSource = 'programmed';
       appState.muscleSinglesMode = 'weighted';
+      appState.ignoredReadinessFlags = {};
+      appState.analyticsSections = normalizeAnalyticsSections(null);
       appState.notesFilter = 'all';
       appState.analyticsTimeframe = 'all';
       appState.analyticsLiftFilter = 'ALL_T1';
@@ -5408,6 +5560,8 @@
         appState.baseLoadPct = parseFloat(parsed.baseLoadPct) > 0 ? parseFloat(parsed.baseLoadPct) : (appState.phase === 'intensification' ? 87.5 : 82.5);
         appState.muscleSource = parsed.muscleSource === 'logged' ? 'logged' : 'programmed';
         appState.muscleSinglesMode = parsed.muscleSinglesMode === 'raw' ? 'raw' : 'weighted';
+        appState.ignoredReadinessFlags = normalizeIgnoredReadinessFlags(parsed.ignoredReadinessFlags);
+        appState.analyticsSections = normalizeAnalyticsSections(parsed.analyticsSections);
         appState.notesFilter = ['all', 'lift', 'session'].includes(parsed.notesFilter) ? parsed.notesFilter : 'all';
         const validTimeframes = ['all', 'currentMeso', 'currentMacro', 'weekly', 'monthly', 'last24', 'last12'];
         appState.analyticsTimeframe = validTimeframes.includes(parsed.analyticsTimeframe) ? parsed.analyticsTimeframe : 'all';
@@ -10628,6 +10782,7 @@
       };
 
       appState.history.push(entry);
+      reconcileIgnoredReadinessFlags(appState.history);
       if (isDiceLogged) {
         processCompletedDiceSession(entry, day);
       }
@@ -13684,6 +13839,7 @@
     }
 
     let feedbackDigestExpanded = false;
+    let feedbackDigestShowIgnored = false;
     let selectedPRLadderLift = null;
 
     function getCurrentCycleContext() {
@@ -13749,6 +13905,53 @@
     function toggleFeedbackDigestExpand() {
       feedbackDigestExpanded = !feedbackDigestExpanded;
       renderFeedbackDigest();
+    }
+
+    function toggleIgnoredFeedbackDigest(forceState = null) {
+      feedbackDigestShowIgnored = typeof forceState === 'boolean' ? forceState : !feedbackDigestShowIgnored;
+      renderFeedbackDigest();
+    }
+
+    function ignoreReadinessFlag(flagKey) {
+      if (!flagKey) return;
+      const src = getActiveAnalyticsScopedHistory();
+      const { rawFlagsByKey } = analyzeLiftFeedbackTrends(src);
+      const fullFlags = analyzeLiftFeedbackTrends(appState.history).rawFlagsByKey;
+      const flag = fullFlags[flagKey] || rawFlagsByKey[flagKey];
+      if (!flag) return;
+      if (!appState.ignoredReadinessFlags || typeof appState.ignoredReadinessFlags !== 'object') {
+        appState.ignoredReadinessFlags = {};
+      }
+      appState.ignoredReadinessFlags[flagKey] = {
+        code: flag.code || '',
+        count: Math.max(1, toIntOr(flag.count, 1)),
+        entryCount: Math.max(0, toIntOr(flag.entryCount, 0)),
+        date: String(flag.date || ''),
+        ignoredAt: new Date().toISOString()
+      };
+      saveState();
+      renderFeedbackDigest();
+      renderLogger();
+      showToast(`Ignored [${flag.tier}] ${flag.exercise} alert — returns automatically if another flagged session is logged.`, 'info');
+    }
+
+    function restoreReadinessFlag(flagKey) {
+      if (!flagKey || !appState.ignoredReadinessFlags || !appState.ignoredReadinessFlags[flagKey]) return;
+      delete appState.ignoredReadinessFlags[flagKey];
+      saveState();
+      renderFeedbackDigest();
+      renderLogger();
+      showToast('Readiness alert restored.', 'info');
+    }
+
+    function restoreAllIgnoredReadinessFlags() {
+      if (!appState.ignoredReadinessFlags || !Object.keys(appState.ignoredReadinessFlags).length) return;
+      appState.ignoredReadinessFlags = {};
+      feedbackDigestShowIgnored = false;
+      saveState();
+      renderFeedbackDigest();
+      renderLogger();
+      showToast('All ignored readiness alerts restored.', 'info');
     }
 
     function selectPRBoardLift(name) {
@@ -13968,6 +14171,7 @@
         `;
       }
 
+      applyAnalyticsSectionsUI();
       renderSBDTotalBanner(scopedSessions, tf);
       renderBodyweightSection(scopedSessions, tf);
       renderIntensityChart(history, parsedFilter);
@@ -14857,60 +15061,133 @@
     function renderFeedbackDigest(scopedSessions = null) {
       const container = document.getElementById('analytics-feedback-digest');
       const badgeEl = document.getElementById('feedback-digest-badge');
+      const ignoredBtn = document.getElementById('feedback-digest-ignored-btn');
+      const ignoredCountEl = document.getElementById('feedback-digest-ignored-count');
+      const ignoredChevronEl = document.getElementById('feedback-digest-ignored-chevron');
+      const ignoredPanel = document.getElementById('analytics-feedback-ignored-panel');
       if (!container) return;
+
+      // Auto-prune any ignored alert that has since escalated/re-triggered on full history
+      if (reconcileIgnoredReadinessFlags(appState.history)) {
+        saveState();
+      }
+
       const src = scopedSessions || getActiveAnalyticsScopedHistory();
       const { digest } = analyzeLiftFeedbackTrends(src);
-      const fatigueCount = digest.filter(d => d.tone === 'rose' || d.tone === 'amber').length;
-      const readyCount = digest.filter(d => d.tone === 'emerald').length;
+      const activeDigest = [];
+      const ignoredDigest = [];
+      digest.forEach(d => {
+        if (isReadinessFlagIgnored(d)) ignoredDigest.push(d);
+        else activeDigest.push(d);
+      });
+
+      const fatigueCount = activeDigest.filter(d => d.tone === 'rose' || d.tone === 'amber').length;
+      const readyCount = activeDigest.filter(d => d.tone === 'emerald').length;
 
       if (badgeEl) {
-        badgeEl.textContent = digest.length
+        badgeEl.textContent = activeDigest.length
           ? `${fatigueCount} Fatigue/Stall · ${readyCount} Ready`
-          : 'All Lifts Balanced';
+          : (ignoredDigest.length ? `All Clear (${ignoredDigest.length} Ignored)` : 'All Lifts Balanced');
       }
 
-      if (!digest.length) {
-        container.innerHTML = `<div class="md:col-span-2 p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-400">No multi-session stall, Subpar streak, or Easy-streak alerts across your logged lifts — effort distribution is balanced.</div>`;
-        return;
+      if (ignoredBtn) {
+        if (ignoredDigest.length > 0) {
+          ignoredBtn.classList.remove('hidden');
+          ignoredBtn.setAttribute('aria-expanded', feedbackDigestShowIgnored ? 'true' : 'false');
+          if (ignoredCountEl) ignoredCountEl.textContent = String(ignoredDigest.length);
+          if (ignoredChevronEl) ignoredChevronEl.textContent = feedbackDigestShowIgnored ? '▴' : '▾';
+        } else {
+          ignoredBtn.classList.add('hidden');
+          ignoredBtn.setAttribute('aria-expanded', 'false');
+          feedbackDigestShowIgnored = false;
+        }
       }
 
-      const shown = feedbackDigestExpanded ? digest : digest.slice(0, 8);
-      let html = shown.map(d => {
-        const cardCls = d.tone === 'rose'
-          ? 'bg-rose-500/10 border-rose-500/30 hover:border-rose-400/70 text-rose-200'
-          : (d.tone === 'amber'
-              ? 'bg-amber-500/10 border-amber-500/30 hover:border-amber-400/70 text-amber-200'
-              : 'bg-emerald-500/10 border-emerald-500/30 hover:border-emerald-400/70 text-emerald-200');
-        const filterVal = `${d.tier}::${d.exercise}`;
-        return `
-          <button type="button" data-filter-val="${escapeHtml(filterVal)}" onclick="selectAnalyticsLiftFilter(this.dataset.filterVal)" class="w-full text-left p-3 rounded-xl border ${cardCls} text-xs space-y-1 transition cursor-pointer" title="Click to drill into ${escapeHtml(d.exercise)} charts">
-            <div class="flex items-center justify-between gap-2">
-              <span class="font-bold">[${escapeHtml(d.tier)}] ${escapeHtml(d.exercise)} <span class="text-[11px] opacity-60">↗</span></span>
-              <span class="font-mono text-[11px] font-extrabold shrink-0">${escapeHtml(d.short)}</span>
+      if (!activeDigest.length) {
+        container.innerHTML = ignoredDigest.length
+          ? `<div class="md:col-span-2 p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-400">No active readiness alerts. <strong class="text-slate-200">${ignoredDigest.length} ignored</strong> — use <strong class="text-slate-200">Ignored (${ignoredDigest.length})</strong> above to view or restore; they automatically return if another flagged session is logged.</div>`
+          : `<div class="md:col-span-2 p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-400">No multi-session stall, Subpar streak, or Easy-streak alerts across your logged lifts — effort distribution is balanced.</div>`;
+      } else {
+        const shown = feedbackDigestExpanded ? activeDigest : activeDigest.slice(0, 8);
+        let html = shown.map(d => {
+          const cardCls = d.tone === 'rose'
+            ? 'bg-rose-500/10 border-rose-500/30 hover:border-rose-400/70 text-rose-200'
+            : (d.tone === 'amber'
+                ? 'bg-amber-500/10 border-amber-500/30 hover:border-amber-400/70 text-amber-200'
+                : 'bg-emerald-500/10 border-emerald-500/30 hover:border-emerald-400/70 text-emerald-200');
+          const dismissCls = d.tone === 'rose'
+            ? 'text-rose-300 hover:text-rose-200 hover:bg-rose-500/20 border-rose-500/30'
+            : (d.tone === 'amber'
+                ? 'text-amber-300 hover:text-amber-200 hover:bg-amber-500/20 border-amber-500/30'
+                : 'text-emerald-300 hover:text-emerald-200 hover:bg-emerald-500/20 border-emerald-500/30');
+          const filterVal = `${d.tier}::${d.exercise}`;
+          return `
+            <div class="relative rounded-xl border ${cardCls} transition">
+              <button type="button" data-filter-val="${escapeHtml(filterVal)}" onclick="selectAnalyticsLiftFilter(this.dataset.filterVal)" class="w-full text-left p-3 pr-10 rounded-xl text-xs space-y-1 cursor-pointer" title="Click to drill into ${escapeHtml(d.exercise)} charts">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <span class="font-bold">[${escapeHtml(d.tier)}] ${escapeHtml(d.exercise)} <span class="text-[11px] opacity-60">↗</span></span>
+                  <span class="font-mono text-[11px] font-extrabold shrink-0">${escapeHtml(d.short)}</span>
+                </div>
+                <div class="text-[11px] opacity-90">${escapeHtml(d.advice)}</div>
+              </button>
+              <button type="button" data-flag-key="${escapeHtml(d.key)}" onclick="ignoreReadinessFlag(this.dataset.flagKey)" aria-label="Ignore readiness alert for ${escapeHtml(d.tier)} ${escapeHtml(d.exercise)}" title="Ignore alert (auto-returns if another flagged session is logged)" class="absolute top-2 right-2 w-7 h-7 rounded-lg border ${dismissCls} text-xs font-bold inline-flex items-center justify-center transition">✕</button>
             </div>
-            <div class="text-[11px] opacity-90">${escapeHtml(d.advice)}</div>
-          </button>
-        `;
-      }).join('');
+          `;
+        }).join('');
 
-      if (digest.length > 8) {
-        html += `
-          <div class="md:col-span-2 flex justify-center">
-            <button type="button" onclick="toggleFeedbackDigestExpand()" class="px-3 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-700 text-[11px] font-mono font-bold text-slate-300 hover:text-white transition">
-              ${feedbackDigestExpanded ? 'Show top 8 alerts' : `Show all ${digest.length} alerts`}
-            </button>
-          </div>
-        `;
+        if (activeDigest.length > 8) {
+          html += `
+            <div class="md:col-span-2 flex justify-center">
+              <button type="button" onclick="toggleFeedbackDigestExpand()" class="px-3 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-700 text-[11px] font-mono font-bold text-slate-300 hover:text-white transition">
+                ${feedbackDigestExpanded ? 'Show top 8 alerts' : `Show all ${activeDigest.length} alerts`}
+              </button>
+            </div>
+          `;
+        }
+
+        if (fatigueCount > 0) {
+          html += `
+            <div class="md:col-span-2 p-3 rounded-xl bg-slate-950 border border-amber-500/25 text-[11px] text-slate-300">
+              <strong class="text-amber-300">Three Pillars of Recovery Check (Book pp. 66–68):</strong> Fatigue/stall trend detected — verify <strong class="text-white">Nutrition &amp; Hydration</strong>, <strong class="text-white">7–8h Sleep</strong>, and <strong class="text-white">Stress / Active Recovery (GPP)</strong> before adding load or volume.
+            </div>
+          `;
+        }
+        container.innerHTML = html;
       }
 
-      if (fatigueCount > 0) {
-        html += `
-          <div class="md:col-span-2 p-3 rounded-xl bg-slate-950 border border-amber-500/25 text-[11px] text-slate-300">
-            <strong class="text-amber-300">Three Pillars of Recovery Check (Book pp. 66–68):</strong> Fatigue/stall trend detected — verify <strong class="text-white">Nutrition &amp; Hydration</strong>, <strong class="text-white">7–8h Sleep</strong>, and <strong class="text-white">Stress / Active Recovery (GPP)</strong> before adding load or volume.
-          </div>
-        `;
+      if (ignoredPanel) {
+        if (!ignoredDigest.length || !feedbackDigestShowIgnored) {
+          ignoredPanel.classList.add('hidden');
+          ignoredPanel.innerHTML = '';
+        } else {
+          ignoredPanel.classList.remove('hidden');
+          ignoredPanel.innerHTML = `
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400">Ignored Readiness Alerts (${ignoredDigest.length}) · auto-returns on next flagged session</span>
+              ${ignoredDigest.length >= 2 ? `<button type="button" onclick="restoreAllIgnoredReadinessFlags()" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-700 text-[11px] font-mono font-bold text-slate-300 hover:text-white transition">Restore All</button>` : ''}
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+              ${ignoredDigest.map(d => {
+                const filterVal = `${d.tier}::${d.exercise}`;
+                return `
+                  <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800 text-xs space-y-1.5">
+                    <div class="flex items-start justify-between gap-2">
+                      <button type="button" data-filter-val="${escapeHtml(filterVal)}" onclick="selectAnalyticsLiftFilter(this.dataset.filterVal)" class="text-left flex-1 min-w-0">
+                        <div class="flex flex-wrap items-center gap-2">
+                          <span class="font-bold text-slate-200">[${escapeHtml(d.tier)}] ${escapeHtml(d.exercise)} <span class="text-[11px] opacity-60">↗</span></span>
+                          <span class="font-mono text-[11px] font-bold text-slate-400">${escapeHtml(d.short)}</span>
+                        </div>
+                      </button>
+                      <button type="button" data-flag-key="${escapeHtml(d.key)}" onclick="restoreReadinessFlag(this.dataset.flagKey)" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-[11px] font-mono font-bold text-slate-200 hover:text-white transition shrink-0">Restore</button>
+                    </div>
+                    <div class="text-[11px] text-slate-400">${escapeHtml(d.advice)}</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `;
+        }
       }
-      container.innerHTML = html;
     }
 
     function buildMultiLiftIntensityDatasets(history, targetTier, metric) {
@@ -15879,30 +16156,143 @@
     }
 
     /* =========================================================================
-       SPECIALTY ANALYTICS DRAWERS (POWERLIFTING A1/A2/A3/A5 + BODYBUILDING B2/B4)
+       COLLAPSIBLE ANALYTICS SECTIONS + SPECIALTY DRAWERS (PL A1/A2/A3/A5 + BB B2/B4)
        ========================================================================= */
+    const ANALYTICS_SECTION_DEFAULTS = {
+      bodyweight: false,
+      vectors: false,
+      readiness: false,
+      muscles: false,
+      pl: false,
+      bb: false,
+      prBoard: false,
+      notes: false,
+      history: false
+    };
+    const ANALYTICS_SECTION_KEYS = Object.keys(ANALYTICS_SECTION_DEFAULTS);
+
+    function normalizeAnalyticsSections(raw) {
+      const out = { ...ANALYTICS_SECTION_DEFAULTS };
+      if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+        ANALYTICS_SECTION_KEYS.forEach(k => {
+          if (typeof raw[k] === 'boolean') out[k] = raw[k];
+        });
+      }
+      return out;
+    }
+
     const analyticsSpecialtyDrawerState = { pl: false, bb: false };
 
-    function toggleAnalyticsSpecialtyDrawer(kind) {
-      if (kind !== 'pl' && kind !== 'bb') return;
-      analyticsSpecialtyDrawerState[kind] = !analyticsSpecialtyDrawerState[kind];
-      const open = analyticsSpecialtyDrawerState[kind];
-      const body = document.getElementById(`${kind}-metrics-drawer-body`);
-      const btn = document.getElementById(`${kind}-metrics-toggle-btn`);
-      const chev = document.getElementById(`${kind}-metrics-chevron`);
+    function resizeAnalyticsSectionCharts(key) {
+      const map = {
+        bodyweight: ['bodyweight'],
+        vectors: ['intensity', 'volume', 'density', 'quality'],
+        muscles: ['muscle'],
+        pl: ['plDotsTrend']
+      };
+      const keys = map[key] || [];
+      if (!keys.length) return;
+      requestAnimationFrame(() => {
+        keys.forEach(ck => {
+          const ch = chartInstances[ck];
+          if (ch && typeof ch.resize === 'function') {
+            try {
+              ch.resize();
+              if (typeof ch.update === 'function') ch.update('none');
+            } catch (_) {}
+          }
+        });
+      });
+    }
+
+    function updateAnalyticsCollapseAllBtn() {
+      const btn = document.getElementById('analytics-collapse-all-btn');
+      if (!btn) return;
+      const secs = normalizeAnalyticsSections(appState.analyticsSections);
+      const anyOpen = ANALYTICS_SECTION_KEYS.some(k => Boolean(secs[k]));
+      btn.textContent = anyOpen ? 'Collapse All ▴' : 'Expand All ▾';
+      btn.setAttribute('aria-pressed', anyOpen ? 'false' : 'true');
+    }
+
+    function applyAnalyticsSectionDom(key, open) {
+      if (key === 'pl' || key === 'bb') {
+        analyticsSpecialtyDrawerState[key] = open;
+        const body = document.getElementById(`${key}-metrics-drawer-body`);
+        const btn = document.getElementById(`${key}-metrics-toggle-btn`);
+        const chev = document.getElementById(`${key}-metrics-chevron`);
+        if (body) body.classList.toggle('hidden', !open);
+        if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (chev) chev.textContent = open ? 'Hide ▴' : 'Show ▾';
+        return;
+      }
+      const body = document.getElementById(`analytics-sec-body-${key}`);
+      const btn = document.getElementById(`analytics-sec-btn-${key}`);
+      const chev = document.getElementById(`analytics-sec-chev-${key}`);
       if (body) body.classList.toggle('hidden', !open);
       if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
       if (chev) chev.textContent = open ? 'Hide ▴' : 'Show ▾';
-      if (open) {
+    }
+
+    function applyAnalyticsSectionsUI() {
+      appState.analyticsSections = normalizeAnalyticsSections(appState.analyticsSections);
+      ANALYTICS_SECTION_KEYS.forEach(k => {
+        applyAnalyticsSectionDom(k, Boolean(appState.analyticsSections[k]));
+      });
+      updateAnalyticsCollapseAllBtn();
+    }
+
+    function toggleAnalyticsSection(key, forceOpen = null) {
+      if (!ANALYTICS_SECTION_KEYS.includes(key)) return;
+      appState.analyticsSections = normalizeAnalyticsSections(appState.analyticsSections);
+      const nextOpen = typeof forceOpen === 'boolean' ? forceOpen : !appState.analyticsSections[key];
+      appState.analyticsSections[key] = nextOpen;
+      applyAnalyticsSectionDom(key, nextOpen);
+      updateAnalyticsCollapseAllBtn();
+      saveState();
+
+      if (key === 'pl' || key === 'bb') {
+        if (nextOpen) {
+          const scoped = getActiveAnalyticsScopedHistory();
+          if (key === 'pl') renderPowerliftingMetricsSection(scoped);
+          else renderBodybuildingMetricsSection(scoped);
+        } else if (key === 'pl') {
+          destroyChart('plDotsTrend');
+        }
+      } else if (nextOpen) {
+        resizeAnalyticsSectionCharts(key);
+      }
+    }
+
+    function toggleAllAnalyticsSections() {
+      appState.analyticsSections = normalizeAnalyticsSections(appState.analyticsSections);
+      const anyOpen = ANALYTICS_SECTION_KEYS.some(k => Boolean(appState.analyticsSections[k]));
+      const targetOpen = !anyOpen;
+      ANALYTICS_SECTION_KEYS.forEach(k => {
+        appState.analyticsSections[k] = targetOpen;
+        applyAnalyticsSectionDom(k, targetOpen);
+      });
+      updateAnalyticsCollapseAllBtn();
+      saveState();
+
+      if (targetOpen) {
         const scoped = getActiveAnalyticsScopedHistory();
-        if (kind === 'pl') renderPowerliftingMetricsSection(scoped);
-        else renderBodybuildingMetricsSection(scoped);
-      } else if (kind === 'pl') {
+        renderPowerliftingMetricsSection(scoped);
+        renderBodybuildingMetricsSection(scoped);
+        ['bodyweight', 'vectors', 'muscles', 'pl'].forEach(resizeAnalyticsSectionCharts);
+      } else {
         destroyChart('plDotsTrend');
       }
     }
 
+    function toggleAnalyticsSpecialtyDrawer(kind) {
+      if (kind !== 'pl' && kind !== 'bb') return;
+      toggleAnalyticsSection(kind);
+    }
+
     function renderAnalyticsSpecialtyDrawers(scopedSessions = null) {
+      const secs = normalizeAnalyticsSections(appState.analyticsSections);
+      analyticsSpecialtyDrawerState.pl = Boolean(secs.pl);
+      analyticsSpecialtyDrawerState.bb = Boolean(secs.bb);
       const scoped = scopedSessions || getActiveAnalyticsScopedHistory();
       if (analyticsSpecialtyDrawerState.pl) {
         renderPowerliftingMetricsSection(scoped);
@@ -16714,7 +17104,9 @@
 
     function renderHistoryTable(scopedSessions = null) {
       const tbody = document.getElementById('history-table-body');
-      if (!tbody) return;
+      const mobileList = document.getElementById('history-mobile-list');
+      const countBadge = document.getElementById('history-session-count-badge');
+      if (!tbody && !mobileList) return;
       const q = (document.getElementById('history-search-input')?.value || '').trim().toLowerCase();
       const srcHist = scopedSessions || getActiveAnalyticsScopedHistory();
       const { prsBySessionId } = computeHistoryPrTimeline(appState.history);
@@ -16737,101 +17129,193 @@
         return blob.includes(q);
       });
 
-      tbody.innerHTML = rows.length
-        ? rows.map(s => {
-            const startTimeLabel = formatStartTimeDisplay(s.startedAt);
-            const sessPr = prsBySessionId[s.id] || { totalPrs: 0, liftsByIdx: {} };
-            const prChipHtml = sessPr.totalPrs > 0
-              ? `<span class="theme-pr-chip px-1.5 py-0.5 rounded text-[11px] font-mono font-extrabold bg-amber-500/20 text-amber-300 border border-amber-400/50 whitespace-nowrap" title="${sessPr.totalPrs} Personal Record${sessPr.totalPrs === 1 ? '' : 's'} set in this session">🏆 ${sessPr.totalPrs > 1 ? `${sessPr.totalPrs} PRs` : 'PR'}</span>`
-              : '';
-            return `
-            <tr data-id="${escapeHtml(s.id)}" onclick="openSessionDetailModal(this.dataset.id)" class="hover:bg-slate-800/45 align-top cursor-pointer transition">
-              <td class="py-3 pr-3 whitespace-nowrap">
-                <div class="font-mono font-bold text-white flex items-center gap-1.5 flex-wrap">
-                  <span>${escapeHtml(s.date)}</span>
-                  ${startTimeLabel ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-slate-800/90 text-cyan-300 border border-slate-700 tabular-nums" title="Workout start time (${escapeHtml(s.startedAt)})">🕒 ${escapeHtml(startTimeLabel)}</span>` : ''}
-                  ${prChipHtml}
-                  ${s.cycleMeta ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40" title="${escapeHtml(`${s.cycleMeta.macrocycleName || ''} · ${s.cycleMeta.mesoName || ''}`)}">Wk ${toIntOr(s.cycleMeta.week, 1)}</span>` : ''}
-                  ${s.diceSession ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/40" title="Dice Gainz Session #${s.diceSession.sessionNumber || ''}">🎲 #${s.diceSession.sessionNumber || ''}</span>` : ''}
+      if (countBadge) {
+        countBadge.textContent = `${rows.length} session${rows.length === 1 ? '' : 's'}`;
+      }
+
+      const buildLiftSummary = (e, s) => {
+        const wDisp = formatExerciseLoadDisplay(e, s.date, true);
+        if (e.tier === 'T3') return `${wDisp} · ${e.totalReps} reps`;
+        const st = normalizeRmStyle(e.rmStyle);
+        const effStr = formatEffortLabel(e.effort);
+        const vdsRepsDisp = e.vdsRepsSummary || (Array.isArray(e.vdsSetReps) ? formatVdsRepsSummary(e.vdsSetReps) : String(e.fuReps));
+        const vdsWtTag = (e.vdsWeight !== null && e.vdsWeight !== undefined && e.vdsWeight !== e.weight) ? `@${e.vdsWeight}kg` : '';
+        if (st === 'skipRm') {
+          const endStr = e.endEffort ? `→${formatEffortLabel(e.endEffort)}` : '';
+          return `Skip RM · ${wDisp} ${e.fuSets}×[${vdsRepsDisp}] (${effStr}${endStr})`;
+        }
+        if (st === 'skipVds') return `${wDisp} × ${e.rmReps}RM [Skip VDS] (${effStr})`;
+        if (st === 'lastSetRm') return `${e.fuSets}×[${vdsRepsDisp}]${vdsWtTag} → Last ${e.rmReps}RM @ ${wDisp} (${effStr})`;
+        if (st === 'bookend') {
+          const beWTag = (e.bookendWeight !== null && e.bookendWeight !== undefined && e.bookendWeight !== e.weight) ? `@${e.bookendWeight}kg` : '';
+          const endStr = e.endEffort ? `/${formatEffortLabel(e.endEffort)}` : '';
+          return `${wDisp} × ${e.rmReps}RM + ${e.fuSets}×[${vdsRepsDisp}]${vdsWtTag} + RM2 ${e.bookendRmReps || e.rmReps}RM${beWTag} (${effStr}${endStr})`;
+        }
+        return `${wDisp} × ${e.rmReps}RM + ${e.fuSets}×${vdsRepsDisp}${vdsWtTag} (${effStr})`;
+      };
+
+      if (tbody) {
+        tbody.innerHTML = rows.length
+          ? rows.map(s => {
+              const startTimeLabel = formatStartTimeDisplay(s.startedAt);
+              const sessPr = prsBySessionId[s.id] || { totalPrs: 0, liftsByIdx: {} };
+              const prChipHtml = sessPr.totalPrs > 0
+                ? `<span class="theme-pr-chip px-1.5 py-0.5 rounded text-[11px] font-mono font-extrabold bg-amber-500/20 text-amber-300 border border-amber-400/50 whitespace-nowrap" title="${sessPr.totalPrs} Personal Record${sessPr.totalPrs === 1 ? '' : 's'} set in this session">🏆 ${sessPr.totalPrs > 1 ? `${sessPr.totalPrs} PRs` : 'PR'}</span>`
+                : '';
+              return `
+              <tr data-id="${escapeHtml(s.id)}" onclick="openSessionDetailModal(this.dataset.id)" class="hover:bg-slate-800/45 align-top cursor-pointer transition">
+                <td class="py-3 pr-3 whitespace-nowrap">
+                  <div class="font-mono font-bold text-white flex items-center gap-1.5 flex-wrap">
+                    <span>${escapeHtml(s.date)}</span>
+                    ${startTimeLabel ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-slate-800/90 text-cyan-300 border border-slate-700 tabular-nums" title="Workout start time (${escapeHtml(s.startedAt)})">🕒 ${escapeHtml(startTimeLabel)}</span>` : ''}
+                    ${prChipHtml}
+                    ${s.cycleMeta ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40" title="${escapeHtml(`${s.cycleMeta.macrocycleName || ''} · ${s.cycleMeta.mesoName || ''}`)}">Wk ${toIntOr(s.cycleMeta.week, 1)}</span>` : ''}
+                    ${s.diceSession ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/40" title="Dice Gainz Session #${s.diceSession.sessionNumber || ''}">🎲 #${s.diceSession.sessionNumber || ''}</span>` : ''}
+                  </div>
+                  <div class="text-xs font-semibold text-slate-200">${escapeHtml(s.dayName)}</div>
+                  ${s.cycleMeta && s.cycleMeta.mesoName ? `<div class="text-[11px] text-indigo-300/80 truncate max-w-[170px]" title="${escapeHtml(`${s.cycleMeta.macrocycleName || ''} — ${s.cycleMeta.mesoName}`)}">${escapeHtml(s.cycleMeta.mesoName)}</div>` : ''}
+                </td>
+                <td class="py-3 px-3 space-y-1">
+                  ${(s.exercises || []).map((e, eIdx) => {
+                    const liftInfo = sessPr.liftsByIdx && sessPr.liftsByIdx[eIdx];
+                    const liftPrs = (liftInfo && Array.isArray(liftInfo.prs)) ? liftInfo.prs : [];
+                    const liftPrBadge = liftPrs.length
+                      ? ` <span class="theme-pr-chip px-1 py-0.5 rounded font-mono text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-400/50" title="${escapeHtml(liftPrs.map(p => `${p.kind} (${p.delta})`).join(' · '))}">PR</span>`
+                      : '';
+                    const partial = (e.completedSets !== undefined && e.plannedSets !== undefined && e.completedSets < e.plannedSets)
+                      ? ` <span class="text-amber-400">(${e.completedSets}/${e.plannedSets} sets)</span>`
+                      : '';
+                    const summary = buildLiftSummary(e, s);
+                    const diceTag = (e.diceMeta && e.diceMeta.rolledRm)
+                      ? ` <span class="px-1 py-0.5 rounded font-mono text-[11px] ${e.diceMeta.passed === false ? 'bg-rose-500/15 text-rose-300 border border-rose-500/35' : 'bg-fuchsia-500/15 text-fuchsia-300 border border-fuchsia-500/35'}">🎲 Rolled ${e.diceMeta.rolledRm}→${e.diceMeta.actualRm}</span>`
+                      : '';
+                    const ssGrp = normalizeSupersetGroup(e.supersetGroup);
+                    const ssPartners = ssGrp
+                      ? ((Array.isArray(e.supersetPartners) && e.supersetPartners.length)
+                          ? e.supersetPartners
+                          : (s.exercises || []).filter(other => other !== e && normalizeSupersetGroup(other.supersetGroup) === ssGrp).map(other => other.exercise))
+                      : [];
+                    const isLinkedSsDur = Boolean(ssGrp && e.durationSecs && e.durationSecs > 0 && (ssPartners.length > 0 || e.supersetSharedTimer));
+                    const ssBadge = ssGrp && !isLinkedSsDur
+                      ? ` <span class="px-1 py-0.5 rounded font-mono text-[11px] font-bold border ${getSupersetStyle(ssGrp).badge}">⛓ SS-${ssGrp}</span>`
+                      : '';
+                    const durBadge = isLinkedSsDur
+                      ? ` <span class="px-1.5 py-0.5 rounded font-mono text-[11px] font-bold bg-fuchsia-500/15 text-fuchsia-200 border border-fuchsia-500/40" title="${escapeHtml(`Linked SS-${ssGrp} superset timer shared with ${ssPartners.join(', ')}${e.supersetCombinedTonnage ? ` · Combined SS-${ssGrp}: ${e.supersetCombinedTonnage.toLocaleString()} kg` : ''}`)}">⛓ SS-${ssGrp} · Linked ⏱ ${formatShortDuration(e.durationSecs)}</span>`
+                      : ((e.durationSecs && e.durationSecs > 0)
+                          ? ` <span class="px-1 py-0.5 rounded font-mono text-[11px] font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/35" title="Logged exercise stopwatch duration">⏱ ${formatShortDuration(e.durationSecs)}</span>`
+                          : '');
+                    const limBadge = (e.limiter && e.limiter !== 'Standard')
+                      ? ` <span class="px-1 py-0.5 rounded font-mono text-[11px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/35">${escapeHtml(e.limiter)}</span>`
+                      : '';
+                    const warmupTxt = formatWarmupSetsSummary(e.warmupSets);
+                    const warmupSubHtml = warmupTxt
+                      ? `<div class="pl-3 text-[11px] font-mono text-orange-300/80">🔥 Warm-up: ${escapeHtml(warmupTxt)} <span class="text-slate-500">(excl. vol/density)</span></div>`
+                      : '';
+                    return `<div class="text-[11px]"><span class="font-mono font-bold text-slate-400">[${e.tier}]</span> <span class="text-slate-200 font-semibold">${escapeHtml(e.exercise)}</span>${liftPrBadge} <span class="font-mono text-slate-400">${summary}</span>${limBadge}${ssBadge}${durBadge}${diceTag}${partial}${e.notes ? ` <span class="text-slate-400 italic">— ${escapeHtml(e.notes)}</span>` : ''}${warmupSubHtml}</div>`;
+                  }).join('')}
+                  ${s.notes ? `<div class="text-[11px] text-amber-300/90 italic pt-0.5">“${escapeHtml(s.notes)}”</div>` : ''}
+                </td>
+                <td class="py-3 px-3 whitespace-nowrap font-mono font-bold text-sky-300">${(s.totalTonnage || 0).toLocaleString()} kg</td>
+                <td class="py-3 px-3 whitespace-nowrap font-mono text-cyan-300">${(s.density || 0).toFixed(1)} kg/min<div class="text-[11px] text-slate-400">${s.durationMin || 0} min</div></td>
+                <td class="py-3 pl-3 text-right whitespace-nowrap">
+                  <div class="inline-flex items-center gap-1.5">
+                    <button type="button" data-id="${escapeHtml(s.id)}" onclick="event.stopPropagation(); openSessionDetailModal(this.dataset.id)" class="px-2.5 py-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-200 border border-sky-500/35 text-[11px] font-bold transition">View</button> <button type="button" data-id="${escapeHtml(s.id)}" onclick="event.stopPropagation(); openEditHistoryModal(this.dataset.id)" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-amber-500/20 text-slate-200 hover:text-amber-200 border border-slate-700 hover:border-amber-500/40 text-[11px] font-semibold transition">Edit</button>
+                    <button type="button" data-id="${escapeHtml(s.id)}" onclick="event.stopPropagation(); deleteHistoryEntry(this.dataset.id)" class="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 text-[11px] transition">Delete</button>
+                  </div>
+                </td>
+              </tr>
+            `;
+            }).join('')
+          : `<tr><td colspan="5" class="py-6 text-center text-xs text-slate-400">No logged sessions found.</td></tr>`;
+      }
+
+      if (mobileList) {
+        mobileList.innerHTML = rows.length
+          ? rows.map(s => {
+              const startTimeLabel = formatStartTimeDisplay(s.startedAt);
+              const sessPr = prsBySessionId[s.id] || { totalPrs: 0, liftsByIdx: {} };
+              const prChipHtml = sessPr.totalPrs > 0
+                ? `<span class="theme-pr-chip px-1.5 py-0.5 rounded text-[11px] font-mono font-extrabold bg-amber-500/20 text-amber-300 border border-amber-400/50 whitespace-nowrap">🏆 ${sessPr.totalPrs > 1 ? `${sessPr.totalPrs} PRs` : 'PR'}</span>`
+                : '';
+              const exList = s.exercises || [];
+              const previewMax = 4;
+              const shownEx = exList.slice(0, previewMax);
+              const extraCount = Math.max(0, exList.length - previewMax);
+              const liftsHtml = shownEx.map((e, eIdx) => {
+                const liftInfo = sessPr.liftsByIdx && sessPr.liftsByIdx[eIdx];
+                const liftPrs = (liftInfo && Array.isArray(liftInfo.prs)) ? liftInfo.prs : [];
+                const tierCls = e.tier === 'T1'
+                  ? 'bg-amber-500/15 text-amber-300 border-amber-500/35'
+                  : (e.tier === 'T2'
+                      ? 'bg-sky-500/15 text-sky-300 border-sky-500/35'
+                      : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/35');
+                const liftPrBadge = liftPrs.length
+                  ? `<span class="theme-pr-chip px-1 py-0.5 rounded font-mono text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-400/50 shrink-0">PR</span>`
+                  : '';
+                const summary = buildLiftSummary(e, s);
+                return `
+                  <div class="flex items-start justify-between gap-2 text-xs">
+                    <div class="min-w-0 flex-1">
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="px-1.5 py-0.5 rounded font-mono text-[10px] font-bold border ${tierCls} shrink-0">${escapeHtml(e.tier)}</span>
+                        <span class="font-semibold text-slate-200 break-words">${escapeHtml(e.exercise)}</span>
+                        ${liftPrBadge}
+                      </div>
+                      <div class="font-mono text-[11px] text-slate-400 mt-0.5 tabular-nums">${escapeHtml(summary)}</div>
+                    </div>
+                  </div>
+                `;
+              }).join('');
+
+              return `
+                <div data-id="${escapeHtml(s.id)}" onclick="openSessionDetailModal(this.dataset.id)" class="rounded-xl bg-slate-950/70 border border-slate-800 hover:border-amber-500/40 p-3.5 space-y-2.5 cursor-pointer transition">
+                  <div class="space-y-1">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                      <div class="font-mono text-xs font-bold text-white flex items-center gap-1.5 flex-wrap tabular-nums">
+                        <span>${escapeHtml(s.date)}</span>
+                        ${startTimeLabel ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-slate-800/90 text-cyan-300 border border-slate-700">🕒 ${escapeHtml(startTimeLabel)}</span>` : ''}
+                      </div>
+                      <div class="flex items-center gap-1 flex-wrap">
+                        ${prChipHtml}
+                        ${s.cycleMeta ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">Wk ${toIntOr(s.cycleMeta.week, 1)}</span>` : ''}
+                        ${s.diceSession ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/40">🎲 #${s.diceSession.sessionNumber || ''}</span>` : ''}
+                      </div>
+                    </div>
+                    <div class="text-sm font-bold text-slate-100">${escapeHtml(s.dayName)}</div>
+                    ${s.cycleMeta && s.cycleMeta.mesoName ? `<div class="text-[11px] text-indigo-300/80 truncate">${escapeHtml(s.cycleMeta.mesoName)}</div>` : ''}
+                  </div>
+
+                  <div class="grid grid-cols-3 gap-2">
+                    <div class="rounded-lg bg-slate-900 border border-slate-800 px-2.5 py-1.5">
+                      <div class="text-[10px] uppercase tracking-wider text-slate-400">Tonnage</div>
+                      <div class="font-mono text-xs font-bold text-sky-300 tabular-nums">${(s.totalTonnage || 0).toLocaleString()} kg</div>
+                    </div>
+                    <div class="rounded-lg bg-slate-900 border border-slate-800 px-2.5 py-1.5">
+                      <div class="text-[10px] uppercase tracking-wider text-slate-400">Density</div>
+                      <div class="font-mono text-xs font-bold text-cyan-300 tabular-nums">${(s.density || 0).toFixed(1)}/m</div>
+                    </div>
+                    <div class="rounded-lg bg-slate-900 border border-slate-800 px-2.5 py-1.5">
+                      <div class="text-[10px] uppercase tracking-wider text-slate-400">Duration</div>
+                      <div class="font-mono text-xs font-bold text-slate-200 tabular-nums">${s.durationMin || 0} min</div>
+                    </div>
+                  </div>
+
+                  <div class="pt-2 border-t border-slate-800/70 space-y-2">
+                    ${liftsHtml || `<div class="text-xs text-slate-400">No lifts recorded.</div>`}
+                    ${extraCount > 0 ? `<div class="text-[11px] font-mono text-slate-400 pt-0.5">+ ${extraCount} more lift${extraCount === 1 ? '' : 's'} · tap to view full session ↗</div>` : ''}
+                    ${s.notes ? `<div class="text-xs text-amber-300/90 italic pt-1 border-t border-slate-800/70">“${escapeHtml(s.notes)}”</div>` : ''}
+                  </div>
+
+                  <div class="flex items-center gap-2 pt-2 border-t border-slate-800/70">
+                    <button type="button" data-id="${escapeHtml(s.id)}" onclick="event.stopPropagation(); openSessionDetailModal(this.dataset.id)" class="flex-1 min-h-[38px] px-3 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-200 border border-sky-500/35 text-xs font-bold transition">View Details</button>
+                    <button type="button" data-id="${escapeHtml(s.id)}" onclick="event.stopPropagation(); openEditHistoryModal(this.dataset.id)" class="min-h-[38px] px-3 rounded-lg bg-slate-800 hover:bg-amber-500/20 text-slate-200 hover:text-amber-200 border border-slate-700 hover:border-amber-500/40 text-xs font-semibold transition">Edit</button>
+                    <button type="button" data-id="${escapeHtml(s.id)}" onclick="event.stopPropagation(); deleteHistoryEntry(this.dataset.id)" class="min-h-[38px] px-3 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-slate-700 text-xs transition">Delete</button>
+                  </div>
                 </div>
-                <div class="text-xs font-semibold text-slate-200">${escapeHtml(s.dayName)}</div>
-                ${s.cycleMeta && s.cycleMeta.mesoName ? `<div class="text-[11px] text-indigo-300/80 truncate max-w-[170px]" title="${escapeHtml(`${s.cycleMeta.macrocycleName || ''} — ${s.cycleMeta.mesoName}`)}">${escapeHtml(s.cycleMeta.mesoName)}</div>` : ''}
-              </td>
-              <td class="py-3 px-3 space-y-1">
-                ${(s.exercises || []).map((e, eIdx) => {
-                  const liftInfo = sessPr.liftsByIdx && sessPr.liftsByIdx[eIdx];
-                  const liftPrs = (liftInfo && Array.isArray(liftInfo.prs)) ? liftInfo.prs : [];
-                  const liftPrBadge = liftPrs.length
-                    ? ` <span class="theme-pr-chip px-1 py-0.5 rounded font-mono text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-400/50" title="${escapeHtml(liftPrs.map(p => `${p.kind} (${p.delta})`).join(' · '))}">PR</span>`
-                    : '';
-                  const partial = (e.completedSets !== undefined && e.plannedSets !== undefined && e.completedSets < e.plannedSets)
-                    ? ` <span class="text-amber-400">(${e.completedSets}/${e.plannedSets} sets)</span>`
-                    : '';
-                  const wDisp = formatExerciseLoadDisplay(e, s.date, true);
-                  let summary = '';
-                  if (e.tier === 'T3') {
-                    summary = `${wDisp} · ${e.totalReps} reps`;
-                  } else {
-                    const st = normalizeRmStyle(e.rmStyle);
-                    const effStr = formatEffortLabel(e.effort);
-                    const vdsRepsDisp = e.vdsRepsSummary || (Array.isArray(e.vdsSetReps) ? formatVdsRepsSummary(e.vdsSetReps) : String(e.fuReps));
-                    const vdsWtTag = (e.vdsWeight !== null && e.vdsWeight !== undefined && e.vdsWeight !== e.weight) ? `@${e.vdsWeight}kg` : '';
-                    if (st === 'skipRm') {
-                      const endStr = e.endEffort ? `→${formatEffortLabel(e.endEffort)}` : '';
-                      summary = `Skip RM · ${wDisp} ${e.fuSets}×[${vdsRepsDisp}] (${effStr}${endStr})`;
-                    } else if (st === 'skipVds') {
-                      summary = `${wDisp} × ${e.rmReps}RM [Skip VDS] (${effStr})`;
-                    } else if (st === 'lastSetRm') {
-                      summary = `${e.fuSets}×[${vdsRepsDisp}]${vdsWtTag} → Last ${e.rmReps}RM @ ${wDisp} (${effStr})`;
-                    } else if (st === 'bookend') {
-                      const beWTag = (e.bookendWeight !== null && e.bookendWeight !== undefined && e.bookendWeight !== e.weight) ? `@${e.bookendWeight}kg` : '';
-                      const endStr = e.endEffort ? `/${formatEffortLabel(e.endEffort)}` : '';
-                      summary = `${wDisp} × ${e.rmReps}RM + ${e.fuSets}×[${vdsRepsDisp}]${vdsWtTag} + RM2 ${e.bookendRmReps || e.rmReps}RM${beWTag} (${effStr}${endStr})`;
-                    } else {
-                      summary = `${wDisp} × ${e.rmReps}RM + ${e.fuSets}×${vdsRepsDisp}${vdsWtTag} (${effStr})`;
-                    }
-                  }
-                  const diceTag = (e.diceMeta && e.diceMeta.rolledRm)
-                    ? ` <span class="px-1 py-0.5 rounded font-mono text-[11px] ${e.diceMeta.passed === false ? 'bg-rose-500/15 text-rose-300 border border-rose-500/35' : 'bg-fuchsia-500/15 text-fuchsia-300 border border-fuchsia-500/35'}">🎲 Rolled ${e.diceMeta.rolledRm}→${e.diceMeta.actualRm}</span>`
-                    : '';
-                  const ssGrp = normalizeSupersetGroup(e.supersetGroup);
-                  const ssPartners = ssGrp
-                    ? ((Array.isArray(e.supersetPartners) && e.supersetPartners.length)
-                        ? e.supersetPartners
-                        : (s.exercises || []).filter(other => other !== e && normalizeSupersetGroup(other.supersetGroup) === ssGrp).map(other => other.exercise))
-                    : [];
-                  const isLinkedSsDur = Boolean(ssGrp && e.durationSecs && e.durationSecs > 0 && (ssPartners.length > 0 || e.supersetSharedTimer));
-                  const ssBadge = ssGrp && !isLinkedSsDur
-                    ? ` <span class="px-1 py-0.5 rounded font-mono text-[11px] font-bold border ${getSupersetStyle(ssGrp).badge}">⛓ SS-${ssGrp}</span>`
-                    : '';
-                  const durBadge = isLinkedSsDur
-                    ? ` <span class="px-1.5 py-0.5 rounded font-mono text-[11px] font-bold bg-fuchsia-500/15 text-fuchsia-200 border border-fuchsia-500/40" title="${escapeHtml(`Linked SS-${ssGrp} superset timer shared with ${ssPartners.join(', ')}${e.supersetCombinedTonnage ? ` · Combined SS-${ssGrp}: ${e.supersetCombinedTonnage.toLocaleString()} kg` : ''}`)}">⛓ SS-${ssGrp} · Linked ⏱ ${formatShortDuration(e.durationSecs)}</span>`
-                    : ((e.durationSecs && e.durationSecs > 0)
-                        ? ` <span class="px-1 py-0.5 rounded font-mono text-[11px] font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/35" title="Logged exercise stopwatch duration">⏱ ${formatShortDuration(e.durationSecs)}</span>`
-                        : '');
-                  const limBadge = (e.limiter && e.limiter !== 'Standard')
-                    ? ` <span class="px-1 py-0.5 rounded font-mono text-[11px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/35">${escapeHtml(e.limiter)}</span>`
-                    : '';
-                  const warmupTxt = formatWarmupSetsSummary(e.warmupSets);
-                  const warmupSubHtml = warmupTxt
-                    ? `<div class="pl-3 text-[11px] font-mono text-orange-300/80">🔥 Warm-up: ${escapeHtml(warmupTxt)} <span class="text-slate-500">(excl. vol/density)</span></div>`
-                    : '';
-                  return `<div class="text-[11px]"><span class="font-mono font-bold text-slate-400">[${e.tier}]</span> <span class="text-slate-200 font-semibold">${escapeHtml(e.exercise)}</span>${liftPrBadge} <span class="font-mono text-slate-400">${summary}</span>${limBadge}${ssBadge}${durBadge}${diceTag}${partial}${e.notes ? ` <span class="text-slate-400 italic">— ${escapeHtml(e.notes)}</span>` : ''}${warmupSubHtml}</div>`;
-                }).join('')}
-                ${s.notes ? `<div class="text-[11px] text-amber-300/90 italic pt-0.5">“${escapeHtml(s.notes)}”</div>` : ''}
-              </td>
-              <td class="py-3 px-3 whitespace-nowrap font-mono font-bold text-sky-300">${(s.totalTonnage || 0).toLocaleString()} kg</td>
-              <td class="py-3 px-3 whitespace-nowrap font-mono text-cyan-300">${(s.density || 0).toFixed(1)} kg/min<div class="text-[11px] text-slate-400">${s.durationMin || 0} min</div></td>
-              <td class="py-3 pl-3 text-right whitespace-nowrap">
-                <div class="inline-flex items-center gap-1.5">
-                  <button type="button" data-id="${escapeHtml(s.id)}" onclick="event.stopPropagation(); openSessionDetailModal(this.dataset.id)" class="px-2.5 py-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-200 border border-sky-500/35 text-[11px] font-bold transition">View</button> <button type="button" data-id="${escapeHtml(s.id)}" onclick="event.stopPropagation(); openEditHistoryModal(this.dataset.id)" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-amber-500/20 text-slate-200 hover:text-amber-200 border border-slate-700 hover:border-amber-500/40 text-[11px] font-semibold transition">Edit</button>
-                  <button type="button" data-id="${escapeHtml(s.id)}" onclick="event.stopPropagation(); deleteHistoryEntry(this.dataset.id)" class="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 text-[11px] transition">Delete</button>
-                </div>
-              </td>
-            </tr>
-          `;
-          }).join('')
-        : `<tr><td colspan="5" class="py-6 text-center text-xs text-slate-400">No logged sessions found.</td></tr>`;
+              `;
+            }).join('')
+          : `<div class="p-6 rounded-xl bg-slate-950/70 border border-slate-800 text-center text-xs text-slate-400">No logged sessions found.</div>`;
+      }
     }
 
     let activeSessionDetailId = null;
