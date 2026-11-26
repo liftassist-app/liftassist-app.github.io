@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gg-powerlifting-pwa-v7';
+const CACHE_NAME = 'gg-powerlifting-pwa-v8';
 const CORE_ASSETS = [
   './',
   './index.html',

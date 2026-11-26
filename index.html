@@ -276,6 +276,7 @@
     html[data-theme="dark"] .bg-amber-500\/5 { background-color: rgba(76, 209, 232, 0.07); }
     html[data-theme="dark"] .hover\:bg-amber-500\/20:hover { background-color: rgba(76, 209, 232, 0.22); }
     html[data-theme="dark"] .hover\:bg-amber-500\/25:hover { background-color: rgba(76, 209, 232, 0.26); }
+    html[data-theme="dark"] .hover\:bg-amber-500\/30:hover { background-color: rgba(76, 209, 232, 0.30); }
     html[data-theme="dark"] .hover\:bg-amber-500\/35:hover { background-color: rgba(76, 209, 232, 0.34); }
     html[data-theme="dark"] .text-amber-400,
     html[data-theme="dark"] .text-amber-400\/90,
@@ -472,6 +473,7 @@
     html[data-theme="light"] .bg-amber-500\/5 { background-color: rgba(17, 111, 148, 0.05); }
     html[data-theme="light"] .hover\:bg-amber-500\/20:hover { background-color: rgba(17, 111, 148, 0.18); }
     html[data-theme="light"] .hover\:bg-amber-500\/25:hover { background-color: rgba(17, 111, 148, 0.22); }
+    html[data-theme="light"] .hover\:bg-amber-500\/30:hover { background-color: rgba(17, 111, 148, 0.25); }
     html[data-theme="light"] .hover\:bg-amber-500\/35:hover { background-color: rgba(17, 111, 148, 0.28); }
     html[data-theme="light"] .text-amber-400,
     html[data-theme="light"] .text-amber-400\/90,
@@ -624,6 +626,7 @@
     html[data-theme="light"] .bg-purple-500\/15 { background-color: rgba(106, 63, 181, 0.11); }
     html[data-theme="light"] .bg-purple-500\/10 { background-color: rgba(106, 63, 181, 0.08); }
     html[data-theme="light"] .hover\:bg-purple-500\/20:hover { background-color: rgba(106, 63, 181, 0.18); }
+    html[data-theme="light"] .hover\:bg-purple-500\/25:hover { background-color: rgba(106, 63, 181, 0.22); }
     html[data-theme="light"] .hover\:bg-purple-500\/35:hover { background-color: rgba(106, 63, 181, 0.26); }
     html[data-theme="light"] .text-purple-400,
     html[data-theme="light"] .text-purple-300,
@@ -885,13 +888,19 @@
           </div>
 
           <!-- 1-Tap Collapsible Rest Presets & Auto-Rest Panel -->
-          <div id="rest-presets-panel" class="hidden pt-2 border-t border-slate-800/80">
+          <div id="rest-presets-panel" class="hidden pt-2 border-t border-slate-800/80 space-y-2">
             <div class="flex flex-wrap items-center gap-1.5">
               <button type="button" id="auto-rest-toggle-btn" onclick="toggleAutoRest()" class="px-3 min-h-[44px] sm:min-h-[36px] rounded-lg text-xs font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/25 transition" title="Automatically launch GG RM or VDS rest timer when checking off a set">
                 ⚡ Auto-Rest: ON
               </button>
-              <button type="button" id="test-bg-ping-btn" onclick="testBackgroundRestPing()" class="px-3 min-h-[44px] sm:min-h-[36px] rounded-lg text-xs font-mono font-semibold bg-slate-800 hover:bg-cyan-500/20 text-cyan-300 border border-slate-700 hover:border-cyan-500/40 transition" title="Start a 5-second test countdown, then switch tabs or apps to verify music-safe background sound pings">
-                🔔 Test Ping (5s)
+              <button type="button" id="bg-lockscreen-toggle-btn" onclick="toggleBgLockscreenPing()" class="px-3 min-h-[44px] sm:min-h-[36px] rounded-lg text-xs font-mono font-bold bg-slate-800 hover:bg-amber-500/20 text-slate-300 border border-slate-700 hover:border-amber-500/40 transition" title="ON: keeps audio session active in background & lockscreen (may pause Spotify/Apple Music while timer runs). OFF: Music-Safe mode.">
+                🔒 Lockscreen Ping: OFF
+              </button>
+              <button type="button" id="rest-notify-perm-btn" onclick="requestRestNotificationPermission()" class="px-3 min-h-[44px] sm:min-h-[36px] rounded-lg text-xs font-mono font-semibold bg-slate-800 hover:bg-sky-500/20 text-sky-300 border border-slate-700 hover:border-sky-500/40 transition" title="Enable OS notification alerts when the app is backgrounded or on lockscreen">
+                🔔 Alerts
+              </button>
+              <button type="button" id="test-bg-ping-btn" onclick="testBackgroundRestPing()" class="px-3 min-h-[44px] sm:min-h-[36px] rounded-lg text-xs font-mono font-semibold bg-slate-800 hover:bg-cyan-500/20 text-cyan-300 border border-slate-700 hover:border-cyan-500/40 transition" title="Start a 5-second test countdown, then switch apps or lock screen to verify background sound pings">
+                ▶ Test Ping (5s)
               </button>
               <button type="button" onclick="startRestTimer(210, 'T1 RM'); toggleRestPresetsPanel(false)" class="px-3 min-h-[44px] sm:min-h-[36px] rounded-lg text-xs font-mono font-semibold bg-slate-800 hover:bg-amber-500/20 text-amber-300 border border-slate-700 hover:border-amber-500/40 transition">T1 RM 3:30</button>
               <button type="button" onclick="startRestTimer(120, 'T1 VDS'); toggleRestPresetsPanel(false)" class="px-3 min-h-[44px] sm:min-h-[36px] rounded-lg text-xs font-mono font-semibold bg-slate-800 hover:bg-amber-500/20 text-amber-200 border border-slate-700 hover:border-amber-500/40 transition">T1 VDS 2:00</button>
@@ -899,6 +908,9 @@
               <button type="button" onclick="startRestTimer(90, 'T2 VDS'); toggleRestPresetsPanel(false)" class="px-3 min-h-[44px] sm:min-h-[36px] rounded-lg text-xs font-mono font-semibold bg-slate-800 hover:bg-sky-500/20 text-sky-200 border border-slate-700 hover:border-sky-500/40 transition">T2 VDS 1:30</button>
               <button type="button" onclick="startRestTimer(60, 'T3 MRS'); toggleRestPresetsPanel(false)" class="px-3 min-h-[44px] sm:min-h-[36px] rounded-lg text-xs font-mono font-semibold bg-slate-800 hover:bg-emerald-500/20 text-emerald-300 border border-slate-700 hover:border-emerald-500/40 transition">T3 MRS 1:00</button>
             </div>
+            <p id="bg-lockscreen-hint" class="text-[11px] text-slate-400 leading-snug">
+              Tip: Turn <strong class="text-slate-200">Lockscreen Ping ON</strong> if your phone silences web audio in the background/lockscreen (uses an active audio session; may pause phone music while resting).
+            </p>
           </div>
         </div>
       </div>
@@ -1387,7 +1399,14 @@
           </div>
           <span id="analytics-sec-chev-vectors" class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-slate-300 border border-slate-700 shrink-0">Show ▾</span>
         </button>
-        <div id="analytics-sec-body-vectors" class="hidden px-4 sm:px-5 pb-4 sm:pb-5 pt-3 border-t border-slate-800/80">
+        <div id="analytics-sec-body-vectors" class="hidden px-4 sm:px-5 pb-4 sm:pb-5 pt-3 border-t border-slate-800/80 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span id="vectors-granularity-caption" class="text-[11px] font-mono text-slate-400">Granularity: Daily (per session)</span>
+            <div class="inline-flex p-0.5 rounded-xl bg-slate-950 border border-slate-800" role="group" aria-label="4-Vector chart granularity">
+              <button type="button" id="vectors-granularity-daily" onclick="setAnalyticsVectorGranularity('daily')" aria-pressed="true" class="px-3 min-h-[34px] sm:min-h-[30px] rounded-lg font-mono text-xs font-bold bg-amber-500 text-slate-950 transition">Daily</button>
+              <button type="button" id="vectors-granularity-weekly" onclick="setAnalyticsVectorGranularity('weekly')" aria-pressed="false" class="px-3 min-h-[34px] sm:min-h-[30px] rounded-lg font-mono text-xs font-bold text-slate-400 hover:text-white transition">Weekly</button>
+            </div>
+          </div>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div class="bg-slate-950/75 border border-slate-800 rounded-xl p-4">
           <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
@@ -1682,7 +1701,7 @@
         </button>
         <div id="analytics-sec-body-history" class="hidden px-4 sm:px-5 pb-4 sm:pb-5 pt-3 border-t border-slate-800/80 space-y-3.5">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
-            <input type="text" id="history-search-input" oninput="renderHistoryTable()" placeholder="Search lift, day, PR, or notes..." class="bg-slate-950 border border-slate-700 rounded-xl px-3 min-h-[38px] text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-amber-500 w-full sm:w-64" />
+            <input type="text" id="history-search-input" name="gg-history-filter" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" oninput="renderHistoryTable()" placeholder="Search lift, day, PR, or notes..." class="bg-slate-950 border border-slate-700 rounded-xl px-3 min-h-[38px] text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-amber-500 w-full sm:w-64" />
             <button type="button" onclick="restoreSampleHistory()" class="px-3 min-h-[38px] rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition self-start sm:self-auto">
               ↻ Load Sample Data
             </button>
@@ -2029,6 +2048,28 @@
        ===================================================================== -->
 
   <!-- Custom Exercise Manager & Creator Modal -->
+  <!-- Searchable Exercise Picker Modal (Active Workout) -->
+  <div id="exercise-picker-modal" role="dialog" aria-modal="true" aria-labelledby="exercise-picker-title" onclick="if (event.target === this) closeExercisePickerModal()" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div tabindex="-1" class="bg-slate-900 border border-slate-700 rounded-2xl max-w-xl w-full max-h-[86vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="px-4 sm:px-5 py-3.5 border-b border-slate-800 flex items-center justify-between gap-2">
+        <div class="min-w-0">
+          <h3 id="exercise-picker-title" class="text-sm sm:text-base font-extrabold text-white">Select Exercise</h3>
+          <p id="exercise-picker-subtitle" class="text-[11px] text-slate-400 truncate">Search by movement name, category, or target muscle.</p>
+        </div>
+        <button type="button" onclick="closeExercisePickerModal()" aria-label="Close Exercise Picker" class="text-slate-400 hover:text-white text-lg px-2 min-h-[40px] min-w-[40px] rounded-lg shrink-0">✕</button>
+      </div>
+      <div class="px-4 sm:px-5 py-3 border-b border-slate-800 bg-slate-950/70 space-y-2.5">
+        <input type="text" id="exercise-picker-search" name="gg-exercise-picker-search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" oninput="renderExercisePickerList()" placeholder="Search exercise or muscle (e.g. tempo, squat, lats, dips)..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 min-h-[42px] text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:border-amber-500" />
+        <div id="exercise-picker-cats" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5"></div>
+      </div>
+      <div id="exercise-picker-list" class="p-3 sm:p-4 overflow-y-auto flex-1 space-y-3"></div>
+      <div class="px-4 sm:px-5 py-3 border-t border-slate-800 bg-slate-950/70 flex items-center justify-between gap-2">
+        <button type="button" onclick="openCustomExerciseFromPicker()" class="px-3 min-h-[38px] rounded-xl text-xs font-bold bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/35 transition">+ Create Custom Exercise</button>
+        <button type="button" onclick="closeExercisePickerModal()" class="px-3 min-h-[38px] rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <div id="custom-exercise-modal" role="dialog" aria-modal="true" aria-labelledby="custom-modal-title" onclick="if (event.target === this) closeCustomModal()" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div tabindex="-1" class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
       <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
@@ -2868,6 +2909,7 @@
       },
       notesFilter: 'all',
       analyticsTimeframe: 'all',
+      analyticsVectorGranularity: 'daily',
       analyticsLiftFilter: 'ALL_T1',
       analyticsIntensityMetric: 'e1rm',
       activeCycle: null,
@@ -2879,7 +2921,10 @@
         durationWeeks: 12,
         targetDate: null,
         horizonWeeks: 12
-      }
+      },
+      _dataUpdatedAt: 0,
+      _deletedHistoryIds: {},
+      _deletedBodyweightDates: {}
     };
 
     function createDefaultDiceGainzState() {
@@ -5373,16 +5418,44 @@
     /* =========================================================================
        6. PERSISTENCE (LOAD / SAVE WITH SAFE MIGRATION)
        ========================================================================= */
+    function normalizeTombstoneMap(raw) {
+      const out = {};
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
+      const entries = Object.entries(raw)
+        .filter(([k, v]) => typeof k === 'string' && k.trim() && Number.isFinite(Number(v)) && Number(v) > 0)
+        .sort((a, b) => Number(b[1]) - Number(a[1]))
+        .slice(0, 250);
+      entries.forEach(([k, v]) => { out[k.trim()] = Math.trunc(Number(v)); });
+      return out;
+    }
+
+    function recordHistoryTombstone(id) {
+      if (!id) return;
+      if (!appState._deletedHistoryIds || typeof appState._deletedHistoryIds !== 'object') appState._deletedHistoryIds = {};
+      appState._deletedHistoryIds[String(id)] = Date.now();
+      appState._deletedHistoryIds = normalizeTombstoneMap(appState._deletedHistoryIds);
+    }
+
+    function clearHistoryTombstone(id) {
+      if (!id || !appState._deletedHistoryIds) return;
+      delete appState._deletedHistoryIds[String(id)];
+    }
+
     function saveState(opts = {}) {
       try {
         if (!opts || !opts.keepSampleFlag) {
           appState._isDefaultSample = false;
         }
+        const isUiOnly = Boolean(opts && opts.uiOnly);
         if (!opts || !opts.preserveTimestamp) {
-          appState._updatedAt = Date.now();
+          const now = Date.now();
+          appState._updatedAt = now;
+          if (!isUiOnly) {
+            appState._dataUpdatedAt = now;
+          }
         }
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-        if ((!opts || !opts.skipCloudPush) && typeof scheduleCloudSyncPush === 'function') {
+        if (!isUiOnly && (!opts || !opts.skipCloudPush) && typeof scheduleCloudSyncPush === 'function') {
           scheduleCloudSyncPush();
         }
       } catch (err) {
@@ -5561,6 +5634,7 @@
       appState.roadmapUi = normalizeRoadmapUi(null);
       appState.notesFilter = 'all';
       appState.analyticsTimeframe = 'all';
+      appState.analyticsVectorGranularity = 'daily';
       appState.analyticsLiftFilter = 'ALL_T1';
       appState.analyticsIntensityMetric = 'e1rm';
       appState.activeCycle = null;
@@ -5568,6 +5642,9 @@
       appState.bodyweightLog = [];
       appState.bodyweightGoal = normalizeBodyweightGoal(null);
       appState._updatedAt = 0;
+      appState._dataUpdatedAt = 0;
+      appState._deletedHistoryIds = {};
+      appState._deletedBodyweightDates = {};
       appState._ownerUid = null;
       appState._isDefaultSample = true;
     }
@@ -5601,6 +5678,7 @@
         appState.notesFilter = ['all', 'lift', 'session'].includes(parsed.notesFilter) ? parsed.notesFilter : 'all';
         const validTimeframes = ['all', 'currentMeso', 'currentMacro', 'weekly', 'monthly', 'last24', 'last12'];
         appState.analyticsTimeframe = validTimeframes.includes(parsed.analyticsTimeframe) ? parsed.analyticsTimeframe : 'all';
+        appState.analyticsVectorGranularity = parsed.analyticsVectorGranularity === 'weekly' ? 'weekly' : 'daily';
         appState.analyticsLiftFilter = (typeof parsed.analyticsLiftFilter === 'string' && parsed.analyticsLiftFilter.trim()) ? parsed.analyticsLiftFilter.trim() : 'ALL_T1';
         appState.analyticsIntensityMetric = parsed.analyticsIntensityMetric === 'load' ? 'load' : 'e1rm';
         appState.activeCycle = (parsed.activeCycle && typeof parsed.activeCycle === 'object') ? { ...parsed.activeCycle } : null;
@@ -5694,6 +5772,9 @@
           ? createSampleHistory()
           : parsed.history.map((s, sIdx) => normalizeHistoryEntry(s, sIdx)).filter(Boolean);
         appState._updatedAt = Number.isFinite(parsed._updatedAt) ? parsed._updatedAt : 0;
+        appState._dataUpdatedAt = Number.isFinite(parsed._dataUpdatedAt) ? parsed._dataUpdatedAt : appState._updatedAt;
+        appState._deletedHistoryIds = normalizeTombstoneMap(parsed._deletedHistoryIds);
+        appState._deletedBodyweightDates = normalizeTombstoneMap(parsed._deletedBodyweightDates);
         appState._ownerUid = (typeof parsed._ownerUid === 'string' && parsed._ownerUid.trim()) ? sanitizeSafeId(parsed._ownerUid, 'uid') : null;
         appState._isDefaultSample = parsed._isDefaultSample !== undefined ? Boolean(parsed._isDefaultSample) : wantsSampleFallback;
         appState.diceGainz = normalizeDiceGainzState(parsed.diceGainz);
@@ -5859,7 +5940,10 @@
     function getSilentKeepAliveWavUri() {
       if (cachedSilentWavUri) return cachedSilentWavUri;
       const sr = 8000;
-      const samples = new Float32Array(sr); // 1 second silent loop
+      const samples = new Float32Array(sr); // 1 second ultra-low inaudible sub-bass loop (avoids OS digital-silence kill)
+      for (let i = 0; i < sr; i++) {
+        samples[i] = Math.sin(2 * Math.PI * 24 * (i / sr)) * 0.0006;
+      }
       cachedSilentWavUri = buildMonoPcmWavDataUri(samples, sr);
       return cachedSilentWavUri;
     }
@@ -6002,12 +6086,12 @@
           const startAt = now + remainingNow;
           const nodes = [];
 
-          // Ultra-quiet ambient keep-alive keeps Web Audio hardware timeline active in background tabs without pausing music
+          // Ultra-quiet ambient keep-alive above digital-silence gate to keep Web Audio timeline awake in background tabs
           const keepOsc = audioCtx.createOscillator();
           const keepGain = audioCtx.createGain();
           keepOsc.type = 'sine';
-          keepOsc.frequency.setValueAtTime(1, now);
-          keepGain.gain.setValueAtTime(0.00001, now);
+          keepOsc.frequency.setValueAtTime(24, now);
+          keepGain.gain.setValueAtTime(0.0005, now);
           keepOsc.connect(keepGain);
           keepGain.connect(audioCtx.destination);
           keepOsc.start(now);
@@ -6132,12 +6216,63 @@
     }
 
     function isBgAudioKeepAliveEnabled() {
-      // Always Music-Safe: never play an HTML5 <audio> silent loop that would pause Spotify/Apple Music
-      return false;
+      return Boolean(appState.audioEnabled && appState.bgAudioLoopOptIn);
+    }
+
+    function toggleBgLockscreenPing() {
+      appState.bgAudioLoopOptIn = !Boolean(appState.bgAudioLoopOptIn);
+      if (appState.bgAudioLoopOptIn && !appState.audioEnabled) {
+        appState.audioEnabled = true;
+        updateAudioUI();
+      }
+      saveState({ uiOnly: true });
+      updateBgAlertUI();
+      if (restTimerState.running && !restTimerState.paused && restTimerState.endsAtMs > Date.now()) {
+        const remSecs = Math.max(0.2, (restTimerState.endsAtMs - Date.now()) / 1000);
+        if (isBgAudioKeepAliveEnabled()) {
+          cancelScheduledRestChime();
+          unlockMobileAudio(false);
+          startBackgroundKeepAlive();
+        } else {
+          stopBackgroundKeepAlive();
+          unlockMobileAudio(true);
+          scheduleBackgroundRestChime(remSecs, restTimerState.endsAtMs);
+        }
+      } else if (!appState.bgAudioLoopOptIn) {
+        stopBackgroundKeepAlive();
+      }
+      showToast(
+        appState.bgAudioLoopOptIn
+          ? 'Lockscreen Ping ON — active audio session keeps rest chime pinging when backgrounded/locked.'
+          : 'Lockscreen Ping OFF — switched back to Music-Safe mode.',
+        'info'
+      );
     }
 
     function startBackgroundKeepAlive() {
-      // Intentionally no-op: background pings use Music-Safe pre-scheduled Web Audio + Web Worker + OS Notification
+      if (!isBgAudioKeepAliveEnabled()) return;
+      try {
+        // 'playback' tells iOS 17+ & Android to keep the browser audio session alive when backgrounded/locked
+        setMobileAudioSessionType('playback');
+        ensureTimerAudioElements();
+        if (restKeepAliveAudioEl) {
+          restKeepAliveAudioEl.volume = 0.02;
+          const p = restKeepAliveAudioEl.play();
+          if (p && typeof p.catch === 'function') p.catch(() => {});
+        }
+        if (typeof navigator !== 'undefined' && navigator.mediaSession) {
+          try {
+            if (typeof MediaMetadata !== 'undefined') {
+              navigator.mediaSession.metadata = new MediaMetadata({
+                title: `${restLabel || 'Rest'} Timer Active`,
+                artist: 'Lift Assist',
+                album: 'Rest Countdown'
+              });
+            }
+            navigator.mediaSession.playbackState = 'playing';
+          } catch (_) {}
+        }
+      } catch (_) {}
     }
 
     function stopBackgroundKeepAlive() {
@@ -6145,6 +6280,9 @@
         if (restKeepAliveAudioEl && !restKeepAliveAudioEl.paused) {
           restKeepAliveAudioEl.pause();
           restKeepAliveAudioEl.currentTime = 0;
+        }
+        if (typeof navigator !== 'undefined' && navigator.mediaSession) {
+          try { navigator.mediaSession.playbackState = 'none'; } catch (_) {}
         }
       } catch (_) {}
     }
@@ -6170,7 +6308,32 @@
     }
 
     function updateBgAlertUI() {
-      // Top-right bell icon is the single unified alert control; all alerts are always Music-Safe
+      const btn = document.getElementById('bg-lockscreen-toggle-btn');
+      if (btn) {
+        const on = Boolean(appState.bgAudioLoopOptIn);
+        btn.textContent = on ? '🔒 Lockscreen Ping: ON' : '🔒 Lockscreen Ping: OFF';
+        btn.className = on
+          ? 'px-3 min-h-[44px] sm:min-h-[36px] rounded-lg text-xs font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/45 hover:bg-amber-500/30 transition'
+          : 'px-3 min-h-[44px] sm:min-h-[36px] rounded-lg text-xs font-mono font-bold bg-slate-800 hover:bg-amber-500/20 text-slate-300 border border-slate-700 hover:border-amber-500/40 transition';
+      }
+      const nBtn = document.getElementById('rest-notify-perm-btn');
+      if (nBtn) {
+        if (typeof Notification === 'undefined') {
+          nBtn.classList.add('hidden');
+        } else {
+          nBtn.classList.remove('hidden');
+          if (Notification.permission === 'granted') {
+            nBtn.textContent = '🔔 Alerts: ON';
+            nBtn.className = 'px-3 min-h-[44px] sm:min-h-[36px] rounded-lg text-xs font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/25 transition';
+          } else if (Notification.permission === 'denied') {
+            nBtn.textContent = '🔕 Alerts: Blocked';
+            nBtn.className = 'px-3 min-h-[44px] sm:min-h-[36px] rounded-lg text-xs font-mono font-semibold bg-rose-500/15 text-rose-300 border border-rose-500/35 transition';
+          } else {
+            nBtn.textContent = '🔔 Enable Alerts';
+            nBtn.className = 'px-3 min-h-[44px] sm:min-h-[36px] rounded-lg text-xs font-mono font-semibold bg-slate-800 hover:bg-sky-500/20 text-sky-300 border border-slate-700 hover:border-sky-500/40 transition';
+          }
+        }
+      }
     }
 
     function testBackgroundRestPing() {
@@ -7491,12 +7654,10 @@
       const box = document.getElementById('rest-countdown-box');
       if (box) box.classList.add('timer-alert-glow');
 
-      const nowMs = Date.now();
       const preScheduledAlreadyPlayed = Boolean(
-        completedEndsAtMs > 0 && (
-          (scheduledRestChimeFiredForEndsAt > 0 && Math.abs(scheduledRestChimeFiredForEndsAt - completedEndsAtMs) <= 2000) ||
-          (scheduledRestChimeTargetMs > 0 && Math.abs(scheduledRestChimeTargetMs - completedEndsAtMs) <= 2000 && nowMs >= scheduledRestChimeTargetMs - 80 && nowMs <= scheduledRestChimeTargetMs + 1500)
-        )
+        completedEndsAtMs > 0 &&
+        scheduledRestChimeFiredForEndsAt > 0 &&
+        Math.abs(scheduledRestChimeFiredForEndsAt - completedEndsAtMs) <= 2000
       );
 
       if (!silentStale) {
@@ -8626,9 +8787,10 @@
               <div class="space-y-2 flex-1 min-w-0">
                 <div class="flex items-center gap-2 min-w-0">
                   <span class="px-2 py-0.5 rounded-md text-xs font-mono font-bold border shrink-0 ${tierColors.badge}">T3 MRS</span>
-                  <select onchange="changeExerciseName(${exIdx}, this.value)" class="bg-slate-950 border border-slate-700 rounded-xl px-2.5 min-h-[44px] sm:min-h-[38px] text-sm font-bold text-white focus:outline-none focus:border-emerald-500 flex-1 min-w-0 sm:flex-initial sm:max-w-xs">
-                    ${buildExerciseSelectOptionsHtml(ex.exercise)}
-                  </select>
+                  <button type="button" onclick="openExercisePickerModal(${exIdx})" aria-label="Select exercise: ${escapeHtml(ex.exercise)}" class="bg-slate-950 border border-slate-700 hover:border-emerald-500/50 rounded-xl px-3 min-h-[44px] sm:min-h-[38px] text-sm font-bold text-white focus:outline-none focus:border-emerald-500 flex-1 min-w-0 sm:flex-initial sm:max-w-xs inline-flex items-center justify-between gap-2 text-left transition" title="Tap to search &amp; switch exercise">
+                    <span class="truncate">${escapeHtml(ex.exercise)}</span>
+                    <span class="text-xs text-slate-400 shrink-0" aria-hidden="true">▾</span>
+                  </button>
                 </div>
                 <div class="flex flex-wrap items-center gap-1.5">
                   ${renderLastSessionBenchmarkHtml(lastEntry, 'T3', exIdx, ex.exercise)}
@@ -9001,9 +9163,10 @@
             <div class="space-y-2 flex-1 min-w-0">
               <div class="flex items-center gap-2 min-w-0">
                 <span class="px-2 py-0.5 rounded-md text-xs font-mono font-bold border shrink-0 ${tierColors.badge}">${ex.tier}</span>
-                <select onchange="changeExerciseName(${exIdx}, this.value)" class="bg-slate-950 border border-slate-700 rounded-xl px-2.5 min-h-[44px] sm:min-h-[38px] text-sm font-bold text-white focus:outline-none focus:border-amber-500 flex-1 min-w-0 sm:flex-initial sm:max-w-xs">
-                  ${buildExerciseSelectOptionsHtml(ex.exercise)}
-                </select>
+                <button type="button" onclick="openExercisePickerModal(${exIdx})" aria-label="Select exercise: ${escapeHtml(ex.exercise)}" class="bg-slate-950 border border-slate-700 hover:border-amber-500/50 rounded-xl px-3 min-h-[44px] sm:min-h-[38px] text-sm font-bold text-white focus:outline-none focus:border-amber-500 flex-1 min-w-0 sm:flex-initial sm:max-w-xs inline-flex items-center justify-between gap-2 text-left transition" title="Tap to search &amp; switch exercise">
+                  <span class="truncate">${escapeHtml(ex.exercise)}</span>
+                  <span class="text-xs text-slate-400 shrink-0" aria-hidden="true">▾</span>
+                </button>
               </div>
               <div class="flex flex-wrap items-center gap-1.5">
                 ${renderLastSessionBenchmarkHtml(lastEntry, ex.tier, exIdx, ex.exercise)}
@@ -9371,6 +9534,137 @@
         const next = Math.max(10, Math.min(150, toIntOr(ex.goalReps, 45) + delta));
         updateExerciseField(exIdx, 'goalReps', next);
       }
+    }
+
+    let activeExercisePickerIdx = -1;
+    let activeExercisePickerCategory = 'ALL';
+
+    function openExercisePickerModal(exIdx) {
+      const ex = appState.split[appState.activeDayIndex]?.exercises[exIdx];
+      if (!ex) return;
+      activeExercisePickerIdx = exIdx;
+      activeExercisePickerCategory = 'ALL';
+      const titleEl = document.getElementById('exercise-picker-title');
+      const subEl = document.getElementById('exercise-picker-subtitle');
+      const searchEl = document.getElementById('exercise-picker-search');
+      if (titleEl) titleEl.textContent = `Select ${ex.tier} Exercise`;
+      if (subEl) subEl.textContent = `Current: ${ex.exercise} — search by name, category, or target muscle.`;
+      if (searchEl) searchEl.value = '';
+      renderExercisePickerList();
+      document.getElementById('exercise-picker-modal')?.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        if (searchEl && typeof searchEl.focus === 'function') searchEl.focus();
+      });
+    }
+
+    function closeExercisePickerModal() {
+      activeExercisePickerIdx = -1;
+      document.getElementById('exercise-picker-modal')?.classList.add('hidden');
+    }
+
+    function setExercisePickerCategory(cat) {
+      activeExercisePickerCategory = cat || 'ALL';
+      renderExercisePickerList();
+    }
+
+    function selectExerciseFromPicker(name) {
+      const idx = activeExercisePickerIdx;
+      closeExercisePickerModal();
+      if (idx >= 0 && name) {
+        changeExerciseName(idx, name);
+      }
+    }
+
+    function openCustomExerciseFromPicker() {
+      const q = (document.getElementById('exercise-picker-search')?.value || '').trim();
+      closeExercisePickerModal();
+      openManageCustomModal();
+      if (q) {
+        const nameInput = document.getElementById('custom-ex-name');
+        if (nameInput) nameInput.value = q;
+      }
+    }
+
+    function renderExercisePickerList() {
+      const catsEl = document.getElementById('exercise-picker-cats');
+      const listEl = document.getElementById('exercise-picker-list');
+      if (!listEl) return;
+      const ex = appState.split[appState.activeDayIndex]?.exercises[activeExercisePickerIdx];
+      const currentName = ex ? canonicalizeExerciseName(ex.exercise) : '';
+      const q = (document.getElementById('exercise-picker-search')?.value || '').trim().toLowerCase();
+      const allEx = getAllExercises();
+      const allCats = Array.from(new Set(allEx.map(item => item.category || 'Other')));
+
+      if (catsEl) {
+        const pills = [{ key: 'ALL', label: 'All' }, ...allCats.map(c => ({ key: c, label: c }))];
+        catsEl.innerHTML = pills.map(p => {
+          const active = activeExercisePickerCategory === p.key;
+          return `<button type="button" data-cat="${escapeHtml(p.key)}" onclick="setExercisePickerCategory(this.dataset.cat)" class="px-2.5 py-1 rounded-lg font-mono text-[11px] font-bold border whitespace-nowrap shrink-0 transition ${
+            active
+              ? 'bg-amber-500 text-slate-950 border-amber-400'
+              : 'bg-slate-900 text-slate-300 border-slate-700 hover:text-white hover:border-slate-500'
+          }">${escapeHtml(p.label)}</button>`;
+        }).join('');
+      }
+
+      const filtered = allEx.filter(item => {
+        if (activeExercisePickerCategory !== 'ALL' && (item.category || 'Other') !== activeExercisePickerCategory) return false;
+        if (!q) return true;
+        const blob = `${item.name || ''} ${item.category || ''} ${(item.primaryMuscles || []).join(' ')} ${(item.secondaryMuscles || []).join(' ')} ${item.loadType || ''}`.toLowerCase();
+        return q.split(/\s+/).every(tok => blob.includes(tok));
+      });
+
+      if (!filtered.length) {
+        listEl.innerHTML = `
+          <div class="p-6 rounded-xl bg-slate-950/70 border border-slate-800 text-center space-y-2.5">
+            <div class="text-xs text-slate-400">No exercises matched “${escapeHtml(q)}”.</div>
+            <button type="button" onclick="openCustomExerciseFromPicker()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/35 transition">+ Create “${escapeHtml(q || 'Custom Exercise')}”</button>
+          </div>
+        `;
+        return;
+      }
+
+      const grouped = {};
+      filtered.forEach(item => {
+        const cat = item.category || 'Other';
+        if (!grouped[cat]) grouped[cat] = [];
+        grouped[cat].push(item);
+      });
+
+      listEl.innerHTML = Object.entries(grouped).map(([cat, items]) => `
+        <div class="space-y-1.5">
+          <div class="px-1 text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400">${escapeHtml(cat)} <span class="text-slate-500">(${items.length})</span></div>
+          <div class="space-y-1">
+            ${items.map(item => {
+              const isCurrent = canonicalizeExerciseName(item.name) === currentName;
+              const primTxt = (item.primaryMuscles || []).slice(0, 3).join(', ');
+              const loadTag = item.loadType === 'assisted'
+                ? '<span class="px-1.5 py-0.5 rounded font-mono text-[10px] font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/35 shrink-0">Assisted</span>'
+                : (item.loadType === 'bodyweight'
+                    ? '<span class="px-1.5 py-0.5 rounded font-mono text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/35 shrink-0">BW</span>'
+                    : (item.loadType === 'weightedBw'
+                        ? '<span class="px-1.5 py-0.5 rounded font-mono text-[10px] font-bold bg-sky-500/15 text-sky-300 border border-sky-500/35 shrink-0">BW+kg</span>'
+                        : ''));
+              const customTag = item.isCustom
+                ? '<span class="px-1.5 py-0.5 rounded font-mono text-[10px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/35 shrink-0">Custom</span>'
+                : '';
+              return `
+                <button type="button" data-ex-name="${escapeHtml(item.name)}" onclick="selectExerciseFromPicker(this.dataset.exName)" class="w-full text-left px-3 py-2.5 rounded-xl border transition flex items-center justify-between gap-2 ${
+                  isCurrent
+                    ? 'bg-amber-500/15 border-amber-500/50 text-white'
+                    : 'bg-slate-950/70 hover:bg-slate-800 border-slate-800 hover:border-slate-600 text-slate-200'
+                }">
+                  <div class="min-w-0">
+                    <div class="text-xs sm:text-sm font-bold ${isCurrent ? 'text-amber-300' : 'text-white'} truncate">${isCurrent ? '✓ ' : ''}${escapeHtml(item.name)}</div>
+                    ${primTxt ? `<div class="text-[11px] text-slate-400 truncate">${escapeHtml(primTxt)}</div>` : ''}
+                  </div>
+                  <div class="flex items-center gap-1 shrink-0">${loadTag}${customTag}</div>
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `).join('');
     }
 
     function changeExerciseName(exIdx, newName) {
@@ -10845,7 +11139,10 @@
       resetSessionTimer();
       stopRestTimer();
       syncRoadmapBaseLoadsFromTrainingData(false);
-      saveState();
+      saveState({ skipCloudPush: true });
+      if (typeof flushCloudSyncNow === 'function') {
+        flushCloudSyncNow();
+      }
       updatePhaseBadgesUI();
       renderLogger();
       if (appState.activeTab === 'roadmap') renderRoadmap();
@@ -11014,6 +11311,10 @@
       const snap = lastSessionUndoSnapshot;
       lastSessionUndoSnapshot = null;
       appState.split = snap.split;
+      const undoneEntries = (appState.history || []).slice(snap.historyLen);
+      undoneEntries.forEach(item => {
+        if (item && item.id) recordHistoryTombstone(item.id);
+      });
       appState.history = appState.history.slice(0, snap.historyLen);
       if (snap.diceGainz) appState.diceGainz = snap.diceGainz;
       if (snap.baseLoads) appState.baseLoads = snap.baseLoads;
@@ -11037,7 +11338,10 @@
       syncAllExerciseStopwatchDom();
       saveActiveTimersState();
       syncTimerDockVisibility();
-      saveState();
+      saveState({ skipCloudPush: true });
+      if (typeof flushCloudSyncNow === 'function') {
+        flushCloudSyncNow();
+      }
       renderLogger();
       showToast('Undid last session log — sets, timers & targets restored.', 'info');
     }
@@ -11087,7 +11391,10 @@
         (appState.roadmapWeeks || []).forEach(wk => { wk.mesoPhase = appState.phase; });
       }
       syncRoadmapBaseLoadsFromTrainingData(false);
-      saveState();
+      saveState({ skipCloudPush: true });
+      if (typeof flushCloudSyncNow === 'function') {
+        flushCloudSyncNow();
+      }
       updatePhaseBadgesUI();
       renderRoadmap();
       renderLogger();
@@ -13336,7 +13643,7 @@
       if (which === 'library') appState.roadmapUi.libraryOpen = !appState.roadmapUi.libraryOpen;
       else if (which === 'setup') appState.roadmapUi.setupOpen = !appState.roadmapUi.setupOpen;
       else return;
-      saveState();
+      saveState({ uiOnly: true });
       applyRoadmapTopDrawersUI();
     }
 
@@ -13369,7 +13676,7 @@
       if (!mesoId) return;
       appState.roadmapUi = normalizeRoadmapUi(appState.roadmapUi);
       appState.roadmapUi.collapsedMesos[mesoId] = !appState.roadmapUi.collapsedMesos[mesoId];
-      saveState();
+      saveState({ uiOnly: true });
       renderRoadmap();
     }
 
@@ -13385,7 +13692,7 @@
       const activeWk = getActiveRoadmapProgressInfo().week;
       const cur = isRoadmapWeekExpanded(weekNum, activeWk);
       appState.roadmapUi.expandedWeeks[String(weekNum)] = !cur;
-      saveState();
+      saveState({ uiOnly: true });
       renderRoadmap();
     }
 
@@ -13407,7 +13714,7 @@
         mesoGroups.forEach(g => { appState.roadmapUi.collapsedMesos[g.mesoId] = false; });
         (appState.roadmapWeeks || []).forEach(wk => { appState.roadmapUi.expandedWeeks[String(wk.week)] = true; });
       }
-      saveState();
+      saveState({ uiOnly: true });
       renderRoadmap();
     }
 
@@ -14303,13 +14610,53 @@
       renderAnalytics();
     }
 
+    function setAnalyticsVectorGranularity(mode) {
+      const clean = mode === 'weekly' ? 'weekly' : 'daily';
+      appState.analyticsVectorGranularity = clean;
+      // If user explicitly picks Daily while global timeframe was 'weekly', switch timeframe to 'all' so Daily takes effect
+      if (clean === 'daily' && appState.analyticsTimeframe === 'weekly') {
+        appState.analyticsTimeframe = 'all';
+        const tfEl = document.getElementById('analytics-timeframe-filter');
+        if (tfEl) tfEl.value = 'all';
+      }
+      saveState({ uiOnly: true });
+      renderAnalytics();
+    }
+
+    function updateVectorsGranularityUI(tf) {
+      const isWeekly = tf === 'weekly' || (tf !== 'monthly' && appState.analyticsVectorGranularity === 'weekly');
+      const dBtn = document.getElementById('vectors-granularity-daily');
+      const wBtn = document.getElementById('vectors-granularity-weekly');
+      const cap = document.getElementById('vectors-granularity-caption');
+      if (dBtn) {
+        dBtn.setAttribute('aria-pressed', !isWeekly ? 'true' : 'false');
+        dBtn.className = !isWeekly
+          ? 'px-3 min-h-[34px] sm:min-h-[30px] rounded-lg font-mono text-xs font-bold bg-amber-500 text-slate-950 transition'
+          : 'px-3 min-h-[34px] sm:min-h-[30px] rounded-lg font-mono text-xs font-bold text-slate-400 hover:text-white transition';
+      }
+      if (wBtn) {
+        wBtn.setAttribute('aria-pressed', isWeekly ? 'true' : 'false');
+        wBtn.className = isWeekly
+          ? 'px-3 min-h-[34px] sm:min-h-[30px] rounded-lg font-mono text-xs font-bold bg-amber-500 text-slate-950 transition'
+          : 'px-3 min-h-[34px] sm:min-h-[30px] rounded-lg font-mono text-xs font-bold text-slate-400 hover:text-white transition';
+      }
+      if (cap) {
+        cap.textContent = tf === 'monthly'
+          ? 'Granularity: Monthly Rollup (from timeline filter)'
+          : (isWeekly
+              ? 'Granularity: Weekly Rollup (ISO week peak e1RM, summed tonnage & weighted density)'
+              : 'Granularity: Daily (per session)');
+      }
+    }
+
     function setAnalyticsTimeframe(tf) {
       const valid = ['all', 'currentMeso', 'currentMacro', 'weekly', 'monthly', 'last24', 'last12'];
       const clean = valid.includes(tf) ? tf : 'all';
       appState.analyticsTimeframe = clean;
+      if (clean === 'weekly') appState.analyticsVectorGranularity = 'weekly';
       const el = document.getElementById('analytics-timeframe-filter');
       if (el && el.value !== clean) el.value = clean;
-      saveState();
+      saveState({ uiOnly: true });
       renderAnalytics();
     }
 
@@ -14347,18 +14694,19 @@
     }
 
     function getFilteredHistory() {
-      const tf = document.getElementById('analytics-timeframe-filter')?.value || appState.analyticsTimeframe || 'all';
+      const tf = appState.analyticsTimeframe || 'all';
       const scoped = getScopedRawHistory(tf);
+      const useWeeklyRollup = tf === 'weekly' || (tf !== 'monthly' && appState.analyticsVectorGranularity === 'weekly');
 
-      if (tf === 'weekly' || tf === 'monthly') {
+      if (useWeeklyRollup || tf === 'monthly') {
         const buckets = {};
         const order = [];
         scoped.forEach(sess => {
-          const key = tf === 'weekly' ? getISOWeekKey(sess.date) : (sess.date || '').slice(0, 7);
+          const key = useWeeklyRollup ? getISOWeekKey(sess.date) : (sess.date || '').slice(0, 7);
           if (!buckets[key]) {
             buckets[key] = {
               date: key,
-              label: tf === 'weekly' ? `Wk ${key}` : key,
+              label: useWeeklyRollup ? `Wk ${key}` : key,
               sessionCount: 0,
               totalTonnage: 0,
               totalReps: 0,
@@ -14432,7 +14780,8 @@
 
     function renderAnalytics() {
       const tfEl = document.getElementById('analytics-timeframe-filter');
-      const tf = (tfEl && tfEl.value) || appState.analyticsTimeframe || 'all';
+      const validTfs = ['all', 'currentMeso', 'currentMacro', 'weekly', 'monthly', 'last24', 'last12'];
+      const tf = validTfs.includes(appState.analyticsTimeframe) ? appState.analyticsTimeframe : 'all';
       if (tfEl && tfEl.value !== tf) tfEl.value = tf;
       const isCycleScope = (tf === 'currentMeso' || tf === 'currentMacro');
       const scopedSessions = getActiveAnalyticsScopedHistory();
@@ -14442,9 +14791,11 @@
 
       renderCycleScopeBanner(tf, scopedSessions);
 
-      const totalSessions = (tf === 'weekly' || tf === 'monthly')
+      const useWeeklyRollup = tf === 'weekly' || (tf !== 'monthly' && appState.analyticsVectorGranularity === 'weekly');
+      const totalSessions = (useWeeklyRollup || tf === 'monthly')
         ? history.reduce((s, b) => s + (b.sessionCount || 1), 0)
         : history.length;
+      updateVectorsGranularityUI(tf);
       const totalTonnage = history.reduce((s, h) => s + (h.totalTonnage || 0), 0);
       const totalDuration = history.reduce((s, h) => s + (h.durationMin || 0), 0);
       const avgDensity = totalDuration > 0 ? (totalTonnage / totalDuration) : 0;
@@ -14917,7 +15268,11 @@
 
     function undoLastBodyweightDelete() {
       if (!lastBwDeleteUndoSnapshot) return;
-      appState.bodyweightLog = JSON.parse(JSON.stringify(lastBwDeleteUndoSnapshot));
+      const restored = JSON.parse(JSON.stringify(lastBwDeleteUndoSnapshot));
+      if (appState._deletedBodyweightDates) {
+        restored.forEach(e => { if (e && e.date) delete appState._deletedBodyweightDates[e.date]; });
+      }
+      appState.bodyweightLog = restored;
       lastBwDeleteUndoSnapshot = null;
       saveState();
       renderLogger();
@@ -14927,6 +15282,13 @@
 
     function deleteBodyweightEntry(date) {
       lastBwDeleteUndoSnapshot = JSON.parse(JSON.stringify(appState.bodyweightLog || []));
+      if (!appState._deletedBodyweightDates || typeof appState._deletedBodyweightDates !== 'object') {
+        appState._deletedBodyweightDates = {};
+      }
+      if (date) {
+        appState._deletedBodyweightDates[String(date)] = Date.now();
+        appState._deletedBodyweightDates = normalizeTombstoneMap(appState._deletedBodyweightDates);
+      }
       appState.bodyweightLog = (appState.bodyweightLog || []).filter(e => e.date !== date);
       saveState();
       renderLogger();
@@ -16581,7 +16943,7 @@
       appState.analyticsSections[key] = nextOpen;
       applyAnalyticsSectionDom(key, nextOpen);
       updateAnalyticsCollapseAllBtn();
-      saveState();
+      saveState({ uiOnly: true });
 
       if (key === 'pl' || key === 'bb') {
         if (nextOpen) {
@@ -16605,7 +16967,7 @@
         applyAnalyticsSectionDom(k, targetOpen);
       });
       updateAnalyticsCollapseAllBtn();
-      saveState();
+      saveState({ uiOnly: true });
 
       if (targetOpen) {
         const scoped = getActiveAnalyticsScopedHistory();
@@ -16639,9 +17001,9 @@
       const n = String(exerciseName || '').toLowerCase();
       if (!n) return null;
       if (n.includes('squat') && !n.includes('split') && !n.includes('hack') && !n.includes('belt')) return 'squat';
-      if ((n.includes('bench') || n.includes('spoto') || n.includes('larsen')) && !n.includes('dumbbell') && !n.includes('db')) return 'bench';
-      if ((n.includes('deadlift') || n.includes('rdl')) && !n.includes('dumbbell') && !n.includes('db')) return 'deadlift';
-      if ((n.includes('overhead') || n.includes('ohp') || n.includes('push press') || n.includes('z-press')) && !n.includes('seated') && !n.includes('dumbbell') && !n.includes('tricep') && !n.includes('cable')) return 'ohp';
+      if ((n.includes('bench') || n.includes('spoto') || n.includes('larsen') || n.includes('floor press') || n.includes('board press')) && !n.includes('dumbbell') && !n.includes('db')) return 'bench';
+      if ((n.includes('deadlift') || n.includes('rdl') || n.includes('sldl') || n.includes('stiff-leg') || n.includes('rack pull') || n.includes('block pull')) && !n.includes('dumbbell') && !n.includes('db')) return 'deadlift';
+      if ((n.includes('overhead') || n.includes('ohp') || n.includes('push press') || n.includes('z-press') || n.includes('military press')) && !n.includes('dumbbell') && !n.includes('db') && !n.includes('tricep') && !n.includes('cable')) return 'ohp';
       return null;
     }
 
@@ -17487,6 +17849,17 @@
         return `${wDisp} × ${e.rmReps}RM + ${e.fuSets}×${vdsRepsDisp}${vdsWtTag} (${effStr})`;
       };
 
+      const totalLoggedAllTime = (appState.history || []).length;
+      const emptyHistoryHtml = (() => {
+        if (q && totalLoggedAllTime > 0) {
+          return `No sessions match search “${escapeHtml(q)}” (${totalLoggedAllTime} total logged). <button type="button" onclick="const el=document.getElementById('history-search-input'); if(el) el.value=''; renderHistoryTable();" class="ml-1.5 px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 font-semibold">Clear Search</button>`;
+        }
+        if (totalLoggedAllTime > 0 && srcHist.length === 0) {
+          return `No logged sessions in this timeline filter (${totalLoggedAllTime} total in All-Time). <button type="button" onclick="setAnalyticsTimeframe('all')" class="ml-1.5 px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 font-semibold">View All-Time</button>`;
+        }
+        return 'No logged sessions found.';
+      })();
+
       if (tbody) {
         tbody.innerHTML = rows.length
           ? rows.map(s => {
@@ -17559,7 +17932,7 @@
               </tr>
             `;
             }).join('')
-          : `<tr><td colspan="5" class="py-6 text-center text-xs text-slate-400">No logged sessions found.</td></tr>`;
+          : `<tr><td colspan="5" class="py-6 text-center text-xs text-slate-400">${emptyHistoryHtml}</td></tr>`;
       }
 
       if (mobileList) {
@@ -17647,7 +18020,7 @@
                 </div>
               `;
             }).join('')
-          : `<div class="p-6 rounded-xl bg-slate-950/70 border border-slate-800 text-center text-xs text-slate-400">No logged sessions found.</div>`;
+          : `<div class="p-6 rounded-xl bg-slate-950/70 border border-slate-800 text-center text-xs text-slate-400">${emptyHistoryHtml}</div>`;
       }
     }
 
@@ -18648,7 +19021,9 @@
 
     function undoLastHistoryEdit() {
       if (!lastHistoryEditUndoSnapshot) return;
-      appState.history = JSON.parse(JSON.stringify(lastHistoryEditUndoSnapshot));
+      const restored = JSON.parse(JSON.stringify(lastHistoryEditUndoSnapshot));
+      restored.forEach(s => { if (s && s.id) clearHistoryTombstone(s.id); });
+      appState.history = restored;
       lastHistoryEditUndoSnapshot = null;
       syncRoadmapBaseLoadsFromTrainingData(false);
       saveState();
@@ -18666,6 +19041,7 @@
       }
       lastHistoryEditUndoSnapshot = JSON.parse(JSON.stringify(appState.history));
       const updated = recalculateHistoryEntryMetrics(editingHistoryDraft);
+      updated._editedAt = Date.now();
       appState.history[idx] = updated;
       appState.history.sort((a, b) => `${a.date || ''} ${a.startedAt || ''}`.localeCompare(`${b.date || ''} ${b.startedAt || ''}`));
       syncRoadmapBaseLoadsFromTrainingData(false);
@@ -18684,6 +19060,7 @@
       const target = (appState.history || []).find(h => h.id === id);
       if (!target) return;
       lastHistoryEditUndoSnapshot = JSON.parse(JSON.stringify(appState.history || []));
+      recordHistoryTombstone(id);
       appState.history = (appState.history || []).filter(h => h.id !== id);
       syncRoadmapBaseLoadsFromTrainingData(false);
       saveState();
@@ -22599,6 +22976,18 @@
       }
     }
 
+    function flushCloudSyncNow() {
+      if (!cloudSyncUser || !cloudSyncDb || !cloudSyncUser.emailVerified || cloudSyncConflictState) return;
+      cloudSyncPendingPush = true;
+      clearTimeout(cloudSyncPushTimer);
+      cloudSyncPushTimer = null;
+      if (!navigator.onLine) {
+        updateCloudSyncBadges('idle');
+        return;
+      }
+      syncCloudState('auto', true);
+    }
+
     function scheduleCloudSyncPush() {
       if (!cloudSyncUser || !cloudSyncDb || !cloudSyncUser.emailVerified || cloudSyncConflictState) return;
       cloudSyncPendingPush = true;
@@ -22607,22 +22996,141 @@
         return;
       }
       clearTimeout(cloudSyncPushTimer);
+      // Always merge with Cloud ('auto') rather than blindly overwriting Cloud from a stale tab!
       cloudSyncPushTimer = setTimeout(() => {
-        syncCloudState('push', true);
-      }, 1500);
+        syncCloudState('auto', true);
+      }, 1600);
     }
 
-    function applyCloudPayloadLocally(payloadJson, uid) {
-      const parsed = safeJsonParse(payloadJson);
+    function mergeTombstoneMaps(a, b) {
+      const out = { ...normalizeTombstoneMap(a) };
+      const bm = normalizeTombstoneMap(b);
+      Object.entries(bm).forEach(([k, v]) => {
+        if (!out[k] || v > out[k]) out[k] = v;
+      });
+      return normalizeTombstoneMap(out);
+    }
+
+    // Non-destructive 2-way merge between local device and Cloud backup.
+    // Never drops completed workout sessions, weigh-ins, custom exercises, or saved macrocycles
+    // unless explicitly deleted via tombstone.
+    function mergeCloudAndLocalStates(localState, cloudState, uid) {
+      const localDataTs = Number(localState?._dataUpdatedAt || localState?._updatedAt) || 0;
+      const cloudDataTs = Number(cloudState?._dataUpdatedAt || cloudState?._updatedAt) || 0;
+      const localIsPrimary = localDataTs >= cloudDataTs;
+      const primary = localIsPrimary ? localState : cloudState;
+      const secondary = localIsPrimary ? cloudState : localState;
+
+      const mergedHistTombstones = mergeTombstoneMaps(localState?._deletedHistoryIds, cloudState?._deletedHistoryIds);
+      const mergedBwTombstones = mergeTombstoneMaps(localState?._deletedBodyweightDates, cloudState?._deletedBodyweightDates);
+
+      // 1. Union workout history by session id (respecting explicit deletion tombstones)
+      const histById = new Map();
+      const ingestHistory = (list, sourceTs, isLocalSource) => {
+        if (!Array.isArray(list)) return;
+        list.forEach(s => {
+          if (!s || typeof s !== 'object' || !s.id) return;
+          const id = String(s.id);
+          const delTs = mergedHistTombstones[id] || 0;
+          const itemTs = Number(s._editedAt) || (id.startsWith('hist_') ? (parseInt(id.split('_')[1], 10) || sourceTs) : sourceTs);
+          if (delTs > 0 && delTs >= itemTs) return;
+          const prev = histById.get(id);
+          if (!prev) {
+            histById.set(id, { item: s, ts: itemTs, isLocal: isLocalSource });
+          } else if (itemTs > prev.ts || (itemTs === prev.ts && isLocalSource === localIsPrimary)) {
+            histById.set(id, { item: s, ts: itemTs, isLocal: isLocalSource });
+          }
+        });
+      };
+      ingestHistory(cloudState?.history, cloudDataTs, false);
+      ingestHistory(localState?.history, localDataTs, true);
+      const mergedHistory = Array.from(histById.values())
+        .map(v => v.item)
+        .sort((a, b) => `${a.date || ''} ${a.startedAt || ''}`.localeCompare(`${b.date || ''} ${b.startedAt || ''}`));
+
+      // 2. Union bodyweight log by date (respecting explicit deletion tombstones)
+      const bwByDate = new Map();
+      const ingestBw = (list, sourceTs, isLocalSource) => {
+        if (!Array.isArray(list)) return;
+        list.forEach(entry => {
+          if (!entry || typeof entry !== 'object' || !entry.date) return;
+          const d = String(entry.date);
+          const delTs = mergedBwTombstones[d] || 0;
+          const entryTs = Number(entry.updatedAt) || sourceTs;
+          if (delTs > 0 && delTs >= entryTs) return;
+          const prev = bwByDate.get(d);
+          if (!prev || entryTs > prev.ts || (entryTs === prev.ts && isLocalSource === localIsPrimary)) {
+            bwByDate.set(d, { item: entry, ts: entryTs });
+          }
+        });
+      };
+      ingestBw(cloudState?.bodyweightLog, cloudDataTs, false);
+      ingestBw(localState?.bodyweightLog, localDataTs, true);
+      const mergedBw = Array.from(bwByDate.values()).map(v => v.item).sort((a, b) => String(a.date).localeCompare(String(b.date)));
+
+      // 3. Union custom exercises by id
+      const custById = new Map();
+      [...(Array.isArray(secondary?.customExercises) ? secondary.customExercises : []), ...(Array.isArray(primary?.customExercises) ? primary.customExercises : [])]
+        .forEach(ex => { if (ex && ex.id) custById.set(String(ex.id), ex); });
+
+      // 4. Union saved macrocycle blocks by id
+      const blocksById = new Map();
+      [...(Array.isArray(secondary?.savedRoadmapBlocks) ? secondary.savedRoadmapBlocks : []), ...(Array.isArray(primary?.savedRoadmapBlocks) ? primary.savedRoadmapBlocks : [])]
+        .forEach(b => { if (b && b.id) blocksById.set(String(b.id), b); });
+
+      // 5. Merge ignored readiness flags
+      const mergedIgnored = {
+        ...normalizeIgnoredReadinessFlags(secondary?.ignoredReadinessFlags),
+        ...normalizeIgnoredReadinessFlags(primary?.ignoredReadinessFlags)
+      };
+
+      const mergedTs = Math.max(localDataTs, cloudDataTs, Date.now());
+      const merged = {
+        ...JSON.parse(JSON.stringify(primary)),
+        history: mergedHistory,
+        bodyweightLog: mergedBw,
+        customExercises: Array.from(custById.values()),
+        savedRoadmapBlocks: Array.from(blocksById.values()),
+        ignoredReadinessFlags: mergedIgnored,
+        // Preserve this device's local viewing preferences (collapsed drawers, active tab, theme)
+        activeTab: localState?.activeTab || primary?.activeTab || 'logger',
+        analyticsSections: normalizeAnalyticsSections(localState?.analyticsSections || primary?.analyticsSections),
+        roadmapUi: normalizeRoadmapUi(localState?.roadmapUi || primary?.roadmapUi),
+        theme: (localState?.theme === 'light' || localState?.theme === 'dark') ? localState.theme : (primary?.theme || 'dark'),
+        _deletedHistoryIds: mergedHistTombstones,
+        _deletedBodyweightDates: mergedBwTombstones,
+        _ownerUid: uid,
+        _isDefaultSample: false,
+        _updatedAt: mergedTs,
+        _dataUpdatedAt: mergedTs
+      };
+
+      const localHistIds = new Set((localState?.history || []).map(s => s && s.id).filter(Boolean));
+      const cloudHistIds = new Set((cloudState?.history || []).map(s => s && s.id).filter(Boolean));
+      const addedToLocal = mergedHistory.filter(s => s && s.id && !localHistIds.has(s.id)).length;
+      const addedToCloud = mergedHistory.filter(s => s && s.id && !cloudHistIds.has(s.id)).length;
+      const needsCloudWrite = addedToCloud > 0 || localDataTs > cloudDataTs || mergedBw.length > (cloudState?.bodyweightLog || []).length;
+      const needsLocalApply = addedToLocal > 0 || cloudDataTs > localDataTs || mergedBw.length > (localState?.bodyweightLog || []).length;
+
+      return { merged, addedToLocal, addedToCloud, needsCloudWrite, needsLocalApply, mergedTs };
+    }
+
+    function applyCloudPayloadLocally(payloadOrObj, uid, preserveCurrentTab = true) {
+      const parsed = typeof payloadOrObj === 'string' ? safeJsonParse(payloadOrObj) : payloadOrObj;
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
         throw new Error('Cloud backup payload is malformed.');
       }
+      const prevTab = appState.activeTab || 'logger';
       parsed._ownerUid = uid;
       parsed._isDefaultSample = false;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
       loadState();
       appState._ownerUid = uid;
       appState._isDefaultSample = false;
+      if (preserveCurrentTab && prevTab) appState.activeTab = prevTab;
+      // Clear any stale search text (or browser autofill) so newly synced sessions are immediately visible
+      const histSearchEl = document.getElementById('history-search-input');
+      if (histSearchEl && histSearchEl.value) histSearchEl.value = '';
       saveState({ preserveTimestamp: true, skipCloudPush: true, keepSampleFlag: true });
       refreshAllPreferenceHeaderUIs();
       switchTab(appState.activeTab || 'logger');
@@ -22640,6 +23148,7 @@
       appState._ownerUid = uid;
       appState._isDefaultSample = false;
       appState._updatedAt = ts;
+      appState._dataUpdatedAt = Math.max(Number(appState._dataUpdatedAt) || 0, ts);
       const payloadJson = JSON.stringify(appState);
       if (getUtf8ByteLength(payloadJson) > MAX_CLOUD_PAYLOAD_CHARS) {
         throw new Error('Workout backup exceeds the 900 KB cloud sync limit. Export JSON and trim old entries.');
@@ -22747,24 +23256,52 @@
                 updateCloudSyncBadges('idle');
                 openCloudSyncModal();
                 showToast('Both this device and Cloud have workout data — choose Pull or Push.', 'warn');
-              } else if (currentLocalTs > cloudTs) {
-                const ts = currentLocalTs || Date.now();
-                await pushLocalStateToCloud(docRef, uid, ts);
-                syncedAtLocalTs = ts;
-                cloudSyncLastSyncedAt = Date.now();
-                updateCloudSyncBadges('idle', 'Up to date');
-                if (!silent) showToast('Synced local changes to Cloud!', 'success');
-              } else if (cloudTs > currentLocalTs) {
-                applyCloudPayloadLocally(cloudData.payloadJson, uid);
-                syncedAtLocalTs = Number(appState._updatedAt) || Date.now();
-                cloudSyncLastSyncedAt = Date.now();
-                updateCloudSyncBadges('idle', 'Updated from Cloud');
-                showToast('Synced newer workout data from another device!', 'success');
               } else {
-                syncedAtLocalTs = currentLocalTs;
-                cloudSyncLastSyncedAt = Date.now();
-                updateCloudSyncBadges('idle', 'Up to date');
-                if (!silent) showToast('Already up to date with Cloud!', 'info');
+                // Smart non-destructive 2-way merge: never deletes sessions logged on either device!
+                let cloudParsed = null;
+                try { cloudParsed = safeJsonParse(cloudData.payloadJson); } catch (_) {}
+                if (!cloudParsed || typeof cloudParsed !== 'object') {
+                  const ts = Math.max(currentLocalTs, Date.now());
+                  await pushLocalStateToCloud(docRef, uid, ts);
+                  syncedAtLocalTs = ts;
+                  cloudSyncLastSyncedAt = Date.now();
+                  updateCloudSyncBadges('idle', 'Uploaded');
+                } else {
+                  const mergeRes = mergeCloudAndLocalStates(appState, cloudParsed, uid);
+                  if (mergeRes.needsLocalApply) {
+                    applyCloudPayloadLocally(mergeRes.merged, uid, true);
+                  } else {
+                    appState._deletedHistoryIds = mergeRes.merged._deletedHistoryIds;
+                    appState._deletedBodyweightDates = mergeRes.merged._deletedBodyweightDates;
+                  }
+                  if (mergeRes.needsCloudWrite) {
+                    await pushLocalStateToCloud(docRef, uid, mergeRes.mergedTs);
+                    syncedAtLocalTs = mergeRes.mergedTs;
+                    cloudSyncLastSyncedAt = Date.now();
+                    const msg = mergeRes.addedToLocal > 0 && mergeRes.addedToCloud > 0
+                      ? `Merged workouts across devices (+${mergeRes.addedToLocal} pulled, +${mergeRes.addedToCloud} uploaded)!`
+                      : (mergeRes.addedToLocal > 0
+                          ? `Synced +${mergeRes.addedToLocal} workout(s) from Cloud!`
+                          : 'Synced local changes to Cloud!');
+                    updateCloudSyncBadges('idle', 'Synced');
+                    if (!silent || mergeRes.addedToLocal > 0) showToast(msg, 'success');
+                  } else if (mergeRes.needsLocalApply) {
+                    syncedAtLocalTs = Number(appState._updatedAt) || Date.now();
+                    cloudSyncLastSyncedAt = Date.now();
+                    updateCloudSyncBadges('idle', 'Updated from Cloud');
+                    showToast(
+                      mergeRes.addedToLocal > 0
+                        ? `Synced +${mergeRes.addedToLocal} new workout(s) from another device!`
+                        : 'Synced newer workout data from another device!',
+                      'success'
+                    );
+                  } else {
+                    syncedAtLocalTs = currentLocalTs;
+                    cloudSyncLastSyncedAt = Date.now();
+                    updateCloudSyncBadges('idle', 'Up to date');
+                    if (!silent) showToast('Already up to date with Cloud!', 'info');
+                  }
+                }
               }
             } else {
               // No cloud backup exists yet for this account
@@ -22873,6 +23410,7 @@
        13. ACCESSIBILITY HELPERS (MODAL FOCUS TRAP & TAP INFO POPOVER) + BOOTSTRAP
        ========================================================================= */
     const ACCESSIBLE_MODAL_IDS = [
+      'exercise-picker-modal',
       'custom-exercise-modal',
       'import-json-modal',
       'session-preview-modal',
@@ -23035,6 +23573,7 @@
           const topModal = getOpenModalEl();
           if (!topModal) return;
           const modalClosers = {
+            'exercise-picker-modal': closeExercisePickerModal,
             'custom-exercise-modal': closeCustomModal,
             'import-json-modal': closeImportModal,
             'session-preview-modal': closeSessionPreviewModal,
@@ -23081,8 +23620,30 @@
       restoreActiveTimersState();
       updateLiveMetrics();
       switchTab(appState.activeTab || 'logger');
+      let lastVisibilitySyncAt = Date.now();
       document.addEventListener('visibilitychange', () => {
         reconcileAllTimersNow();
+        if (document.visibilityState === 'hidden') {
+          if (cloudSyncPendingPush && typeof flushCloudSyncNow === 'function') {
+            flushCloudSyncNow();
+          }
+          return;
+        }
+        if (document.visibilityState === 'visible' && cloudSyncUser && cloudSyncUser.emailVerified && !cloudSyncConflictState && navigator.onLine) {
+          const now = Date.now();
+          if (cloudSyncPendingPush && typeof flushCloudSyncNow === 'function') {
+            lastVisibilitySyncAt = now;
+            flushCloudSyncNow();
+          } else if (now - lastVisibilitySyncAt > 15000) {
+            lastVisibilitySyncAt = now;
+            syncCloudState('auto', true);
+          }
+        }
+      });
+      window.addEventListener('pagehide', () => {
+        if (cloudSyncPendingPush && typeof flushCloudSyncNow === 'function') {
+          flushCloudSyncNow();
+        }
       });
       window.addEventListener('focus', () => {
         reconcileAllTimersNow();
