@@ -1039,82 +1039,108 @@
     <!-- ===================================================================
          TAB 2: PROGRESSION ROADMAP (ACCUMULATION vs. INTENSIFICATION)
          =================================================================== -->
-    <section id="view-roadmap" class="hidden space-y-6">
-      <!-- Saved Macrocycles Bar (Apply-Only Isolated Multi-Macrocycle Switcher) -->
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg space-y-3.5">
-        <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3">
-          <div class="flex flex-wrap items-center gap-2 flex-1 min-w-0">
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 shrink-0">📚 Macrocycle:</span>
-            <input type="text" id="roadmap-block-name-input" maxlength="48" placeholder="Name this macrocycle (e.g. Spring Peak)..." oninput="updateActiveRoadmapBlockName(this.value)" class="flex-1 min-w-[180px] max-w-xs bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-bold text-white placeholder-slate-400 focus:outline-none focus:border-amber-500" />
+    <section id="view-roadmap" class="hidden space-y-4">
+      <!-- Saved Macrocycles Bar (Collapsible Library Drawer) -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-lg overflow-hidden">
+        <button type="button" id="roadmap-library-toggle-btn" onclick="toggleRoadmapTopSection('library')" aria-expanded="false" aria-controls="roadmap-library-drawer-body" class="w-full px-4 sm:px-5 py-3.5 flex flex-wrap items-center justify-between gap-2 text-left hover:bg-slate-800/40 transition">
+          <div class="flex flex-wrap items-center gap-2 min-w-0">
+            <span class="text-sm shrink-0">📚</span>
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 shrink-0">Macrocycle:</span>
+            <span id="roadmap-library-summary-name" class="text-xs sm:text-sm font-extrabold text-white truncate max-w-[200px] sm:max-w-xs">Untitled Draft</span>
             <div id="roadmap-block-meta-badges" class="flex flex-wrap items-center gap-1.5"></div>
           </div>
+          <span id="roadmap-library-chevron" class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-slate-300 border border-slate-700 shrink-0">Show ▾</span>
+        </button>
 
-          <div class="flex flex-wrap items-center gap-1.5 shrink-0">
-            <button type="button" onclick="saveActiveRoadmapBlock()" class="px-3 min-h-[38px] sm:min-h-[34px] rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition">Save Macrocycle</button>
-            <button type="button" onclick="saveRoadmapBlockAsNew()" class="px-3 min-h-[38px] sm:min-h-[34px] rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">Save As New</button>
-            <button type="button" onclick="requestNewRoadmapDraft()" class="px-3 min-h-[38px] sm:min-h-[34px] rounded-lg text-xs font-semibold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/35 transition">+ New Draft</button>
-            <button type="button" id="roadmap-delete-block-btn" onclick="confirmDeleteActiveRoadmapBlock()" class="px-2.5 min-h-[38px] sm:min-h-[34px] rounded-lg text-xs font-semibold bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-slate-700 hover:border-rose-500/40 transition disabled:opacity-40 disabled:cursor-not-allowed" title="Delete currently selected saved macrocycle">Delete</button>
+        <div id="roadmap-library-drawer-body" class="hidden px-4 sm:px-5 pb-4 pt-3 border-t border-slate-800/80 space-y-3.5">
+          <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-2 flex-1 min-w-0">
+              <label for="roadmap-block-name-input" class="text-xs font-bold uppercase tracking-wider text-slate-400 shrink-0">Name:</label>
+              <input type="text" id="roadmap-block-name-input" maxlength="48" placeholder="Name this macrocycle (e.g. Spring Peak)..." oninput="updateActiveRoadmapBlockName(this.value)" class="flex-1 min-w-[180px] max-w-xs bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-bold text-white placeholder-slate-400 focus:outline-none focus:border-amber-500" />
+            </div>
+
+            <div class="flex flex-wrap items-center gap-1.5 shrink-0">
+              <button type="button" onclick="saveActiveRoadmapBlock()" class="px-3 min-h-[38px] sm:min-h-[34px] rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition">Save Macrocycle</button>
+              <button type="button" onclick="saveRoadmapBlockAsNew()" class="px-3 min-h-[38px] sm:min-h-[34px] rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">Save As New</button>
+              <button type="button" onclick="requestNewRoadmapDraft()" class="px-3 min-h-[38px] sm:min-h-[34px] rounded-lg text-xs font-semibold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/35 transition">+ New Draft</button>
+              <button type="button" id="roadmap-delete-block-btn" onclick="confirmDeleteActiveRoadmapBlock()" class="px-2.5 min-h-[38px] sm:min-h-[34px] rounded-lg text-xs font-semibold bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-slate-700 hover:border-rose-500/40 transition disabled:opacity-40 disabled:cursor-not-allowed" title="Delete currently selected saved macrocycle">Delete</button>
+            </div>
           </div>
-        </div>
 
-        <div id="roadmap-saved-blocks-list" class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-800/80"></div>
+          <div id="roadmap-saved-blocks-list" class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-800/80"></div>
+        </div>
       </div>
 
-      <!-- Phase Switcher Banner -->
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-lg space-y-5">
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div>
-            <h2 class="text-lg sm:text-xl font-extrabold text-white">General Gainz Macrocycle &amp; Mesocycle Roadmap</h2>
-            <p class="text-xs sm:text-sm text-slate-400 mt-1">
-              Build a single mesocycle or chain multiple <span class="text-sky-400 font-semibold">Accumulation</span> → <span class="text-amber-400 font-semibold">Intensification</span> mesocycles into one overarching Macrocycle, customize wave lengths, and apply any week safely to Active Workout.
-            </p>
+      <!-- Phase & Week 1 Reference Loads Calibration Drawer (Collapsible) -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-lg overflow-hidden">
+        <button type="button" id="roadmap-setup-toggle-btn" onclick="toggleRoadmapTopSection('setup')" aria-expanded="false" aria-controls="roadmap-setup-drawer-body" class="w-full px-4 sm:px-5 py-3.5 flex flex-wrap items-center justify-between gap-2 text-left hover:bg-slate-800/40 transition">
+          <div class="flex flex-wrap items-center gap-2 min-w-0">
+            <span class="text-sm shrink-0">🧭</span>
+            <span class="text-xs sm:text-sm font-extrabold text-white shrink-0">Phase &amp; Reference Loads</span>
+            <span id="roadmap-setup-summary-pill" class="px-2.5 py-0.5 rounded-lg text-[11px] font-mono font-semibold bg-slate-950 text-slate-300 border border-slate-800 truncate max-w-full">📈 Accumulation · 82.5% e1RM</span>
           </div>
+          <span id="roadmap-setup-chevron" class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-slate-300 border border-slate-700 shrink-0">Show ▾</span>
+        </button>
 
-          <div class="inline-flex p-1 rounded-xl bg-slate-950 border border-slate-800 self-start">
-            <button onclick="setTrainingPhase('accumulation')" id="phase-btn-accumulation" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition bg-sky-500 text-slate-950">
-              📈 Accumulation
-            </button>
-            <button onclick="setTrainingPhase('intensification')" id="phase-btn-intensification" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition text-slate-400 hover:text-white">
-              🔥 Intensification
-            </button>
-          </div>
-        </div>
-
-        <div id="phase-description-box" class="p-4 rounded-xl bg-sky-500/10 border border-sky-500/25 text-xs sm:text-sm text-slate-200 leading-relaxed"></div>
-
-        <!-- Validated 1RM Anchor Calibration Grid -->
-        <div class="pt-2 border-t border-slate-800">
-          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+        <div id="roadmap-setup-drawer-body" class="hidden px-4 sm:px-6 pb-5 pt-3 border-t border-slate-800/80 space-y-5">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Week 1 Reference Loads (kg) — Calibrated from Training Data e1RMs</span>
-              <p class="text-[11px] text-slate-400 mt-0.5">
-                All lifts use <span class="text-amber-300 font-mono">Wathen (1994)</span> for 1–7RM &amp; lower/pull work; upper pressing seamlessly shifts to <span class="text-sky-300 font-mono">Mayhew (1992)</span> at 8+RM. Auto-scaled to <span id="roadmap-pct-label" class="font-mono text-white font-semibold">82.5%</span> e1RM as a reference guide.
+              <h2 class="text-base sm:text-lg font-extrabold text-white">General Gainz Macrocycle &amp; Mesocycle Roadmap</h2>
+              <p class="text-xs sm:text-sm text-slate-400 mt-1">
+                Build a single mesocycle or chain multiple <span class="text-sky-400 font-semibold">Accumulation</span> → <span class="text-amber-400 font-semibold">Intensification</span> mesocycles into one overarching Macrocycle, customize wave lengths, and apply any week safely to Active Workout.
               </p>
             </div>
-            <div class="flex flex-wrap items-center gap-2">
-              <div class="inline-flex items-center gap-1.5 bg-slate-950 border border-slate-700 rounded-lg px-2.5 min-h-[38px] sm:min-h-[34px]">
-                <label for="roadmap-base-pct-input" class="text-xs font-semibold text-slate-400">Ref e1RM %</label>
-                <input type="number" id="roadmap-base-pct-input" min="50" max="100" step="0.5" value="82.5" onchange="updateRoadmapBaseLoadPct(this.value)" class="no-spinners w-16 bg-slate-900 border border-slate-700 rounded-md px-2 py-0.5 font-mono text-xs font-bold text-amber-300 text-right tabular-nums focus:outline-none focus:border-amber-500" />
-                <span class="text-xs font-mono text-slate-400">%</span>
-              </div>
-              <button type="button" onclick="syncRoadmapBaseLoadsFromTrainingData(true)" class="px-3 min-h-[38px] sm:min-h-[34px] rounded-lg text-xs font-semibold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition">
-                Re-Sync from Data
+
+            <div class="inline-flex p-1 rounded-xl bg-slate-950 border border-slate-800 self-start">
+              <button onclick="setTrainingPhase('accumulation')" id="phase-btn-accumulation" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition bg-sky-500 text-slate-950">
+                📈 Accumulation
+              </button>
+              <button onclick="setTrainingPhase('intensification')" id="phase-btn-intensification" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition text-slate-400 hover:text-white">
+                🔥 Intensification
               </button>
             </div>
           </div>
-          <div id="base-loads-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></div>
+
+          <div id="phase-description-box" class="p-4 rounded-xl bg-sky-500/10 border border-sky-500/25 text-xs sm:text-sm text-slate-200 leading-relaxed"></div>
+
+          <!-- Validated 1RM Anchor Calibration Grid -->
+          <div class="pt-2 border-t border-slate-800">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+              <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Week 1 Reference Loads (kg) — Calibrated from Training Data e1RMs</span>
+                <p class="text-[11px] text-slate-400 mt-0.5">
+                  All lifts use <span class="text-amber-300 font-mono">Wathen (1994)</span> for 1–7RM &amp; lower/pull work; upper pressing seamlessly shifts to <span class="text-sky-300 font-mono">Mayhew (1992)</span> at 8+RM. Auto-scaled to <span id="roadmap-pct-label" class="font-mono text-white font-semibold">82.5%</span> e1RM as a reference guide.
+                </p>
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <div class="inline-flex items-center gap-1.5 bg-slate-950 border border-slate-700 rounded-lg px-2.5 min-h-[38px] sm:min-h-[34px]">
+                  <label for="roadmap-base-pct-input" class="text-xs font-semibold text-slate-400">Ref e1RM %</label>
+                  <input type="number" id="roadmap-base-pct-input" min="50" max="100" step="0.5" value="82.5" onchange="updateRoadmapBaseLoadPct(this.value)" class="no-spinners w-16 bg-slate-900 border border-slate-700 rounded-md px-2 py-0.5 font-mono text-xs font-bold text-amber-300 text-right tabular-nums focus:outline-none focus:border-amber-500" />
+                  <span class="text-xs font-mono text-slate-400">%</span>
+                </div>
+                <button type="button" onclick="syncRoadmapBaseLoadsFromTrainingData(true)" class="px-3 min-h-[38px] sm:min-h-[34px] rounded-lg text-xs font-semibold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition">
+                  Re-Sync from Data
+                </button>
+              </div>
+            </div>
+            <div id="base-loads-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></div>
+          </div>
         </div>
       </div>
 
-      <!-- Mesocycle Wave Plan Card -->
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-lg">
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
+      <!-- Mesocycle Wave Plan Card (No overflow-hidden so sticky Plan Day bar works cleanly) -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-lg">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-3">
           <div class="flex flex-wrap items-center gap-2">
             <h3 class="text-base font-extrabold text-white">Mesocycle Wave Plan</h3>
             <span id="roadmap-meso-count-badge" class="hidden px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/35">1 Mesocycle</span>
             <span id="roadmap-week-count-badge" class="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-slate-800 text-amber-300 border border-slate-700">6 Weeks</span>
+            <span id="roadmap-active-week-header-pill" class="hidden px-2.5 py-0.5 rounded-md text-[11px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/35">● Active Wk 1</span>
           </div>
           <div class="flex flex-wrap items-center gap-2">
+            <button type="button" id="roadmap-collapse-all-btn" onclick="toggleAllRoadmapGroups()" class="px-3 min-h-[38px] sm:min-h-[34px] rounded-lg text-xs font-mono font-bold bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition" title="Collapse or expand all mesocycles and week cards">
+              Collapse All ▴
+            </button>
             <button type="button" onclick="openBookPresetsModal('replace')" class="px-3 min-h-[38px] sm:min-h-[34px] rounded-lg text-xs font-bold bg-indigo-500/20 hover:bg-indigo-500/35 text-indigo-200 border border-indigo-500/45 transition" title="Browse all 11 General Gainz book programs & 2–6 day example schedules">
               Book Presets
             </button>
@@ -1135,47 +1161,49 @@
           </div>
         </div>
 
-        <!-- Roadmap Day Selector & Independent Day Management Bar (Step B1b — Apply-Only Sync) -->
-        <div class="pb-4 mb-4 border-b border-slate-800/80 space-y-3">
-          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2.5">
-            <div class="flex flex-wrap items-center gap-2">
-              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Plan Day:</span>
-              <div id="roadmap-day-selector" class="flex flex-wrap gap-1.5"></div>
-              <button type="button" id="roadmap-add-day-btn" onclick="addRoadmapDay()" class="px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/35 transition" title="Add a new training day to this roadmap (syncs to Active Workout only on Apply)">
-                + Add Day
-              </button>
-              <button type="button" onclick="toggleRoadmapDayRename()" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition" title="Rename the selected roadmap day">
-                ✎ Rename
-              </button>
-              <button type="button" id="roadmap-remove-day-btn" onclick="confirmRemoveRoadmapDay()" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-slate-700 hover:border-rose-500/40 transition" title="Remove the selected roadmap day (syncs to Active Workout only on Apply)">
-                ✕ Remove Day
-              </button>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-              <span id="roadmap-draft-sync-badge" class="hidden px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/35" title="Roadmap day edits stay isolated until you press Apply on a week">
-                ● Draft Split Differs (Apply to Sync)
-              </span>
-              <button type="button" onclick="syncRoadmapExercisesFromSplit()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5" title="Pull your current Active Workout split days and lifts into every roadmap week">
-                <span>🔄</span><span>Sync Lifts from Split</span>
-              </button>
-            </div>
+        <!-- Day Management Actions (Non-sticky to keep mobile sticky bar sleek) -->
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 mb-1 border-b border-slate-800/80">
+          <div class="flex flex-wrap items-center gap-1.5">
+            <button type="button" id="roadmap-add-day-btn" onclick="addRoadmapDay()" class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/35 transition" title="Add a new training day to this roadmap (syncs to Active Workout only on Apply)">
+              + Day
+            </button>
+            <button type="button" onclick="toggleRoadmapDayRename()" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition" title="Rename the selected roadmap day">
+              ✎ Rename
+            </button>
+            <button type="button" id="roadmap-remove-day-btn" onclick="confirmRemoveRoadmapDay()" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-slate-700 hover:border-rose-500/40 transition" title="Remove the selected roadmap day (syncs to Active Workout only on Apply)">
+              ✕ Remove
+            </button>
           </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span id="roadmap-draft-sync-badge" class="hidden px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/35" title="Roadmap day edits stay isolated until you press Apply on a week">
+              ● Draft Split Differs (Apply to Sync)
+            </span>
+            <button type="button" onclick="syncRoadmapExercisesFromSplit()" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5" title="Pull your current Active Workout split days and lifts into every roadmap week">
+              <span>🔄</span><span>Sync Split</span>
+            </button>
+          </div>
+        </div>
 
-          <!-- Inline Day Rename Panel (No browser prompt dialogs) -->
-          <div id="roadmap-day-rename-panel" class="hidden p-3 rounded-xl bg-slate-950 border border-slate-800 flex flex-col sm:flex-row sm:items-end gap-2.5">
-            <div class="flex-1 min-w-[140px]">
-              <label for="roadmap-rename-short" class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Tab Label (Short Name)</label>
-              <input type="text" id="roadmap-rename-short" maxlength="24" placeholder="e.g., D5: Back & Arms" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white focus:outline-none focus:border-amber-500" />
-            </div>
-            <div class="flex-[2] min-w-[200px]">
-              <label for="roadmap-rename-full" class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Workout Header Title</label>
-              <input type="text" id="roadmap-rename-full" maxlength="64" placeholder="e.g., Day 5 — Upper Back, Delts & Arms Hypertrophy" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500" />
-            </div>
-            <div class="flex items-center gap-1.5 shrink-0">
-              <button type="button" onclick="saveRoadmapDayRename()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition">Save Name</button>
-              <button type="button" onclick="toggleRoadmapDayRename(false)" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition">Cancel</button>
-            </div>
+        <!-- Inline Day Rename Panel (No browser prompt dialogs) -->
+        <div id="roadmap-day-rename-panel" class="hidden p-3 mb-2 rounded-xl bg-slate-950 border border-slate-800 flex flex-col sm:flex-row sm:items-end gap-2.5">
+          <div class="flex-1 min-w-[140px]">
+            <label for="roadmap-rename-short" class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Tab Label (Short Name)</label>
+            <input type="text" id="roadmap-rename-short" maxlength="24" placeholder="e.g., D5: Back & Arms" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white focus:outline-none focus:border-amber-500" />
           </div>
+          <div class="flex-[2] min-w-[200px]">
+            <label for="roadmap-rename-full" class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Workout Header Title</label>
+            <input type="text" id="roadmap-rename-full" maxlength="64" placeholder="e.g., Day 5 — Upper Back, Delts & Arms Hypertrophy" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500" />
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button type="button" onclick="saveRoadmapDayRename()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition">Save Name</button>
+            <button type="button" onclick="toggleRoadmapDayRename(false)" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Sleek 1-Row Sticky Roadmap Day Switcher Bar -->
+        <div id="roadmap-sticky-day-bar" class="sticky top-[56px] sm:top-[64px] z-20 bg-slate-900/95 backdrop-blur-md -mx-4 sm:-mx-6 px-4 sm:px-6 py-2 mb-4 border-b border-slate-800/80 flex items-center gap-2">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 shrink-0">Day:</span>
+          <div id="roadmap-day-selector" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-nowrap py-0.5"></div>
         </div>
 
         <div id="roadmap-weeks-container" class="space-y-4"></div>
@@ -2831,6 +2859,12 @@
         prBoard: false,
         notes: false,
         history: false
+      },
+      roadmapUi: {
+        libraryOpen: false,
+        setupOpen: false,
+        collapsedMesos: {},
+        expandedWeeks: {}
       },
       notesFilter: 'all',
       analyticsTimeframe: 'all',
@@ -5524,6 +5558,7 @@
       appState.muscleSinglesMode = 'weighted';
       appState.ignoredReadinessFlags = {};
       appState.analyticsSections = normalizeAnalyticsSections(null);
+      appState.roadmapUi = normalizeRoadmapUi(null);
       appState.notesFilter = 'all';
       appState.analyticsTimeframe = 'all';
       appState.analyticsLiftFilter = 'ALL_T1';
@@ -5562,6 +5597,7 @@
         appState.muscleSinglesMode = parsed.muscleSinglesMode === 'raw' ? 'raw' : 'weighted';
         appState.ignoredReadinessFlags = normalizeIgnoredReadinessFlags(parsed.ignoredReadinessFlags);
         appState.analyticsSections = normalizeAnalyticsSections(parsed.analyticsSections);
+        appState.roadmapUi = normalizeRoadmapUi(parsed.roadmapUi);
         appState.notesFilter = ['all', 'lift', 'session'].includes(parsed.notesFilter) ? parsed.notesFilter : 'all';
         const validTimeframes = ['all', 'currentMeso', 'currentMacro', 'weekly', 'monthly', 'last24', 'last12'];
         appState.analyticsTimeframe = validTimeframes.includes(parsed.analyticsTimeframe) ? parsed.analyticsTimeframe : 'all';
@@ -10592,6 +10628,8 @@
         historyLen: (appState.history || []).length,
         diceGainz: appState.diceGainz ? JSON.parse(JSON.stringify(appState.diceGainz)) : null,
         baseLoads: appState.baseLoads ? JSON.parse(JSON.stringify(appState.baseLoads)) : null,
+        activeCycle: appState.activeCycle ? JSON.parse(JSON.stringify(appState.activeCycle)) : null,
+        phase: appState.phase,
         notesValue: preNotes,
         sessionTimerState: JSON.parse(JSON.stringify(sessionTimerState)),
         exerciseStopwatchRuntime: JSON.parse(JSON.stringify(exerciseStopwatchRuntime)),
@@ -10783,6 +10821,7 @@
 
       appState.history.push(entry);
       reconcileIgnoredReadinessFlags(appState.history);
+      const cycleAdvanceInfo = advanceActiveCycleOnSessionLog(day);
       if (isDiceLogged) {
         processCompletedDiceSession(entry, day);
       }
@@ -10807,8 +10846,15 @@
       stopRestTimer();
       syncRoadmapBaseLoadsFromTrainingData(false);
       saveState();
+      updatePhaseBadgesUI();
       renderLogger();
-      showToast(`Logged ${sessionHeading} (${m.completedTonnage.toLocaleString()} kg) & rolled targets forward!`, 'success', {
+      if (appState.activeTab === 'roadmap') renderRoadmap();
+      const advMsg = (cycleAdvanceInfo && cycleAdvanceInfo.advanced)
+        ? ` · Roadmap advanced to Week ${cycleAdvanceInfo.toWeek}${cycleAdvanceInfo.phaseChanged ? ` (${cycleAdvanceInfo.newPhase === 'intensification' ? 'Intensification' : 'Accumulation'})` : ''}`
+        : ((cycleAdvanceInfo && cycleAdvanceInfo.weekCompleted)
+            ? ` · Final Week ${cycleAdvanceInfo.fromWeek} complete (${cycleAdvanceInfo.doneCount}/${cycleAdvanceInfo.totalDays} days)`
+            : '');
+      showToast(`Logged ${sessionHeading} (${m.completedTonnage.toLocaleString()} kg) & rolled targets forward!${advMsg}`, 'success', {
         actionLabel: 'Undo',
         durationMs: 7000,
         onAction: undoLastSessionLog
@@ -10971,6 +11017,9 @@
       appState.history = appState.history.slice(0, snap.historyLen);
       if (snap.diceGainz) appState.diceGainz = snap.diceGainz;
       if (snap.baseLoads) appState.baseLoads = snap.baseLoads;
+      if (snap.activeCycle !== undefined) appState.activeCycle = snap.activeCycle;
+      if (snap.phase) appState.phase = snap.phase;
+      updatePhaseBadgesUI();
       const notesEl = document.getElementById('session-notes-input');
       if (notesEl) notesEl.value = snap.notesValue || '';
       if (snap.sessionTimerState) {
@@ -12927,6 +12976,8 @@
         mesoName: wk.mesoName || `Mesocycle (Wk ${wk.week})`,
         mesoPhase: appliedPhase,
         week: wk.week,
+        completedDayIds: [],
+        weekCompleted: false,
         appliedAt: new Date().toISOString()
       };
       saveState();
@@ -13150,6 +13201,233 @@
       `;
     }
 
+    function normalizeRoadmapUi(raw) {
+      const out = {
+        libraryOpen: false,
+        setupOpen: false,
+        collapsedMesos: {},
+        expandedWeeks: {}
+      };
+      if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+        out.libraryOpen = Boolean(raw.libraryOpen);
+        out.setupOpen = Boolean(raw.setupOpen);
+        if (raw.collapsedMesos && typeof raw.collapsedMesos === 'object' && !Array.isArray(raw.collapsedMesos)) {
+          Object.entries(raw.collapsedMesos).forEach(([k, v]) => {
+            if (typeof k === 'string' && k) out.collapsedMesos[k] = Boolean(v);
+          });
+        }
+        if (raw.expandedWeeks && typeof raw.expandedWeeks === 'object' && !Array.isArray(raw.expandedWeeks)) {
+          Object.entries(raw.expandedWeeks).forEach(([k, v]) => {
+            if (typeof k === 'string' && k && typeof v === 'boolean') out.expandedWeeks[k] = v;
+          });
+        }
+      }
+      return out;
+    }
+
+    function getActiveRoadmapProgressInfo() {
+      const ctx = getCurrentCycleContext();
+      const splitDayIds = (appState.split || []).map(d => d && d.id).filter(Boolean);
+      const totalDays = splitDayIds.length;
+      const rawDone = (appState.activeCycle && Array.isArray(appState.activeCycle.completedDayIds))
+        ? appState.activeCycle.completedDayIds
+        : [];
+      const doneCount = totalDays > 0
+        ? splitDayIds.filter(id => rawDone.includes(id)).length
+        : rawDone.length;
+      const weekCompleted = Boolean(appState.activeCycle && appState.activeCycle.weekCompleted);
+      return {
+        week: ctx.week,
+        mesoId: ctx.mesoId,
+        mesoPhase: ctx.mesoPhase,
+        doneCount,
+        totalDays,
+        weekCompleted
+      };
+    }
+
+    // Option B: Metadata-only week auto-advance on full split completion.
+    // Strictly never mutates appState.split (Active Workout slots/weights/RM/VDS/effort remain untouched).
+    function advanceActiveCycleOnSessionLog(day) {
+      const ctx = getCurrentCycleContext();
+      const weeks = Array.isArray(appState.roadmapWeeks) ? appState.roadmapWeeks : [];
+      if (!appState.activeCycle || typeof appState.activeCycle !== 'object') {
+        appState.activeCycle = {
+          macrocycleId: ctx.macrocycleId,
+          macrocycleName: ctx.macrocycleName,
+          mesoId: ctx.mesoId,
+          mesoName: ctx.mesoName,
+          mesoPhase: ctx.mesoPhase,
+          week: ctx.week,
+          completedDayIds: [],
+          weekCompleted: false,
+          appliedAt: new Date().toISOString()
+        };
+      }
+      if (!Array.isArray(appState.activeCycle.completedDayIds)) {
+        appState.activeCycle.completedDayIds = [];
+      }
+      const dayId = day && day.id ? String(day.id) : '';
+      if (dayId && !appState.activeCycle.completedDayIds.includes(dayId)) {
+        appState.activeCycle.completedDayIds.push(dayId);
+      }
+
+      const splitDayIds = (appState.split || []).map(d => d && d.id).filter(Boolean);
+      const totalDays = splitDayIds.length;
+      const doneCount = totalDays > 0
+        ? splitDayIds.filter(id => appState.activeCycle.completedDayIds.includes(id)).length
+        : appState.activeCycle.completedDayIds.length;
+
+      const curWeek = Math.max(1, toIntOr(appState.activeCycle.week, ctx.week || 1));
+      if (totalDays > 0 && doneCount >= totalDays) {
+        const nextWk = weeks.find(w => w.week === curWeek + 1);
+        if (nextWk) {
+          const nextPhase = nextWk.mesoPhase === 'intensification'
+            ? 'intensification'
+            : (nextWk.mesoPhase === 'accumulation' ? 'accumulation' : (appState.phase || 'accumulation'));
+          const prevPhase = getEffectiveTrainingPhase();
+          appState.activeCycle = {
+            ...appState.activeCycle,
+            macrocycleId: appState.activeRoadmapBlockId || appState.activeCycle.macrocycleId || null,
+            macrocycleName: (appState.activeRoadmapBlockName || '').trim() || appState.activeCycle.macrocycleName || 'Current Macrocycle',
+            mesoId: nextWk.mesoId || appState.activeCycle.mesoId || 'meso_1',
+            mesoName: nextWk.mesoName || `Mesocycle (Wk ${nextWk.week})`,
+            mesoPhase: nextPhase,
+            week: nextWk.week,
+            completedDayIds: [],
+            weekCompleted: false,
+            advancedAt: new Date().toISOString()
+          };
+          const phaseChanged = nextPhase !== prevPhase;
+          if (appState.phase !== nextPhase) {
+            appState.phase = nextPhase;
+          }
+          return {
+            advanced: true,
+            fromWeek: curWeek,
+            toWeek: nextWk.week,
+            phaseChanged,
+            newPhase: nextPhase,
+            doneCount,
+            totalDays
+          };
+        }
+        appState.activeCycle.weekCompleted = true;
+        return {
+          advanced: false,
+          weekCompleted: true,
+          fromWeek: curWeek,
+          doneCount,
+          totalDays
+        };
+      }
+      appState.activeCycle.weekCompleted = false;
+      return {
+        advanced: false,
+        weekCompleted: false,
+        fromWeek: curWeek,
+        doneCount,
+        totalDays
+      };
+    }
+
+    function toggleRoadmapTopSection(which) {
+      appState.roadmapUi = normalizeRoadmapUi(appState.roadmapUi);
+      if (which === 'library') appState.roadmapUi.libraryOpen = !appState.roadmapUi.libraryOpen;
+      else if (which === 'setup') appState.roadmapUi.setupOpen = !appState.roadmapUi.setupOpen;
+      else return;
+      saveState();
+      applyRoadmapTopDrawersUI();
+    }
+
+    function applyRoadmapTopDrawersUI() {
+      const ui = normalizeRoadmapUi(appState.roadmapUi);
+      const libBody = document.getElementById('roadmap-library-drawer-body');
+      const libBtn = document.getElementById('roadmap-library-toggle-btn');
+      const libChev = document.getElementById('roadmap-library-chevron');
+      const libNameEl = document.getElementById('roadmap-library-summary-name');
+      if (libBody) libBody.classList.toggle('hidden', !ui.libraryOpen);
+      if (libBtn) libBtn.setAttribute('aria-expanded', ui.libraryOpen ? 'true' : 'false');
+      if (libChev) libChev.textContent = ui.libraryOpen ? 'Hide ▴' : 'Show ▾';
+      if (libNameEl) libNameEl.textContent = (appState.activeRoadmapBlockName || '').trim() || 'Untitled Draft';
+
+      const setupBody = document.getElementById('roadmap-setup-drawer-body');
+      const setupBtn = document.getElementById('roadmap-setup-toggle-btn');
+      const setupChev = document.getElementById('roadmap-setup-chevron');
+      const setupPill = document.getElementById('roadmap-setup-summary-pill');
+      if (setupBody) setupBody.classList.toggle('hidden', !ui.setupOpen);
+      if (setupBtn) setupBtn.setAttribute('aria-expanded', ui.setupOpen ? 'true' : 'false');
+      if (setupChev) setupChev.textContent = ui.setupOpen ? 'Hide ▴' : 'Show ▾';
+      if (setupPill) {
+        const isInt = appState.phase === 'intensification';
+        const bl = appState.baseLoads || {};
+        setupPill.textContent = `${isInt ? '🔥 Intensification' : '📈 Accumulation'} · ${appState.baseLoadPct || 82.5}% · SQ ${bl.squat || 0} · BN ${bl.bench || 0} · DL ${bl.deadlift || 0} · OH ${bl.ohp || 0}`;
+      }
+    }
+
+    function toggleRoadmapMesocycle(mesoId) {
+      if (!mesoId) return;
+      appState.roadmapUi = normalizeRoadmapUi(appState.roadmapUi);
+      appState.roadmapUi.collapsedMesos[mesoId] = !appState.roadmapUi.collapsedMesos[mesoId];
+      saveState();
+      renderRoadmap();
+    }
+
+    function isRoadmapWeekExpanded(weekNum, activeWeekNum) {
+      const ui = normalizeRoadmapUi(appState.roadmapUi);
+      const key = String(weekNum);
+      if (typeof ui.expandedWeeks[key] === 'boolean') return ui.expandedWeeks[key];
+      return weekNum === activeWeekNum;
+    }
+
+    function toggleRoadmapWeekCard(weekNum) {
+      appState.roadmapUi = normalizeRoadmapUi(appState.roadmapUi);
+      const activeWk = getActiveRoadmapProgressInfo().week;
+      const cur = isRoadmapWeekExpanded(weekNum, activeWk);
+      appState.roadmapUi.expandedWeeks[String(weekNum)] = !cur;
+      saveState();
+      renderRoadmap();
+    }
+
+    function toggleAllRoadmapGroups() {
+      appState.roadmapUi = normalizeRoadmapUi(appState.roadmapUi);
+      const mesoGroups = getMesocycleGroups(appState.roadmapWeeks || []);
+      const activeWk = getActiveRoadmapProgressInfo().week;
+      const anyMesoOpen = mesoGroups.some(g => !appState.roadmapUi.collapsedMesos[g.mesoId]);
+      const anyWeekOpen = (appState.roadmapWeeks || []).some(wk => isRoadmapWeekExpanded(wk.week, activeWk));
+      const shouldCollapse = anyMesoOpen && anyWeekOpen;
+      if (shouldCollapse) {
+        mesoGroups.forEach(g => { appState.roadmapUi.collapsedMesos[g.mesoId] = true; });
+        (appState.roadmapWeeks || []).forEach(wk => { appState.roadmapUi.expandedWeeks[String(wk.week)] = false; });
+      } else if (anyMesoOpen && !anyWeekOpen) {
+        // Mesocycles open, weeks compact -> collapse mesocycles too for ultra-compact view
+        mesoGroups.forEach(g => { appState.roadmapUi.collapsedMesos[g.mesoId] = true; });
+      } else {
+        // Everything collapsed -> expand all mesocycles & weeks
+        mesoGroups.forEach(g => { appState.roadmapUi.collapsedMesos[g.mesoId] = false; });
+        (appState.roadmapWeeks || []).forEach(wk => { appState.roadmapUi.expandedWeeks[String(wk.week)] = true; });
+      }
+      saveState();
+      renderRoadmap();
+    }
+
+    function summarizeRoadmapDaySlots(t1Slots, t2Slots, t3Slots) {
+      const parts = [];
+      const fmtT12 = (x) => {
+        const sl = x.slot;
+        const st = normalizeRmStyle(sl.rmStyle);
+        const effShort = sl.effort === 'Easy' ? 'E' : (sl.effort === 'Hard' ? 'H' : 'M');
+        const modeShort = sl.fuMode === 'singles' ? '1s' : (sl.fuMode === 'half' ? '½' : (sl.fuMode === 'threeQuarter' ? '¾' : (sl.fuMode === 'quarter' ? '¼' : `${sl.customFuReps || 1}r`)));
+        if (st === 'skipRm') return `${sl.exercise} Skip RM ${sl.fuSets}×${modeShort} (${effShort})`;
+        if (st === 'skipVds') return `${sl.exercise} ${sl.rm}RM [No VDS] (${effShort})`;
+        return `${sl.exercise} ${sl.rm}RM + ${sl.fuSets}×${modeShort} (${effShort})`;
+      };
+      if (t1Slots.length) parts.push(`T1: ${fmtT12(t1Slots[0])}${t1Slots.length > 1 ? ` (+${t1Slots.length - 1})` : ''}`);
+      if (t2Slots.length) parts.push(`T2: ${fmtT12(t2Slots[0])}${t2Slots.length > 1 ? ` (+${t2Slots.length - 1})` : ''}`);
+      if (t3Slots.length) parts.push(`T3: ${t3Slots.length} lift${t3Slots.length === 1 ? '' : 's'}`);
+      return parts.join(' · ') || 'No lifts scheduled for this day';
+    }
+
     function renderRoadmapWeekCard(wk, wIdx, dayIdx, totalWeeks, mesoCtx = null) {
       const dp = (wk.dayPlans && wk.dayPlans[dayIdx]) || { shortName: `D${dayIdx + 1}`, slots: [] };
       const indexedSlots = (dp.slots || []).map((slot, slotIdx) => ({ slot, slotIdx }));
@@ -13168,67 +13446,95 @@
       const showT2T3BalanceCue = maxT2Fu >= 5 && maxT3Sets >= 4;
       const effectivePhase = wk.mesoPhase || (mesoCtx && mesoCtx.mesoPhase) || appState.phase;
       const showLocalMesoBadge = mesoCtx && mesoCtx.totalMesos > 1;
+      const activeInfo = (mesoCtx && mesoCtx.activeInfo) || getActiveRoadmapProgressInfo();
+      const isActiveWeek = wk.week === activeInfo.week;
+      const isExpanded = isRoadmapWeekExpanded(wk.week, activeInfo.week);
+      const summaryLine = summarizeRoadmapDaySlots(t1Slots, t2Slots, t3Slots);
+
+      const activeBadgeHtml = isActiveWeek
+        ? `<span class="px-2 py-0.5 rounded-md font-mono text-[11px] font-extrabold bg-amber-500 text-slate-950 whitespace-nowrap" title="Currently followed week (auto-advances when all split days are logged; never overwrites Active Workout slots)">● Active${activeInfo.totalDays > 0 ? (activeInfo.weekCompleted ? ` · ${activeInfo.totalDays}/${activeInfo.totalDays} Done` : ` · ${activeInfo.doneCount}/${activeInfo.totalDays}d`) : ''}</span>`
+        : '';
 
       const focusOptionsHtml = QUALITY_FOCUS_OPTIONS.map(opt =>
         `<option value="${escapeHtml(opt)}" ${(wk.qualityFocus || 'Standard') === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`
       ).join('');
 
       return `
-        <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3.5 shadow-md">
-          <!-- Week Card Header -->
-          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 pb-3 border-b border-slate-800/80">
-            <div class="flex flex-wrap items-center gap-2.5">
-              <span class="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/35 font-mono text-xs font-extrabold text-amber-300">
-                Week ${wk.week}
-              </span>
-              ${showLocalMesoBadge ? `
-                <span class="px-2 py-0.5 rounded-md font-mono text-[11px] font-bold border ${
-                  effectivePhase === 'intensification'
-                    ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
-                    : 'bg-sky-500/10 text-sky-300 border-sky-500/30'
-                }">Meso ${mesoCtx.mesoIndex} · Wk ${mesoCtx.localWeek}/${mesoCtx.mesoLength}</span>
+        <div class="bg-slate-950/90 border ${isActiveWeek ? 'border-amber-500/50 shadow-md' : 'border-slate-800 shadow-sm'} rounded-2xl overflow-hidden transition">
+          <!-- Always-Visible Week Summary Bar -->
+          <div class="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+            <button type="button" onclick="toggleRoadmapWeekCard(${wk.week})" aria-expanded="${isExpanded ? 'true' : 'false'}" class="flex-1 min-w-0 text-left space-y-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-lg bg-amber-500/15 border border-amber-500/35 font-mono text-xs font-extrabold text-amber-300">
+                  Week ${wk.week}
+                </span>
+                ${activeBadgeHtml}
+                ${showLocalMesoBadge ? `
+                  <span class="px-2 py-0.5 rounded-md font-mono text-[11px] font-bold border ${
+                    effectivePhase === 'intensification'
+                      ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+                      : 'bg-sky-500/10 text-sky-300 border-sky-500/30'
+                  }">Meso ${mesoCtx.mesoIndex} · Wk ${mesoCtx.localWeek}/${mesoCtx.mesoLength}</span>
+                ` : ''}
+                <span class="px-2 py-0.5 rounded-md font-mono text-[11px] font-bold bg-slate-900 text-amber-300 border border-slate-800 tabular-nums">${loadMultPct}%</span>
+                ${(wk.qualityFocus && wk.qualityFocus !== 'Standard') ? `<span class="px-2 py-0.5 rounded-md font-mono text-[11px] font-semibold bg-slate-900 text-slate-300 border border-slate-800">${escapeHtml(wk.qualityFocus)}</span>` : ''}
+              </div>
+              ${!isExpanded ? `<div class="text-xs text-slate-400 truncate" title="${escapeHtml(summaryLine)}">${escapeHtml(summaryLine)}</div>` : ''}
+            </button>
+
+            <div class="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+              <button type="button" onclick="applyWeekToLogger(${wIdx})" class="px-3 min-h-[36px] sm:min-h-[32px] rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition" title="Apply Week ${wk.week} blueprint into Active Workout">Apply</button>
+              <button type="button" onclick="toggleRoadmapWeekCard(${wk.week})" aria-expanded="${isExpanded ? 'true' : 'false'}" class="px-2.5 min-h-[36px] sm:min-h-[32px] rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 font-mono text-xs font-bold transition">${isExpanded ? 'Hide ▴' : 'Edit ▾'}</button>
+            </div>
+          </div>
+
+          ${isExpanded ? `
+            <div class="px-4 pb-4 pt-3 border-t border-slate-800/80 space-y-3.5">
+              <!-- Week Editor Controls -->
+              <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2.5">
+                <div class="flex flex-wrap items-center gap-2">
+                  <div class="inline-flex items-center gap-1.5">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Focus:</span>
+                    <select aria-label="Week ${wk.week} quality focus" onchange="updateRoadmapWeekField(${wIdx}, 'qualityFocus', this.value)" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs font-semibold text-slate-200 focus:outline-none focus:border-amber-500">
+                      ${focusOptionsHtml}
+                    </select>
+                  </div>
+                  <div class="inline-flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg px-2 min-h-[34px] sm:min-h-[30px]" title="Reference load multiplier applied to Week 1 Reference Loads (guide only)">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Load %:</span>
+                    <input type="number" min="50" max="150" step="2.5" value="${loadMultPct}" onchange="updateRoadmapWeekLoadMult(${wIdx}, this.value)" class="no-spinners w-14 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 font-mono text-xs font-bold text-amber-300 text-right tabular-nums focus:outline-none focus:border-amber-500" />
+                    <span class="text-xs font-mono text-slate-400">%</span>
+                  </div>
+                  <span class="px-2.5 py-1 rounded-lg bg-slate-900/90 border border-slate-800 font-mono text-xs text-slate-300 tabular-nums" title="Estimated reference working loads (kg)">
+                    SQ <strong class="text-white">${sq}</strong> · BN <strong class="text-white">${bn}</strong> · DL <strong class="text-white">${dl}</strong> · OH <strong class="text-white">${oh}</strong>
+                  </span>
+                </div>
+
+                <div class="flex items-center gap-1.5 self-end lg:self-center shrink-0">
+                  <button type="button" onclick="duplicateRoadmapWeek(${wIdx})" aria-label="Duplicate Week ${wk.week}" class="min-h-[36px] min-w-[36px] sm:min-h-[32px] sm:min-w-[32px] rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition inline-flex items-center justify-center" title="Duplicate Week">⧉</button>
+                  <button type="button" onclick="removeRoadmapWeek(${wIdx})" aria-label="Remove Week ${wk.week}" class="min-h-[36px] min-w-[36px] sm:min-h-[32px] sm:min-w-[32px] rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 text-xs transition inline-flex items-center justify-center" title="Remove Week">✕</button>
+                </div>
+              </div>
+
+              <!-- Week Coaching Note -->
+              <div class="flex items-center gap-2">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 shrink-0">Note:</span>
+                <input type="text" value="${escapeHtml(wk.note || '')}" onchange="updateRoadmapWeekField(${wIdx}, 'note', this.value)" placeholder="Week coaching note (e.g., bar speed, fatigue check, wave pivot)..." class="w-full bg-slate-900/80 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-amber-500" />
+              </div>
+
+              ${showT2T3BalanceCue ? `
+                <div class="px-3 py-1.5 rounded-xl bg-sky-500/10 border border-sky-500/25 text-[11px] text-sky-200/90 flex items-center gap-2">
+                  <span>⚖️</span><span><strong>T2 ↔ T3 Fatigue Balance:</strong> T2 VDS is peaking (${maxT2Fu} sets) alongside ${maxT3Sets} T3 MRS sets — consider trimming T3 sets if recovery dips.</span>
+                </div>
               ` : ''}
-              <div class="inline-flex items-center gap-1.5">
-                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Focus:</span>
-                <select aria-label="Week ${wk.week} quality focus" onchange="updateRoadmapWeekField(${wIdx}, 'qualityFocus', this.value)" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs font-semibold text-slate-200 focus:outline-none focus:border-amber-500">
-                  ${focusOptionsHtml}
-                </select>
+
+              <!-- Grouped T1, T2, T3 Exercise Rows for Selected Day -->
+              <div class="space-y-2.5">
+                ${renderRoadmapTierGroup('T1', t1Slots, wIdx, dayIdx, totalWeeks, effectivePhase)}
+                ${renderRoadmapTierGroup('T2', t2Slots, wIdx, dayIdx, totalWeeks, effectivePhase)}
+                ${renderRoadmapTierGroup('T3', t3Slots, wIdx, dayIdx, totalWeeks, effectivePhase)}
               </div>
-              <div class="inline-flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg px-2 min-h-[36px] sm:min-h-[32px]" title="Reference load multiplier applied to Week 1 Reference Loads (guide only)">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Load %:</span>
-                <input type="number" min="50" max="150" step="2.5" value="${loadMultPct}" onchange="updateRoadmapWeekLoadMult(${wIdx}, this.value)" class="no-spinners w-14 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 font-mono text-xs font-bold text-amber-300 text-right tabular-nums focus:outline-none focus:border-amber-500" />
-                <span class="text-xs font-mono text-slate-400">%</span>
-              </div>
-              <span class="px-2.5 py-1 rounded-lg bg-slate-900/90 border border-slate-800 font-mono text-xs text-slate-300" title="Estimated reference working loads (kg)">
-                SQ <strong class="text-white">${sq}</strong> · BN <strong class="text-white">${bn}</strong> · DL <strong class="text-white">${dl}</strong> · OH <strong class="text-white">${oh}</strong>
-              </span>
-            </div>
-
-            <div class="flex items-center gap-1.5 self-end lg:self-center shrink-0">
-              <button type="button" onclick="applyWeekToLogger(${wIdx})" class="px-3 min-h-[38px] sm:min-h-[34px] rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition">Apply</button>
-              <button type="button" onclick="duplicateRoadmapWeek(${wIdx})" aria-label="Duplicate Week ${wk.week}" class="min-h-[38px] min-w-[38px] sm:min-h-[34px] sm:min-w-[34px] rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition inline-flex items-center justify-center" title="Duplicate Week">⧉</button>
-              <button type="button" onclick="removeRoadmapWeek(${wIdx})" aria-label="Remove Week ${wk.week}" class="min-h-[38px] min-w-[38px] sm:min-h-[34px] sm:min-w-[34px] rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 text-xs transition inline-flex items-center justify-center" title="Remove Week">✕</button>
-            </div>
-          </div>
-
-          <!-- Week Coaching Note -->
-          <div class="flex items-center gap-2">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 shrink-0">Note:</span>
-            <input type="text" value="${escapeHtml(wk.note || '')}" onchange="updateRoadmapWeekField(${wIdx}, 'note', this.value)" placeholder="Week coaching note (e.g., bar speed, fatigue check, wave pivot)..." class="w-full bg-slate-900/80 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-amber-500" />
-          </div>
-
-          ${showT2T3BalanceCue ? `
-            <div class="px-3 py-1.5 rounded-xl bg-sky-500/10 border border-sky-500/25 text-[11px] text-sky-200/90 flex items-center gap-2">
-              <span>⚖️</span><span><strong>T2 ↔ T3 Fatigue Balance:</strong> T2 VDS is peaking (${maxT2Fu} sets) alongside ${maxT3Sets} T3 MRS sets — consider trimming T3 sets if recovery dips.</span>
             </div>
           ` : ''}
-
-          <!-- Grouped T1, T2, T3 Exercise Rows for Selected Day -->
-          <div class="space-y-2.5">
-            ${renderRoadmapTierGroup('T1', t1Slots, wIdx, dayIdx, totalWeeks, effectivePhase)}
-            ${renderRoadmapTierGroup('T2', t2Slots, wIdx, dayIdx, totalWeeks, effectivePhase)}
-            ${renderRoadmapTierGroup('T3', t3Slots, wIdx, dayIdx, totalWeeks, effectivePhase)}
-          </div>
         </div>
       `;
     }
@@ -13296,6 +13602,8 @@
 
     function updateActiveRoadmapBlockName(val) {
       appState.activeRoadmapBlockName = val;
+      const summaryEl = document.getElementById('roadmap-library-summary-name');
+      if (summaryEl) summaryEl.textContent = (val || '').trim() || 'Untitled Draft';
       saveState();
       renderSavedRoadmapBlocksBar();
     }
@@ -13574,18 +13882,38 @@
       }
 
       const mesoGroups = getMesocycleGroups(appState.roadmapWeeks);
+      const activeInfo = getActiveRoadmapProgressInfo();
+      const roadmapUi = normalizeRoadmapUi(appState.roadmapUi);
+      applyRoadmapTopDrawersUI();
+
       if (mesoCountBadge) {
         mesoCountBadge.textContent = `⛓️ ${mesoGroups.length} Mesocycle${mesoGroups.length === 1 ? '' : 's'}`;
         mesoCountBadge.classList.toggle('hidden', mesoGroups.length <= 1);
       }
       if (weekCountBadge) weekCountBadge.textContent = `${appState.roadmapWeeks.length} Week${appState.roadmapWeeks.length === 1 ? '' : 's'}`;
 
+      const activeHeaderPill = document.getElementById('roadmap-active-week-header-pill');
+      if (activeHeaderPill) {
+        activeHeaderPill.classList.remove('hidden');
+        activeHeaderPill.textContent = activeInfo.totalDays > 0
+          ? (activeInfo.weekCompleted
+              ? `● Active Wk ${activeInfo.week} (${activeInfo.totalDays}/${activeInfo.totalDays} Done)`
+              : `● Active Wk ${activeInfo.week} (${activeInfo.doneCount}/${activeInfo.totalDays}d)`)
+          : `● Active Wk ${activeInfo.week}`;
+      }
+
+      const collapseAllBtn = document.getElementById('roadmap-collapse-all-btn');
+      if (collapseAllBtn) {
+        const anyMesoOpen = mesoGroups.some(g => !roadmapUi.collapsedMesos[g.mesoId]);
+        collapseAllBtn.textContent = anyMesoOpen ? 'Collapse All ▴' : 'Expand All ▾';
+      }
+
       const rmDays = getRoadmapDays();
       appState.roadmapDayIndex = Math.max(0, Math.min(appState.roadmapDayIndex, Math.max(0, rmDays.length - 1)));
 
       if (daySelector) {
         daySelector.innerHTML = rmDays.map((d, i) => `
-          <button type="button" onclick="selectRoadmapDay(${i})" class="px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
+          <button type="button" onclick="selectRoadmapDay(${i})" class="px-3 py-1.5 rounded-lg text-xs font-bold border whitespace-nowrap shrink-0 transition ${
             i === appState.roadmapDayIndex
               ? 'bg-amber-500 text-slate-950 border-amber-400'
               : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-600 hover:text-white'
@@ -13608,11 +13936,13 @@
         const wkSpanLabel = group.startIdx === group.endIdx
           ? `Week ${group.startIdx + 1} · 1 Wk`
           : `Weeks ${group.startIdx + 1}–${group.endIdx + 1} · ${group.weeks.length} Wks`;
+        const isMesoCollapsed = Boolean(roadmapUi.collapsedMesos[group.mesoId]);
+        const containsActiveWeek = group.weeks.some(({ wk }) => wk.week === activeInfo.week);
 
         const transitionDividerHtml = mIdx > 0 ? `
-          <div class="relative py-4 my-2 flex items-center justify-center" data-meso-transition="${mIdx}">
+          <div class="relative py-3 my-1 flex items-center justify-center" data-meso-transition="${mIdx}">
             <div class="w-full border-t-2 border-dashed ${gInt ? 'border-amber-500/45' : 'border-cyan-500/45'}"></div>
-            <div class="absolute px-4 py-1.5 rounded-full bg-slate-950 border-2 ${gInt ? 'border-amber-500/60 text-amber-300' : 'border-cyan-500/60 text-cyan-300'} font-mono text-[11px] font-extrabold tracking-wider uppercase shadow-lg flex items-center gap-2 whitespace-nowrap">
+            <div class="absolute px-3.5 py-1 rounded-full bg-slate-950 border-2 ${gInt ? 'border-amber-500/60 text-amber-300' : 'border-cyan-500/60 text-cyan-300'} font-mono text-[11px] font-extrabold tracking-wider uppercase shadow-lg flex items-center gap-2 whitespace-nowrap">
               <span>⛓️ MESOCYCLE TRANSITION</span>
               <span class="text-slate-400">·</span>
               <span>Meso ${mIdx} (${prevPhaseLbl}) → Meso ${mIdx + 1} (${currPhaseLbl})</span>
@@ -13630,8 +13960,9 @@
               <span class="px-2 py-0.5 rounded-md font-mono text-[11px] font-extrabold uppercase tracking-wider shrink-0 ${
                 gInt ? 'bg-amber-500 text-slate-950' : 'bg-sky-500 text-slate-950'
               }">MESOCYCLE ${mIdx + 1}</span>
-              <input type="text" aria-label="Mesocycle ${mIdx + 1} name" value="${escapeHtml(group.mesoName)}" data-id="${escapeHtml(group.mesoId)}" onchange="updateMesocycleMeta(this.dataset.id, 'mesoName', this.value)" class="flex-1 min-w-[160px] max-w-sm bg-slate-950/80 border border-slate-700 rounded-lg px-2.5 py-1 text-xs sm:text-sm font-bold text-white focus:outline-none ${gInt ? 'focus:border-amber-400' : 'focus:border-sky-400'}" />
+              <input type="text" aria-label="Mesocycle ${mIdx + 1} name" value="${escapeHtml(group.mesoName)}" data-id="${escapeHtml(group.mesoId)}" onchange="updateMesocycleMeta(this.dataset.id, 'mesoName', this.value)" class="flex-1 min-w-[140px] max-w-sm bg-slate-950/80 border border-slate-700 rounded-lg px-2.5 py-1 text-xs sm:text-sm font-bold text-white focus:outline-none ${gInt ? 'focus:border-amber-400' : 'focus:border-sky-400'}" />
               <span class="px-2 py-0.5 rounded-md font-mono text-[11px] font-bold bg-slate-950/80 text-slate-300 border border-slate-700 shrink-0">${wkSpanLabel}</span>
+              ${containsActiveWeek && isMesoCollapsed ? `<span class="px-2 py-0.5 rounded-md font-mono text-[11px] font-extrabold bg-amber-500 text-slate-950 shrink-0">● Active Wk ${activeInfo.week}</span>` : ''}
             </div>
             <div class="flex flex-wrap items-center gap-1.5 shrink-0">
               <div class="inline-flex rounded-lg overflow-hidden border border-slate-700 bg-slate-950" title="Mesocycle Training Phase (controls per-meso coaching cues)">
@@ -13640,17 +13971,19 @@
               </div>
               <button type="button" data-id="${escapeHtml(group.mesoId)}" onclick="addRoadmapWeek(this.dataset.id)" class="px-2.5 py-1 rounded-lg font-mono text-[11px] font-bold bg-slate-900 hover:bg-slate-800 text-amber-300 border border-slate-700 transition" title="Add +1 week inside Mesocycle ${mIdx + 1}">+ Wk</button>
               ${multiMeso ? `<button type="button" data-id="${escapeHtml(group.mesoId)}" onclick="confirmRemoveMesocycle(this.dataset.id)" class="px-2 py-1 rounded-lg font-mono text-[11px] font-bold bg-slate-900 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-slate-700 hover:border-rose-500/40 transition" title="Remove Mesocycle ${mIdx + 1}">✕ Meso</button>` : ''}
+              <button type="button" data-id="${escapeHtml(group.mesoId)}" onclick="toggleRoadmapMesocycle(this.dataset.id)" aria-expanded="${isMesoCollapsed ? 'false' : 'true'}" class="px-2.5 py-1 rounded-lg font-mono text-[11px] font-bold bg-slate-950 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700 transition" title="${isMesoCollapsed ? 'Expand' : 'Minimize'} Mesocycle ${mIdx + 1}">${isMesoCollapsed ? 'Show ▾' : 'Hide ▴'}</button>
             </div>
           </div>
         `;
 
-        const cardsHtml = group.weeks.map(({ wk, wIdx }, localIdx) =>
+        const cardsHtml = isMesoCollapsed ? '' : group.weeks.map(({ wk, wIdx }, localIdx) =>
           renderRoadmapWeekCard(wk, wIdx, appState.roadmapDayIndex, totalWeeks, {
             mesoIndex: mIdx + 1,
             localWeek: localIdx + 1,
             mesoLength: group.weeks.length,
             totalMesos: mesoGroups.length,
-            mesoPhase: group.mesoPhase
+            mesoPhase: group.mesoPhase,
+            activeInfo
           })
         ).join('');
 
@@ -13658,11 +13991,11 @@
           ${transitionDividerHtml}
           <div id="meso-section-${escapeHtml(group.mesoId)}" data-meso-group="${mIdx + 1}" class="${
             multiMeso
-              ? `rounded-2xl border-l-4 ${gInt ? 'border-l-amber-500 border-amber-500/25 bg-amber-500/[0.03]' : 'border-l-sky-500 border-sky-500/25 bg-sky-500/[0.03]'} border p-3 sm:p-4 space-y-3.5`
-              : 'space-y-3.5'
+              ? `rounded-2xl border-l-4 ${gInt ? 'border-l-amber-500 border-amber-500/25 bg-amber-500/[0.03]' : 'border-l-sky-500 border-sky-500/25 bg-sky-500/[0.03]'} border p-3 sm:p-4 space-y-3`
+              : 'space-y-3'
           }">
             ${headerBannerHtml}
-            <div class="space-y-4">${cardsHtml}</div>
+            ${isMesoCollapsed ? '' : `<div class="space-y-3">${cardsHtml}</div>`}
           </div>
         `;
       }).join('');
