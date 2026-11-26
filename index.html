@@ -2354,9 +2354,12 @@
         <div id="cloud-sync-conflict-panel" class="hidden p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/40 space-y-2.5">
           <div class="text-[11px] uppercase tracking-wider font-bold text-amber-300">⚠️ Choose Which Backup to Keep</div>
           <p id="cloud-sync-conflict-summary" class="text-[11px] text-slate-200 leading-relaxed"></p>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <button type="button" onclick="resolveCloudSyncConflict('pull')" class="px-3 py-2 rounded-xl text-xs font-extrabold bg-sky-500 hover:bg-sky-400 text-slate-950 transition">⬇️ Pull Cloud Backup</button>
-            <button type="button" onclick="resolveCloudSyncConflict('push')" class="px-3 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition">⬆️ Push This Device</button>
+          <div class="space-y-2">
+            <button type="button" onclick="resolveCloudSyncConflict('merge')" class="w-full px-3 py-2 rounded-xl text-xs font-extrabold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition">🔀 Merge Both (Keep All Sessions)</button>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button type="button" onclick="resolveCloudSyncConflict('pull')" class="px-3 py-2 rounded-xl text-xs font-bold bg-sky-500 hover:bg-sky-400 text-slate-950 transition">⬇️ Pull Cloud Only</button>
+              <button type="button" onclick="resolveCloudSyncConflict('push')" class="px-3 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition">⬆️ Push This Device Only</button>
+            </div>
           </div>
         </div>
 
@@ -2924,7 +2927,10 @@
       },
       _dataUpdatedAt: 0,
       _deletedHistoryIds: {},
-      _deletedBodyweightDates: {}
+      _deletedBodyweightDates: {},
+      _deletedCustomExerciseIds: {},
+      _deletedRoadmapBlockIds: {},
+      _restoredReadinessFlags: {}
     };
 
     function createDefaultDiceGainzState() {
@@ -5429,16 +5435,24 @@
       return out;
     }
 
+    function recordTombstone(field, key) {
+      if (!field || !key) return;
+      if (!appState[field] || typeof appState[field] !== 'object') appState[field] = {};
+      appState[field][String(key)] = Date.now();
+      appState[field] = normalizeTombstoneMap(appState[field]);
+    }
+
+    function clearTombstone(field, key) {
+      if (!field || !key || !appState[field]) return;
+      delete appState[field][String(key)];
+    }
+
     function recordHistoryTombstone(id) {
-      if (!id) return;
-      if (!appState._deletedHistoryIds || typeof appState._deletedHistoryIds !== 'object') appState._deletedHistoryIds = {};
-      appState._deletedHistoryIds[String(id)] = Date.now();
-      appState._deletedHistoryIds = normalizeTombstoneMap(appState._deletedHistoryIds);
+      recordTombstone('_deletedHistoryIds', id);
     }
 
     function clearHistoryTombstone(id) {
-      if (!id || !appState._deletedHistoryIds) return;
-      delete appState._deletedHistoryIds[String(id)];
+      clearTombstone('_deletedHistoryIds', id);
     }
 
     function saveState(opts = {}) {
@@ -5645,6 +5659,9 @@
       appState._dataUpdatedAt = 0;
       appState._deletedHistoryIds = {};
       appState._deletedBodyweightDates = {};
+      appState._deletedCustomExerciseIds = {};
+      appState._deletedRoadmapBlockIds = {};
+      appState._restoredReadinessFlags = {};
       appState._ownerUid = null;
       appState._isDefaultSample = true;
     }
@@ -5701,14 +5718,19 @@
         }
 
         appState.customExercises = Array.isArray(parsed.customExercises)
-          ? parsed.customExercises.map(ex => ({
-              id: sanitizeSafeId(ex && ex.id, 'cust'),
-              name: (ex && ex.name) || 'Custom Exercise',
-              category: (ex && ex.category) || 'Custom Exercises',
-              tiers: Array.isArray(ex && ex.tiers) && ex.tiers.length ? ex.tiers : ['T2', 'T3'],
-              primaryMuscles: normalizeMuscleList(ex && ex.primaryMuscles),
-              secondaryMuscles: normalizeMuscleList(ex && ex.secondaryMuscles)
-            }))
+          ? parsed.customExercises.map(ex => {
+              const lt = normalizeLoadType(ex && ex.loadType);
+              return {
+                id: sanitizeSafeId(ex && ex.id, 'cust'),
+                name: (ex && ex.name) || 'Custom Exercise',
+                category: (ex && ex.category) || 'Custom Exercises',
+                ...(lt !== 'standard' ? { loadType: lt } : {}),
+                tiers: Array.isArray(ex && ex.tiers) && ex.tiers.length ? ex.tiers : ['T2', 'T3'],
+                primaryMuscles: normalizeMuscleList(ex && ex.primaryMuscles),
+                secondaryMuscles: normalizeMuscleList(ex && ex.secondaryMuscles),
+                ...(Number.isFinite(Number(ex && ex.updatedAt)) && Number(ex.updatedAt) > 0 ? { updatedAt: Math.trunc(Number(ex.updatedAt)) } : {})
+              };
+            })
           : [];
 
         if (Array.isArray(parsed.split) && parsed.split.length > 0) {
@@ -5775,6 +5797,9 @@
         appState._dataUpdatedAt = Number.isFinite(parsed._dataUpdatedAt) ? parsed._dataUpdatedAt : appState._updatedAt;
         appState._deletedHistoryIds = normalizeTombstoneMap(parsed._deletedHistoryIds);
         appState._deletedBodyweightDates = normalizeTombstoneMap(parsed._deletedBodyweightDates);
+        appState._deletedCustomExerciseIds = normalizeTombstoneMap(parsed._deletedCustomExerciseIds);
+        appState._deletedRoadmapBlockIds = normalizeTombstoneMap(parsed._deletedRoadmapBlockIds);
+        appState._restoredReadinessFlags = normalizeTombstoneMap(parsed._restoredReadinessFlags);
         appState._ownerUid = (typeof parsed._ownerUid === 'string' && parsed._ownerUid.trim()) ? sanitizeSafeId(parsed._ownerUid, 'uid') : null;
         appState._isDefaultSample = parsed._isDefaultSample !== undefined ? Boolean(parsed._isDefaultSample) : wantsSampleFallback;
         appState.diceGainz = normalizeDiceGainzState(parsed.diceGainz);
@@ -13940,6 +13965,7 @@
         appState.savedRoadmapBlocks.push(snapshot);
         appState.activeRoadmapBlockId = snapshot.id;
       }
+      clearTombstone('_deletedRoadmapBlockIds', snapshot.id);
 
       saveState();
       renderSavedRoadmapBlocksBar();
@@ -14053,6 +14079,7 @@
         `Delete Saved Macrocycle "${target.name}"?`,
         'This permanently deletes this saved macrocycle from your library. Your Active Workout split and training history will not be affected.',
         () => {
+          recordTombstone('_deletedRoadmapBlockIds', target.id);
           appState.savedRoadmapBlocks = appState.savedRoadmapBlocks.filter(b => b.id !== target.id);
           appState.activeRoadmapBlockId = null;
           appState.activeRoadmapBlockName = 'Untitled Draft';
@@ -14569,6 +14596,7 @@
         date: String(flag.date || ''),
         ignoredAt: new Date().toISOString()
       };
+      clearTombstone('_restoredReadinessFlags', flagKey);
       saveState();
       renderFeedbackDigest();
       renderLogger();
@@ -14578,6 +14606,7 @@
     function restoreReadinessFlag(flagKey) {
       if (!flagKey || !appState.ignoredReadinessFlags || !appState.ignoredReadinessFlags[flagKey]) return;
       delete appState.ignoredReadinessFlags[flagKey];
+      recordTombstone('_restoredReadinessFlags', flagKey);
       saveState();
       renderFeedbackDigest();
       renderLogger();
@@ -14586,6 +14615,7 @@
 
     function restoreAllIgnoredReadinessFlags() {
       if (!appState.ignoredReadinessFlags || !Object.keys(appState.ignoredReadinessFlags).length) return;
+      Object.keys(appState.ignoredReadinessFlags).forEach(k => recordTombstone('_restoredReadinessFlags', k));
       appState.ignoredReadinessFlags = {};
       feedbackDigestShowIgnored = false;
       saveState();
@@ -19193,7 +19223,8 @@
         loadType: loadType !== 'standard' ? loadType : undefined,
         tiers: customFormState.tiers.length ? [...customFormState.tiers] : ['T2', 'T3'],
         primaryMuscles: primaryClean,
-        secondaryMuscles: secondaryClean
+        secondaryMuscles: secondaryClean,
+        updatedAt: Date.now()
       };
       if (editId) {
         const idx = appState.customExercises.findIndex(e => e.id === editId);
@@ -19201,6 +19232,7 @@
       } else {
         appState.customExercises.push(entry);
       }
+      clearTombstone('_deletedCustomExerciseIds', entry.id);
       saveState();
       openCreateCustomForm();
       renderCustomExercisesList();
@@ -19212,6 +19244,7 @@
     }
 
     function deleteCustomExercise(id) {
+      recordTombstone('_deletedCustomExerciseIds', id);
       appState.customExercises = (appState.customExercises || []).filter(e => e.id !== id);
       saveState();
       renderCustomExercisesList();
@@ -22503,6 +22536,23 @@
     let cloudSyncLastSyncedAt = null;
     let cloudSyncConflictState = null;
     let cloudSyncLastError = '';
+    let cloudSyncRetryCount = 0;
+    const CLOUD_SYNC_MAX_RETRIES = 3;
+
+    function isPermanentCloudSyncError(err) {
+      const code = String(err?.code || '').toLowerCase();
+      const msg = String(err?.message || '').toLowerCase();
+      return (
+        code.includes('permission-denied') ||
+        code.includes('unauthenticated') ||
+        code.includes('invalid-argument') ||
+        code.includes('resource-exhausted') ||
+        code.includes('failed-precondition') ||
+        msg.includes('900 kb') ||
+        msg.includes('permission') ||
+        msg.includes('quota')
+      );
+    }
 
     function getActiveFirebaseConfig() {
       // Production lock: when embedded config is present, ignore localStorage overrides to prevent redirection attacks
@@ -22681,7 +22731,7 @@
             if (cloudSyncConflictState.cloudBlocks > 0) cloudExtra.push(`${cloudSyncConflictState.cloudBlocks} macrocycle(s)`);
             const localExtraTxt = localExtra.length ? ` (${localExtra.join(', ')})` : '';
             const cloudExtraTxt = cloudExtra.length ? ` (${cloudExtra.join(', ')})` : '';
-            conflictSummaryEl.textContent = `This device has ${cloudSyncConflictState.localSessions} unlinked local session(s)${localExtraTxt}, while your Cloud account already has ${cloudSyncConflictState.cloudSessions} session(s)${cloudExtraTxt} (updated ${cTime}). Choose Pull to load your Cloud backup, or Push to overwrite Cloud with this device.`;
+            conflictSummaryEl.textContent = `This device has ${cloudSyncConflictState.localSessions} unlinked local session(s)${localExtraTxt}, while your Cloud account already has ${cloudSyncConflictState.cloudSessions} session(s)${cloudExtraTxt} (updated ${cTime}). Choose Merge Both to keep sessions from both devices, Pull to load Cloud only, or Push to overwrite Cloud with this device.`;
           }
         } else {
           conflictEl?.classList.add('hidden');
@@ -22979,6 +23029,7 @@
     function flushCloudSyncNow() {
       if (!cloudSyncUser || !cloudSyncDb || !cloudSyncUser.emailVerified || cloudSyncConflictState) return;
       cloudSyncPendingPush = true;
+      cloudSyncRetryCount = 0;
       clearTimeout(cloudSyncPushTimer);
       cloudSyncPushTimer = null;
       if (!navigator.onLine) {
@@ -22988,9 +23039,10 @@
       syncCloudState('auto', true);
     }
 
-    function scheduleCloudSyncPush() {
+    function scheduleCloudSyncPush(delayMs = 1600, isRetry = false) {
       if (!cloudSyncUser || !cloudSyncDb || !cloudSyncUser.emailVerified || cloudSyncConflictState) return;
       cloudSyncPendingPush = true;
+      if (!isRetry) cloudSyncRetryCount = 0;
       if (!navigator.onLine) {
         updateCloudSyncBadges('idle');
         return;
@@ -22999,7 +23051,7 @@
       // Always merge with Cloud ('auto') rather than blindly overwriting Cloud from a stale tab!
       cloudSyncPushTimer = setTimeout(() => {
         syncCloudState('auto', true);
-      }, 1600);
+      }, Math.max(250, Number(delayMs) || 1600));
     }
 
     function mergeTombstoneMaps(a, b) {
@@ -23009,6 +23061,49 @@
         if (!out[k] || v > out[k]) out[k] = v;
       });
       return normalizeTombstoneMap(out);
+    }
+
+    function canonicalSortedRecord(obj) {
+      const out = {};
+      if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return out;
+      Object.keys(obj).sort().forEach(k => { out[k] = obj[k]; });
+      return out;
+    }
+
+    function canonicalSyncCollectionsSignature(state) {
+      const hist = Array.isArray(state?.history)
+        ? [...state.history].filter(s => s && s.id).sort((a, b) => String(a.id).localeCompare(String(b.id)))
+        : [];
+      const bw = Array.isArray(state?.bodyweightLog)
+        ? [...state.bodyweightLog].filter(e => e && e.date).sort((a, b) => String(a.date).localeCompare(String(b.date)))
+        : [];
+      const cust = Array.isArray(state?.customExercises)
+        ? [...state.customExercises].filter(e => e && e.id).sort((a, b) => String(a.id).localeCompare(String(b.id)))
+        : [];
+      const blocks = Array.isArray(state?.savedRoadmapBlocks)
+        ? [...state.savedRoadmapBlocks].filter(b => b && b.id).sort((a, b) => String(a.id).localeCompare(String(b.id)))
+        : [];
+      const ac = state?.activeCycle && typeof state.activeCycle === 'object'
+        ? {
+            ...state.activeCycle,
+            completedDayIds: Array.isArray(state.activeCycle.completedDayIds)
+              ? [...new Set(state.activeCycle.completedDayIds.map(String))].sort()
+              : []
+          }
+        : null;
+      return JSON.stringify({
+        history: hist,
+        bodyweightLog: bw,
+        customExercises: cust,
+        savedRoadmapBlocks: blocks,
+        ignoredReadinessFlags: canonicalSortedRecord(normalizeIgnoredReadinessFlags(state?.ignoredReadinessFlags)),
+        activeCycle: ac,
+        _deletedHistoryIds: canonicalSortedRecord(normalizeTombstoneMap(state?._deletedHistoryIds)),
+        _deletedBodyweightDates: canonicalSortedRecord(normalizeTombstoneMap(state?._deletedBodyweightDates)),
+        _deletedCustomExerciseIds: canonicalSortedRecord(normalizeTombstoneMap(state?._deletedCustomExerciseIds)),
+        _deletedRoadmapBlockIds: canonicalSortedRecord(normalizeTombstoneMap(state?._deletedRoadmapBlockIds)),
+        _restoredReadinessFlags: canonicalSortedRecord(normalizeTombstoneMap(state?._restoredReadinessFlags))
+      });
     }
 
     // Non-destructive 2-way merge between local device and Cloud backup.
@@ -23023,6 +23118,9 @@
 
       const mergedHistTombstones = mergeTombstoneMaps(localState?._deletedHistoryIds, cloudState?._deletedHistoryIds);
       const mergedBwTombstones = mergeTombstoneMaps(localState?._deletedBodyweightDates, cloudState?._deletedBodyweightDates);
+      const mergedCustTombstones = mergeTombstoneMaps(localState?._deletedCustomExerciseIds, cloudState?._deletedCustomExerciseIds);
+      const mergedBlockTombstones = mergeTombstoneMaps(localState?._deletedRoadmapBlockIds, cloudState?._deletedRoadmapBlockIds);
+      const mergedRestoredFlags = mergeTombstoneMaps(localState?._restoredReadinessFlags, cloudState?._restoredReadinessFlags);
 
       // 1. Union workout history by session id (respecting explicit deletion tombstones)
       const histById = new Map();
@@ -23046,7 +23144,7 @@
       ingestHistory(localState?.history, localDataTs, true);
       const mergedHistory = Array.from(histById.values())
         .map(v => v.item)
-        .sort((a, b) => `${a.date || ''} ${a.startedAt || ''}`.localeCompare(`${b.date || ''} ${b.startedAt || ''}`));
+        .sort((a, b) => `${a.date || ''} ${a.startedAt || ''} ${a.id || ''}`.localeCompare(`${b.date || ''} ${b.startedAt || ''} ${b.id || ''}`));
 
       // 2. Union bodyweight log by date (respecting explicit deletion tombstones)
       const bwByDate = new Map();
@@ -23068,30 +23166,93 @@
       ingestBw(localState?.bodyweightLog, localDataTs, true);
       const mergedBw = Array.from(bwByDate.values()).map(v => v.item).sort((a, b) => String(a.date).localeCompare(String(b.date)));
 
-      // 3. Union custom exercises by id
+      // 3. Union custom exercises by id (respecting deletion tombstones)
       const custById = new Map();
-      [...(Array.isArray(secondary?.customExercises) ? secondary.customExercises : []), ...(Array.isArray(primary?.customExercises) ? primary.customExercises : [])]
-        .forEach(ex => { if (ex && ex.id) custById.set(String(ex.id), ex); });
-
-      // 4. Union saved macrocycle blocks by id
-      const blocksById = new Map();
-      [...(Array.isArray(secondary?.savedRoadmapBlocks) ? secondary.savedRoadmapBlocks : []), ...(Array.isArray(primary?.savedRoadmapBlocks) ? primary.savedRoadmapBlocks : [])]
-        .forEach(b => { if (b && b.id) blocksById.set(String(b.id), b); });
-
-      // 5. Merge ignored readiness flags
-      const mergedIgnored = {
-        ...normalizeIgnoredReadinessFlags(secondary?.ignoredReadinessFlags),
-        ...normalizeIgnoredReadinessFlags(primary?.ignoredReadinessFlags)
+      const ingestCustom = (list, sourceTs, isLocalSource) => {
+        if (!Array.isArray(list)) return;
+        list.forEach(ex => {
+          if (!ex || typeof ex !== 'object' || !ex.id) return;
+          const id = String(ex.id);
+          const delTs = mergedCustTombstones[id] || 0;
+          const exTs = Number(ex.updatedAt) || (id.startsWith('cust_') ? (parseInt(id.split('_')[1], 10) || sourceTs) : sourceTs);
+          if (delTs > 0 && delTs >= exTs) return;
+          const prev = custById.get(id);
+          if (!prev || exTs > prev.ts || (exTs === prev.ts && isLocalSource === localIsPrimary)) {
+            custById.set(id, { item: ex, ts: exTs });
+          }
+        });
       };
+      ingestCustom(cloudState?.customExercises, cloudDataTs, false);
+      ingestCustom(localState?.customExercises, localDataTs, true);
+      const mergedCustomExercises = Array.from(custById.values()).map(v => v.item);
+
+      // 4. Union saved macrocycle blocks by id (respecting deletion tombstones)
+      const blocksById = new Map();
+      const ingestBlocks = (list, sourceTs, isLocalSource) => {
+        if (!Array.isArray(list)) return;
+        list.forEach(b => {
+          if (!b || typeof b !== 'object' || !b.id) return;
+          const id = String(b.id);
+          const delTs = mergedBlockTombstones[id] || 0;
+          const parsedIso = b.updatedAt ? Date.parse(b.updatedAt) : NaN;
+          const blockTs = Number.isFinite(parsedIso) ? parsedIso : (id.startsWith('block_') ? (parseInt(id.split('_')[1], 10) || sourceTs) : sourceTs);
+          if (delTs > 0 && delTs >= blockTs) return;
+          const prev = blocksById.get(id);
+          if (!prev || blockTs > prev.ts || (blockTs === prev.ts && isLocalSource === localIsPrimary)) {
+            blocksById.set(id, { item: b, ts: blockTs });
+          }
+        });
+      };
+      ingestBlocks(cloudState?.savedRoadmapBlocks, cloudDataTs, false);
+      ingestBlocks(localState?.savedRoadmapBlocks, localDataTs, true);
+      const mergedBlocks = Array.from(blocksById.values()).map(v => v.item);
+
+      // 5. Merge ignored readiness flags (respecting explicit Restore tombstones)
+      const flagByKey = new Map();
+      const ingestFlags = (mapObj, sourceTs, isLocalSource) => {
+        const clean = normalizeIgnoredReadinessFlags(mapObj);
+        Object.entries(clean).forEach(([k, val]) => {
+          const parsedIso = val && val.ignoredAt ? Date.parse(val.ignoredAt) : NaN;
+          const flagTs = Number.isFinite(parsedIso) ? parsedIso : sourceTs;
+          const restoredTs = mergedRestoredFlags[k] || 0;
+          if (restoredTs > 0 && restoredTs >= flagTs) return;
+          const prev = flagByKey.get(k);
+          if (!prev || flagTs > prev.ts || (flagTs === prev.ts && isLocalSource === localIsPrimary)) {
+            flagByKey.set(k, { val, ts: flagTs });
+          }
+        });
+      };
+      ingestFlags(cloudState?.ignoredReadinessFlags, cloudDataTs, false);
+      ingestFlags(localState?.ignoredReadinessFlags, localDataTs, true);
+      const mergedIgnored = {};
+      flagByKey.forEach((entry, k) => { mergedIgnored[k] = entry.val; });
+
+      // 6. Merge activeCycle.completedDayIds when both devices share the same cycle week
+      let mergedActiveCycle = primary?.activeCycle && typeof primary.activeCycle === 'object'
+        ? JSON.parse(JSON.stringify(primary.activeCycle))
+        : (secondary?.activeCycle && typeof secondary.activeCycle === 'object' ? JSON.parse(JSON.stringify(secondary.activeCycle)) : null);
+      if (mergedActiveCycle && primary?.activeCycle && secondary?.activeCycle) {
+        const pAc = primary.activeCycle;
+        const sAc = secondary.activeCycle;
+        const sameMacro = (pAc.macrocycleId || '') === (sAc.macrocycleId || '');
+        const sameMeso = (pAc.mesoId || '') === (sAc.mesoId || '');
+        const sameWeek = Number(pAc.week) === Number(sAc.week);
+        if (sameMacro && sameMeso && sameWeek) {
+          const pDays = Array.isArray(pAc.completedDayIds) ? pAc.completedDayIds : [];
+          const sDays = Array.isArray(sAc.completedDayIds) ? sAc.completedDayIds : [];
+          mergedActiveCycle.completedDayIds = Array.from(new Set([...pDays, ...sDays].map(String).filter(Boolean)));
+        }
+      }
 
       const mergedTs = Math.max(localDataTs, cloudDataTs, Date.now());
       const merged = {
         ...JSON.parse(JSON.stringify(primary)),
         history: mergedHistory,
         bodyweightLog: mergedBw,
-        customExercises: Array.from(custById.values()),
-        savedRoadmapBlocks: Array.from(blocksById.values()),
+        customExercises: mergedCustomExercises,
+        savedRoadmapBlocks: mergedBlocks,
         ignoredReadinessFlags: mergedIgnored,
+        activeCycle: mergedActiveCycle,
         // Preserve this device's local viewing preferences (collapsed drawers, active tab, theme)
         activeTab: localState?.activeTab || primary?.activeTab || 'logger',
         analyticsSections: normalizeAnalyticsSections(localState?.analyticsSections || primary?.analyticsSections),
@@ -23099,6 +23260,9 @@
         theme: (localState?.theme === 'light' || localState?.theme === 'dark') ? localState.theme : (primary?.theme || 'dark'),
         _deletedHistoryIds: mergedHistTombstones,
         _deletedBodyweightDates: mergedBwTombstones,
+        _deletedCustomExerciseIds: mergedCustTombstones,
+        _deletedRoadmapBlockIds: mergedBlockTombstones,
+        _restoredReadinessFlags: mergedRestoredFlags,
         _ownerUid: uid,
         _isDefaultSample: false,
         _updatedAt: mergedTs,
@@ -23109,8 +23273,11 @@
       const cloudHistIds = new Set((cloudState?.history || []).map(s => s && s.id).filter(Boolean));
       const addedToLocal = mergedHistory.filter(s => s && s.id && !localHistIds.has(s.id)).length;
       const addedToCloud = mergedHistory.filter(s => s && s.id && !cloudHistIds.has(s.id)).length;
-      const needsCloudWrite = addedToCloud > 0 || localDataTs > cloudDataTs || mergedBw.length > (cloudState?.bodyweightLog || []).length;
-      const needsLocalApply = addedToLocal > 0 || cloudDataTs > localDataTs || mergedBw.length > (localState?.bodyweightLog || []).length;
+      const mergedSig = canonicalSyncCollectionsSignature(merged);
+      const localCollectionsDiffer = mergedSig !== canonicalSyncCollectionsSignature(localState);
+      const cloudCollectionsDiffer = mergedSig !== canonicalSyncCollectionsSignature(cloudState);
+      const needsCloudWrite = localDataTs > cloudDataTs || cloudCollectionsDiffer;
+      const needsLocalApply = cloudDataTs > localDataTs || localCollectionsDiffer;
 
       return { merged, addedToLocal, addedToCloud, needsCloudWrite, needsLocalApply, mergedTs };
     }
@@ -23163,7 +23330,9 @@
     }
 
     function resolveCloudSyncConflict(choice) {
-      if (choice === 'push') {
+      if (choice === 'merge') {
+        syncCloudState('merge', false);
+      } else if (choice === 'push') {
         syncCloudState('push', false);
       } else {
         syncCloudState('pull', false);
@@ -23187,12 +23356,15 @@
         return;
       }
       if (cloudSyncInFlight) {
-        if (mode === 'push') cloudSyncPendingPush = true;
+        if (mode === 'push' || mode === 'merge') cloudSyncPendingPush = true;
         return;
       }
+      if (!silent) cloudSyncRetryCount = 0;
       cloudSyncInFlight = true;
       updateCloudSyncBadges('syncing');
       let syncedAtLocalTs = null;
+      let syncFailed = false;
+      let syncFailurePermanent = false;
 
       try {
         const uid = cloudSyncUser.uid;
@@ -23224,6 +23396,33 @@
               cloudSyncLastSyncedAt = Date.now();
               updateCloudSyncBadges('idle', 'Pulled from Cloud');
               if (!silent) showToast('Pulled latest workout data from Cloud!', 'success');
+            }
+          } else if (mode === 'merge') {
+            cloudSyncConflictState = null;
+            let cloudParsed = null;
+            if (cloudData && cloudData.payloadJson) {
+              try { cloudParsed = safeJsonParse(cloudData.payloadJson); } catch (_) {}
+            }
+            if (!cloudParsed || typeof cloudParsed !== 'object') {
+              const ts = Math.max(currentLocalTs, Date.now());
+              await pushLocalStateToCloud(docRef, uid, ts);
+              syncedAtLocalTs = ts;
+              cloudSyncLastSyncedAt = Date.now();
+              updateCloudSyncBadges('idle', 'Uploaded');
+              if (!silent) showToast('Saved this device’s backup to Cloud Sync!', 'success');
+            } else {
+              const mergeRes = mergeCloudAndLocalStates(appState, cloudParsed, uid);
+              applyCloudPayloadLocally(mergeRes.merged, uid, true);
+              await pushLocalStateToCloud(docRef, uid, mergeRes.mergedTs);
+              syncedAtLocalTs = mergeRes.mergedTs;
+              cloudSyncLastSyncedAt = Date.now();
+              updateCloudSyncBadges('idle', 'Merged');
+              if (!silent) {
+                showToast(
+                  `Merged both backups (+${mergeRes.addedToLocal} from Cloud, +${mergeRes.addedToCloud} from this device)!`,
+                  'success'
+                );
+              }
             }
           } else {
             // Auto mode with strict account ownership & sample-data protection
@@ -23273,6 +23472,9 @@
                   } else {
                     appState._deletedHistoryIds = mergeRes.merged._deletedHistoryIds;
                     appState._deletedBodyweightDates = mergeRes.merged._deletedBodyweightDates;
+                    appState._deletedCustomExerciseIds = mergeRes.merged._deletedCustomExerciseIds;
+                    appState._deletedRoadmapBlockIds = mergeRes.merged._deletedRoadmapBlockIds;
+                    appState._restoredReadinessFlags = mergeRes.merged._restoredReadinessFlags;
                   }
                   if (mergeRes.needsCloudWrite) {
                     await pushLocalStateToCloud(docRef, uid, mergeRes.mergedTs);
@@ -23329,6 +23531,8 @@
           }
         }
       } catch (err) {
+        syncFailed = true;
+        syncFailurePermanent = isPermanentCloudSyncError(err);
         console.warn('Cloud sync error:', err);
         updateCloudSyncBadges('error', err.message || 'Sync error');
         if (!silent) showToast(`Cloud Sync failed: ${err.message}`, 'error');
@@ -23338,8 +23542,18 @@
         const editedDuringFlight = syncedAtLocalTs !== null && postLocalTs > syncedAtLocalTs;
         if (syncedAtLocalTs !== null && !editedDuringFlight) {
           cloudSyncPendingPush = false;
-        } else if (editedDuringFlight || (cloudSyncPendingPush && navigator.onLine && !cloudSyncConflictState)) {
-          scheduleCloudSyncPush();
+          cloudSyncRetryCount = 0;
+        } else if (editedDuringFlight) {
+          cloudSyncRetryCount = 0;
+          scheduleCloudSyncPush(1600, false);
+        } else if (syncFailed) {
+          if (!syncFailurePermanent && cloudSyncPendingPush && navigator.onLine && !cloudSyncConflictState && cloudSyncRetryCount < CLOUD_SYNC_MAX_RETRIES) {
+            cloudSyncRetryCount += 1;
+            const backoffMs = Math.min(45000, 5000 * Math.pow(3, cloudSyncRetryCount - 1));
+            scheduleCloudSyncPush(backoffMs, true);
+          }
+        } else if (cloudSyncPendingPush && navigator.onLine && !cloudSyncConflictState) {
+          scheduleCloudSyncPush(1600, false);
         }
         renderCloudSyncModalState();
       }
@@ -23381,6 +23595,7 @@
         showToast('Lift Assist installed to Home Screen!', 'success');
       });
       window.addEventListener('online', () => {
+        cloudSyncRetryCount = 0;
         updateCloudSyncBadges('idle');
         if (!cloudSyncAuth || !cloudSyncDb) {
           initCloudSyncIfConfigured(true);
